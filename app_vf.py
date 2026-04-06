@@ -74,7 +74,7 @@ header {visibility: hidden;}
 @st.cache_data
 def charger_donnees():
     if os.path.exists(path_csv):
-        df = pd.read_csv(path_csv, sep=';', low_memory=False)
+        df = pd.read_csv(path_csv, sep=',', low_memory=False)
         for c in ['prix_gazole', 'prix_sp95', 'prix_sp98', 'prix_e10', 'prix_e85']:
             if c in df.columns: df[c] = pd.to_numeric(df[c], errors='coerce')
         return df
