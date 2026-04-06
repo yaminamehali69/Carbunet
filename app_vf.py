@@ -8,8 +8,8 @@ from geopy.distance import geodesic
 import base64
 
 # --- 1. CONFIGURATION ---
-path_logo = r"G:\Mon Drive\Carburant prix\logo_carbunet.png"
-path_csv = r"G:\Mon Drive\Carburant prix\carburant_prix_nettoye.csv"
+path_logo = "logo_carbunet.png"
+path_csv = "carburant_prix_nettoye.csv"
 VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 
