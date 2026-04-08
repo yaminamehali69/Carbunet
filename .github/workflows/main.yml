@@ -1,0 +1,33 @@
+name: Mise a jour Automatique CarbuNet
+
+on:
+  schedule:
+    # S'exécute à 7h et 16h UTC (soit 9h et 18h en France)
+    - cron: '0 7,16 * * *' 
+  workflow_dispatch: # Permet de cliquer sur un bouton pour tester
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recupere le code
+        uses: actions/checkout@v3
+
+      - name: Installe Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Installe les outils
+        run: pip install pandas sqlalchemy pymysql GitPython cryptography
+
+      - name: Execute le nettoyage
+        run: python maj_script.py
+
+      - name: Envoi sur GitHub
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add carburant_prix_nettoye.csv
+          git commit -m "MàJ auto Cloud" || echo "Pas de changement"
+          git push
