@@ -28,6 +28,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git pull origin main
           git add carburant_prix_nettoye.csv
-          git commit -m "MàJ auto Cloud" || echo "Pas de changement"
-          git push
+          git commit -m "MàJ auto Cloud" || exit 0
+          git push origin main
