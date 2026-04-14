@@ -247,10 +247,10 @@ with tabs[2]:
         p_moy = df[f"prix_{carbu.lower()}"].mean() if 'carbu' in locals() else 1.80
         st.metric("Coût estimé du trajet", f"{(dist/100) * conso * p_moy:.2f} €")
 
-
-# 
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
+    import streamlit.components.v1 as components
+
     # On s'assure que les icônes Google sont chargées
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
@@ -273,35 +273,37 @@ with tabs[3]:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- FORMULAIRE CONNECTÉ À TA BOÎTE MAIL ---
-    # Remplace l'email ci-dessous par le tien !
-    contact_form = """
-    <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <input type="hidden" name="_captcha" value="false">
-        <input type="hidden" name="_subject" value="Nouveau message CarbuNet !">
-        
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <input type="text" name="name" placeholder="👤 Nom & Prénom" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;" required>
-            <input type="email" name="email" placeholder="📧 Votre Email" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;" required>
-        </div>
+    # --- FORMULAIRE (Méthode Components pour forcer l'affichage) ---
+    contact_form_html = """
+    <div style="font-family: sans-serif;">
+        <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_subject" value="Nouveau message CarbuNet !">
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" name="name" placeholder="👤 Nom & Prénom" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" required>
+                <input type="email" name="email" placeholder="📧 Votre Email" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" required>
+            </div>
 
-        <select name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; color: #334155;">
-            <option disabled selected>🎯 Objet de votre demande</option>
-            <option>Signaler un Bug</option>
-            <option>Suggestion d'amélioration</option>
-            <option>Erreur sur une station</option>
-            <option>Autre question</option>
-        </select>
+            <select name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; color: #334155; font-size: 14px;">
+                <option disabled selected>🎯 Objet de votre demande</option>
+                <option>Signaler un Bug</option>
+                <option>Suggestion d'amélioration</option>
+                <option>Erreur sur une station</option>
+                <option>Autre question</option>
+            </select>
 
-        <textarea name="message" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 120px; margin-bottom: 20px; outline: none;" required></textarea>
+            <textarea name="message" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px; font-size: 14px;" required></textarea>
 
-        <button type="submit" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 1rem; transition: 0.3s;">
-            🚀 ENVOYER MA DEMANDE
-        </button>
-    </form>
+            <button type="submit" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
+                🚀 ENVOYER MA DEMANDE
+            </button>
+        </form>
+    </div>
     """
     
-    st.markdown(contact_form, unsafe_allow_html=True)
+    # On affiche le composant (on lui donne 450px de hauteur pour être sûr qu'il ne soit pas coupé)
+    components.html(contact_form_html, height=450)
 
     st.markdown("---")
     st.markdown("""
