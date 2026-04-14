@@ -273,25 +273,19 @@ with tabs[3]:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- FORMULAIRE OPTIMISÉ (Design Pro + Redirection) ---
+    # --- FORMULAIRE (Méthode Components pour forcer l'affichage) ---
     contact_form_html = """
-    <div style="font-family: 'Segoe UI', sans-serif; background: #f8fafc; padding: 10px; border-radius: 15px;">
-        <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+    <div style="font-family: sans-serif;">
+        <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
             <input type="hidden" name="_captcha" value="false">
-            <input type="hidden" name="_subject" value="🚀 Nouveau message CarbuNet !">
-            <input type="hidden" name="_next" value="https://carbunet.streamlit.app">
-            <input type="hidden" name="_template" value="table">
+            <input type="hidden" name="_subject" value="Nouveau message CarbuNet !">
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <div style="flex: 1;">
-                    <input type="text" name="name" placeholder="👤 Nom & Prénom" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
-                </div>
-                <div style="flex: 1;">
-                    <input type="email" name="email" placeholder="📧 Votre Email" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
-                </div>
+                <input type="text" name="name" placeholder="👤 Nom & Prénom" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" required>
+                <input type="email" name="email" placeholder="📧 Votre Email" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" required>
             </div>
 
-            <select name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; color: #334155;">
+            <select name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; color: #334155; font-size: 14px;">
                 <option disabled selected>🎯 Objet de votre demande</option>
                 <option>Signaler un Bug</option>
                 <option>Suggestion d'amélioration</option>
@@ -299,17 +293,17 @@ with tabs[3]:
                 <option>Autre question</option>
             </select>
 
-            <textarea name="message" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 110px; margin-bottom: 20px; box-sizing: border-box;" required></textarea>
+            <textarea name="message" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px; font-size: 14px;" required></textarea>
 
-            <button type="submit" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 15px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
-                ENVOYER MA DEMANDE
+            <button type="submit" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
+                🚀 ENVOYER MA DEMANDE
             </button>
         </form>
     </div>
     """
     
-    # Affichage du composant
-    components.html(contact_form_html, height=520)
+    # On affiche le composant (on lui donne 450px de hauteur pour être sûr qu'il ne soit pas coupé)
+    components.html(contact_form_html, height=450)
 
     st.markdown("---")
     st.markdown("""
