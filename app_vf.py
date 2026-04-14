@@ -9,9 +9,10 @@ import base64
 
 # --- 1. CONFIGURATION ---
 path_logo = "logo_carbunet.png"
-path_csv = "carburant_prix_nettoye.csv"
+path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carburant_prix_nettoye.csv"
 VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
+
 
 st.set_page_config(
     page_title=f"CarbuNet by {AUTEUR}", 
@@ -70,17 +71,23 @@ header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
+
 # --- 2. DONNÉES ---
-@st.cache_data
+@st.cache_data(ttl=3600) # Ajout d'une durée de cache (1h) pour forcer l'actu
 def charger_donnees():
-    if os.path.exists(path_csv):
-        df = pd.read_csv(path_csv, sep=';', low_memory=False)
+    try:
+        # On lit directement l'URL GitHub
+        df = pd.read_csv(path_csv, sep=',', low_memory=False) # Attention sep=',' car mon script robot utilise la virgule
         for c in ['prix_gazole', 'prix_sp95', 'prix_sp98', 'prix_e10', 'prix_e85']:
-            if c in df.columns: df[c] = pd.to_numeric(df[c], errors='coerce')
+            if c in df.columns: 
+                df[c] = pd.to_numeric(df[c], errors='coerce')
         return df
-    return None
+    except Exception as e:
+        st.error(f"Erreur de chargement des données : {e}")
+        return None
 
 df = charger_donnees()
+
 
 # --- 3. NAVIGATION ---
 tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
