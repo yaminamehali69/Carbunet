@@ -8,11 +8,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Autorisation explicite
     steps:
       - name: Recupere le code
-        uses: actions/checkout@v4 # Version plus récente
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/checkout@v4
 
       - name: Installe Python
         uses: actions/setup-python@v5
