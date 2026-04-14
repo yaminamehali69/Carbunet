@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
-import scipy.stats as st
 import os
-import git
 from sqlalchemy import create_engine
 from datetime import datetime
 
@@ -48,43 +46,20 @@ for col in colonnes_dates:
         carburant_prix[col] = pd.to_datetime(carburant_prix[col], errors='coerce').dt.tz_localize(None)
 
 # === 7. SAUVEGARDE POUR GITHUB (Indispensable pour l'appli) ===
-# On enregistre simplement dans le dossier courant pour que le robot puisse le voir
-carburant_prix.to_csv("carburant_prix_nettoye.csv", index=False, sep=';', encoding='utf-8-sig')
-print("✅ Fichier CSV généré pour GitHub")
+# On utilise la virgule comme séparateur standard pour éviter les soucis
+carburant_prix.to_csv("carburant_prix_nettoye.csv", index=False, sep=',', encoding='utf-8-sig')
+print("✅ Fichier CSV généré avec succès")
 
-# === 8. SAUVEGARDES LOCALES (UNIQUEMENT SUR TON PC) ===
+# === 8. SAUVEGARDES LOCALES (Tentative discrète) ===
 try:
-    # Sauvegarde sur le Bureau
     chemin_bureau = os.path.join(os.path.expanduser("~"), "Desktop", "carburant_prix_nettoye.csv")
     carburant_prix.to_csv(chemin_bureau, index=False, sep=';', encoding='utf-8-sig')
-    
-    # Sauvegarde Google Drive
-    chemin_drive = r"G:\Mon Drive\Carburant prix\carburant_prix_nettoye.csv"
-    carburant_prix.to_csv(chemin_drive, index=False, sep=';', encoding='utf-8-sig')
-    
-    print("✅ Sauvegardes Bureau et Drive réussies (Local)")
-except Exception as e:
-    print("⚠️ Sauvegardes locales ignorées (Mode Cloud GitHub)")
+except:
+    pass
 
-# === 9. CONNEXION MARIADB (UNIQUEMENT SUR TON PC) ===
+# === 9. CONNEXION MARIADB (Tentative discrète) ===
 try:
     engine = create_engine(f"mysql+pymysql://root:1212.Y8m@localhost:3306/carburant_prix?charset=utf8mb4")
     carburant_prix.to_sql(name='carburant_prix', con=engine, if_exists='replace', index=False)
-    print("✅ Données envoyées dans MariaDB")
-except Exception as e:
-    print("⚠️ Connexion MariaDB impossible (Normal en Cloud)")
-
-# === 10. GESTION DU GIT (UNIQUEMENT SUR TON PC) ===
-# Sur GitHub Actions, c'est le fichier .yml qui gère le "Push", pas cette partie du code.
-try:
-    path_repo = r"C:\Users\mehal\Documents\Projets_Python\Carbunet"
-    if os.path.exists(path_repo):
-        repo = git.Repo(path_repo)
-        repo.git.add("carburant_prix_nettoye.csv")
-        message = f"MàJ automatique - {datetime.now().strftime('%d/%m/%Y %H:%M')}"
-        repo.index.commit(message)
-        origin = repo.remote(name='origin')
-        origin.push()
-        print("🚀 Push GitHub réussi depuis le PC local")
-except Exception as e:
-    print("⚠️ Git local ignoré (Le robot GitHub gère son propre Push)")
+except:
+    pass
