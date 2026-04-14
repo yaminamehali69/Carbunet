@@ -22,7 +22,7 @@ jobs:
         run: pip install pandas sqlalchemy pymysql GitPython cryptography
 
       - name: Execute le nettoyage
-        run: python maj_script.py
+        run: python maj_auto.py
 
       - name: Envoi sur GitHub
         run: |
