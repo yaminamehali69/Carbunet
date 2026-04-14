@@ -2,9 +2,9 @@ name: Mise a jour Automatique CarbuNet
 
 on:
   schedule:
-    # S'exécute à 7h et 16h UTC (soit 9h et 18h en France)
+    # S'exécute à 7h et 16h UTC (9h et 18h en France)
     - cron: '0 7,16 * * *' 
-  workflow_dispatch: # Permet de cliquer sur un bouton pour tester
+  workflow_dispatch: # Bouton pour tester manuellement
 
 jobs:
   build:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Recupere le code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Récupère tout l'historique pour éviter les conflits
 
       - name: Installe Python
         uses: actions/setup-python@v4
@@ -19,16 +21,15 @@ jobs:
           python-version: '3.11'
 
       - name: Installe les outils
-        run: pip install pandas sqlalchemy pymysql GitPython cryptography
+        run: pip install pandas sqlalchemy pymysql GitPython cryptography openpyxl
 
       - name: Execute le nettoyage
         run: python maj_auto.py
 
-      - name: Envoi sur GitHub
+      - name: Envoi sur GitHub (Force Mode)
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git pull origin main
           git add carburant_prix_nettoye.csv
-          git commit -m "MàJ auto Cloud" || exit 0
-          git push origin main
+          git commit -m "MàJ auto Cloud (Robot)" || exit 0
+          git push origin main --force
