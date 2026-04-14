@@ -251,7 +251,7 @@ with tabs[2]:
 with tabs[3]:
     import streamlit.components.v1 as components
 
-    # 1. Vérification du retour après envoi pour afficher le message en Français
+    # 1. Logique pour rester sur cet onglet et afficher le message de succès
     query_params = st.query_params
     if query_params.get("sent") == "true":
         st.balloons()
@@ -282,7 +282,7 @@ with tabs[3]:
         </div>
         """, unsafe_allow_html=True)
 
-        # --- FORMULAIRE AVEC REDIRECTION AUTOMATIQUE ---
+        # --- FORMULAIRE ---
         contact_form_html = """
         <div style="font-family: sans-serif;">
             <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
