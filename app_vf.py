@@ -253,69 +253,52 @@ with tabs[2]:
 with tabs[3]:
     import streamlit.components.v1 as components
 
-    # 1. GESTION DU MESSAGE DE SUCCÈS (Texte pro en vert)
-    if st.query_params.get("envoye") == "oui":
-        st.markdown("""
-            <div style="background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center;">
-                <h3 style="margin:0;">✅ Message envoyé !</h3>
-                <p style="margin:10px 0 0 0;">Merci pour votre retour, Yamina vous répondra dans les plus brefs délais.</p>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("Envoyer un autre message"):
-            st.query_params.clear()
-            st.rerun()
+    # Style des icônes
+    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
+
+    # Titre 
+    st.markdown("""
+        <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #f59e0b; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
+            <span class="material-icons-outlined" style="font-size: 35px; color: #f59e0b;">contact_support</span>
+            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Centre de Support CarbuNet</h2>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style="background-color: #fffbeb; padding: 15px; border-radius: 10px; border-left: 5px solid #f59e0b; margin-bottom: 20px;">
+        <p style="color: #92400e; margin: 0; font-size: 0.9rem;"><b>Besoin d'aide ?</b> Une idée ou un bug ? Yamina vous répondra vite.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- LE FORMULAIRE SANS REDIRECTION QUI CASSE TOUT ---
+    contact_form_html = """
+    <div style="font-family: sans-serif;">
+        <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_subject" value="🚀 Nouveau message CarbuNet !">
             
-    else:
-        # 2. AFFICHAGE NORMAL (Titre + Formulaire)
-        st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
-
-        st.markdown("""
-            <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #f59e0b; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
-                <span class="material-icons-outlined" style="font-size: 35px; color: #f59e0b;">contact_support</span>
-                <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Centre de Support CarbuNet</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <input type="text" name="name" placeholder="👤 Nom & Prénom" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
+                <input type="email" name="email" placeholder="📧 Votre Email" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
             </div>
-        """, unsafe_allow_html=True)
 
-        st.markdown("""
-        <div style="background-color: #fffbeb; padding: 15px; border-radius: 10px; border-left: 5px solid #f59e0b; margin-bottom: 20px;">
-            <p style="color: #92400e; margin: 0; font-size: 0.9rem;"><b>Besoin d'aide ?</b> Une idée ou un bug ? Remplissez le formulaire ci-dessous.</p>
-        </div>
-        """, unsafe_allow_html=True)
+            <select name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white;">
+                <option disabled selected>🎯 Objet de votre demande</option>
+                <option>Signaler un Bug</option>
+                <option>Suggestion d'amélioration</option>
+                <option>Erreur sur une station</option>
+                <option>Autre question</option>
+            </select>
 
-        # URL de ton appli (vérifie bien qu'elle finit par .app/)
-        url_app = "https://yaminamehali69-carbunet-app-vf-tpyp84.streamlit.app/"
+            <textarea name="message" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px;" required></textarea>
 
-        contact_form_html = f"""
-        <div style="font-family: sans-serif;">
-            <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                <input type="hidden" name="_captcha" value="false">
-                <input type="hidden" name="_subject" value="🚀 Nouveau message CarbuNet !">
-                
-                <input type="hidden" name="_next" value="{url_app}?envoye=oui">
-                
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <input type="text" name="name" placeholder="👤 Nom & Prénom" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
-                    <input type="email" name="email" placeholder="📧 Votre Email" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
-                </div>
-
-                <select name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white;">
-                    <option disabled selected>🎯 Objet de votre demande</option>
-                    <option>Signaler un Bug</option>
-                    <option>Suggestion d'amélioration</option>
-                    <option>Erreur sur une station</option>
-                    <option>Autre question</option>
-                </select>
-
-                <textarea name="message" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px;" required></textarea>
-
-                <button type="submit" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
-                    🚀 ENVOYER MA DEMANDE
-                </button>
-            </form>
-        </div>
-        """
-        components.html(contact_form_html, height=430)
+            <button type="submit" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
+                🚀 ENVOYER MA DEMANDE
+            </button>
+        </form>
+    </div>
+    """
+    components.html(contact_form_html, height=430)
 
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
