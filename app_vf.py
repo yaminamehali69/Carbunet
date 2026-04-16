@@ -248,7 +248,6 @@ with tabs[2]:
         st.metric("Coût estimé du trajet", f"{(dist/100) * conso * p_moy:.2f} €")
 
 
-
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
     import streamlit.components.v1 as components
@@ -264,16 +263,15 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("""
-    <div style="background-color: #fffbeb; padding: 15px; border-radius: 10px; border-left: 5px solid #f59e0b; margin-bottom: 20px;">
-        <p style="color: #92400e; margin: 0; font-size: 0.9rem;"><b>Besoin d'aide ?</b> Une idée ou un bug ? Yamina vous répondra vite.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # --- LE FORMULAIRE SANS REDIRECTION QUI CASSE TOUT ---
+    # --- LE FORMULAIRE AVEC CARRÉ VERT SANS RECHARGER ---
     contact_form_html = """
-    <div style="font-family: sans-serif;">
-        <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+    <div id="form-container" style="font-family: sans-serif;">
+        <div id="success-message" style="display: none; background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center;">
+            <h3 style="margin:0;">✅ Message envoyé !</h3>
+            <p style="margin:10px 0 0 0;">Merci pour votre retour, Yamina vous répondra dans les plus brefs délais.</p>
+        </div>
+
+        <form id="support-form" action="https://formsubmit.co/ajax/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_subject" value="🚀 Nouveau message CarbuNet !">
             
@@ -290,15 +288,45 @@ with tabs[3]:
                 <option>Autre question</option>
             </select>
 
-            <textarea name="message" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px;" required></textarea>
+            <textarea name="message" id="msg-field" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px;" required></textarea>
 
-            <button type="submit" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
+            <button type="submit" id="submit-btn" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
                 🚀 ENVOYER MA DEMANDE
             </button>
         </form>
     </div>
+
+    <script>
+        const form = document.getElementById('support-form');
+        const successMsg = document.getElementById('success-message');
+        const btn = document.getElementById('submit-btn');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            btn.innerHTML = "Envoi en cours...";
+            btn.disabled = true;
+
+            const formData = new FormData(form);
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (response.ok) {
+                form.style.display = 'none';
+                successMsg.style.display = 'block';
+            } else {
+                alert("Erreur lors de l'envoi. Réessayez.");
+                btn.innerHTML = "🚀 ENVOYER MA DEMANDE";
+                btn.disabled = false;
+            }
+        };
+    </script>
     """
-    components.html(contact_form_html, height=430)
+    
+    # On affiche le composant
+    components.html(contact_form_html, height=450)
 
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
