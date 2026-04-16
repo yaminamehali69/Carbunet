@@ -252,23 +252,10 @@ with tabs[2]:
 with tabs[3]:
     import streamlit.components.v1 as components
 
-    # 1. LOGIQUE DE CONFIRMATION (Bandeau vert)
-    # Si l'URL contient "sent=true", on affiche le message de succès
-    if st.query_params.get("sent") == "true":
-        st.markdown("""
-            <div style="background-color: #d1fae5; color: #065f46; padding: 15px; border-radius: 10px; border: 1px solid #34d399; margin-bottom: 20px; text-align: center;">
-                <b>✅ Merci pour votre retour !</b><br>
-                Votre message a bien été transmis. Nous allons vous répondre dans les plus brefs délais.
-            </div>
-        """, unsafe_allow_html=True)
-        # Petit bouton pour masquer le message et revenir au formulaire propre
-        if st.button("Rédiger un autre message"):
-            st.query_params.clear()
-            st.rerun()
-
-    # 2. DESIGN DE L'ONGLET
+    # On s'assure que les icônes Google sont chargées
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
+    # Titre Pro
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #f59e0b; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #f59e0b;">contact_support</span>
@@ -278,6 +265,7 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
+    # Message d'aide
     st.markdown("""
     <div style="background-color: #fffbeb; padding: 15px; border-radius: 10px; border-left: 5px solid #f59e0b; margin-bottom: 20px;">
         <p style="color: #92400e; margin: 0; font-size: 0.9rem;">
@@ -286,17 +274,12 @@ with tabs[3]:
     </div>
     """, unsafe_allow_html=True)
 
-    # 3. LE FORMULAIRE (Configuré pour rediriger proprement)
-    # Remplace bien l'URL ci-dessous par celle de ton application si elle change
-    app_url = "https://yaminamehali69-carbunet-app-vf-tpyp84.streamlit.app/"
-    
-    contact_form_html = f"""
+    # --- FORMULAIRE (Méthode Components pour forcer l'affichage) ---
+    contact_form_html = """
     <div style="font-family: sans-serif;">
         <form action="https://formsubmit.co/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
             <input type="hidden" name="_captcha" value="false">
-            <input type="hidden" name="_subject" value="🚀 Nouveau message CarbuNet !">
-            
-            <input type="hidden" name="_next" value="{app_url}?sent=true">
+            <input type="hidden" name="_subject" value="Nouveau message CarbuNet !">
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                 <input type="text" name="name" placeholder="👤 Nom & Prénom" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px;" required>
@@ -320,7 +303,8 @@ with tabs[3]:
     </div>
     """
     
-    components.html(contact_form_html, height=420)
+    # On affiche le composant (on lui donne 450px de hauteur pour être sûr qu'il ne soit pas coupé)
+    components.html(contact_form_html, height=450)
 
     st.markdown("---")
     st.markdown("""
