@@ -229,38 +229,9 @@ with tabs[1]:
                 except: st.error("Lieu non reconnu.")
 
 # --- ONGLET 3 : SIMULATEUR ---
-import requests
-import re
-
-# --- FONCTION POUR RÉCUPÉRER LE VRAI MODÈLE (OPTION A) ---
-def recuperer_infos_plaque(plaque):
-    try:
-        # On interroge Oscaro (très fiable pour le SIV)
-        url = f"https://www.oscaro.com/catalog/vehicles/search?v0={plaque}"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        }
-        response = requests.get(url, headers=headers, timeout=5)
-        
-        if response.status_code == 200:
-            # On cherche le nom du véhicule dans le texte de la page
-            # C'est une méthode de "scraping" rapide et gratuite
-            contenu = response.text
-            
-            # On cherche les mots clés pour le carburant
-            is_diesel = any(x in contenu.upper() for x in ["DIESEL", "HDI", "TDI", "DCI", "CDTI", "JTD", "TDCI"])
-            is_essence = any(x in contenu.upper() for x in ["ESSENCE", "VTI", "THP", "TSI", "TFSI", "PURETECH"])
-            
-            if is_diesel:
-                return "Diesel", 4.8  # Conso moyenne diesel
-            elif is_essence:
-                return "Essence", 6.5  # Conso moyenne essence
-        return "Inconnu", 6.0
-    except:
-        return "Erreur", 6.0
-
-# --- INTÉGRATION À TON ONGLET 3 ---
 with tabs[2]:
+    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
+    
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #1a73e8;">calculate</span>
@@ -268,30 +239,53 @@ with tabs[2]:
         </div>
     """, unsafe_allow_html=True)
 
+    # --- INITIALISATION DES VARIABLES (Pour éviter l'erreur NameError) ---
+    conso_auto = 6.0  # Valeur par défaut
+    type_carbu_detecte = "Non défini"
+
+    # --- ENTREE PLAQUE ---
     plaque_input = st.text_input("Entrez votre plaque", placeholder="AB-123-CD").upper().replace("-", "").replace(" ", "")
 
     if plaque_input:
-        with st.spinner('Connexion aux bases de données SIV...'):
-            type_carbu_reel, conso_auto = recuperer_infos_plaque(plaque_input)
-            
-            if type_carbu_reel != "Inconnu":
-                st.success(f"✅ Véhicule identifié : **{type_carbu_reel}**")
+        with st.spinner('Recherche du moteur...'):
+            try:
+                # Utilisation d'une URL de recherche qui renvoie directement au modèle
+                url = f"https://www.oscaro.com/catalog/vehicles/search?v0={plaque_input}"
+                headers = {"User-Agent": "Mozilla/5.0"}
+                res = requests.get(url, headers=headers, timeout=5)
                 
-                # VERIFICATION DE COHÉRENCE AVEC TON ONGLET STATION
-                if 'carbu' in locals():
-                    if type_carbu_reel == "Diesel" and "prix_gazole" not in f"prix_{carbu.lower()}":
-                        st.warning(f"⚠️ Votre plaque correspond à un **Diesel**, mais vous avez choisi **{carbu}** dans l'onglet Station.")
-            else:
-                st.error("Impossible de détecter le carburant. Utilisation d'une valeur par défaut.")
+                # On scanne le texte brut pour trouver le carburant réel
+                texte = res.text.upper()
+                if any(x in texte for x in ["DIESEL", "HDI", "TDI", "DCI", "CDTI", "JTD"]):
+                    type_carbu_detecte = "Diesel"
+                    conso_auto = 5.0
+                elif any(x in texte for x in ["ESSENCE", "VTI", "PURETECH", "TSI", "TFSI", "THP"]):
+                    type_carbu_detecte = "Essence"
+                    conso_auto = 6.8
+                
+                if type_carbu_detecte != "Non défini":
+                    st.success(f"✅ Véhicule identifié : **{type_carbu_detecte}**")
+                else:
+                    st.warning("⚠️ Modèle trouvé mais carburant non identifié. Conso par défaut : 6.0L")
+            except:
+                st.error("Connexion aux données SIV impossible. Entrez la conso manuellement.")
 
+    # --- SAISIE DISTANCE ---
     dist = st.number_input("Distance du trajet (km)", value=100, min_value=1)
 
+    # --- CALCUL FINAL ---
     if df is not None:
-        p_moy = df[f"prix_{carbu.lower()}"].mean() if 'carbu' in locals() else 1.80
+        # On vérifie si la variable 'carbu' existe (venant de ton onglet Stations)
+        nom_colonne = f"prix_{carbu.lower()}" if 'carbu' in locals() else df.columns[1]
+        p_moy = df[nom_colonne].mean()
+        
+        # Le calcul ne plantera plus car conso_auto est définie au début
         cout_total = (dist / 100) * conso_auto * p_moy
         
         st.metric("Coût estimé du trajet", f"{cout_total:.2f} €")
-        st.caption(f"Basé sur {conso_auto} L/100 (moyenne {type_carbu_reel}) et {p_moy:.3f} €/L")
+        
+        # Petit rappel pour l'utilisateur
+        st.caption(f"Basé sur une conso de {conso_auto}L/100 et un prix moyen de {p_moy:.3f}€/L")
 
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
