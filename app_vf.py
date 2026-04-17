@@ -229,58 +229,69 @@ with tabs[1]:
                 except: st.error("Lieu non reconnu.")
 
 # --- ONGLET 3 : SIMULATEUR ---
-# --- ONGLET 3 : SIMULATEUR ---
-with tabs[2]:
-    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
+import requests
+import re
 
+# --- FONCTION POUR RÉCUPÉRER LE VRAI MODÈLE (OPTION A) ---
+def recuperer_infos_plaque(plaque):
+    try:
+        # On interroge Oscaro (très fiable pour le SIV)
+        url = f"https://www.oscaro.com/catalog/vehicles/search?v0={plaque}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers, timeout=5)
+        
+        if response.status_code == 200:
+            # On cherche le nom du véhicule dans le texte de la page
+            # C'est une méthode de "scraping" rapide et gratuite
+            contenu = response.text
+            
+            # On cherche les mots clés pour le carburant
+            is_diesel = any(x in contenu.upper() for x in ["DIESEL", "HDI", "TDI", "DCI", "CDTI", "JTD", "TDCI"])
+            is_essence = any(x in contenu.upper() for x in ["ESSENCE", "VTI", "THP", "TSI", "TFSI", "PURETECH"])
+            
+            if is_diesel:
+                return "Diesel", 4.8  # Conso moyenne diesel
+            elif is_essence:
+                return "Essence", 6.5  # Conso moyenne essence
+        return "Inconnu", 6.0
+    except:
+        return "Erreur", 6.0
+
+# --- INTÉGRATION À TON ONGLET 3 ---
+with tabs[2]:
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #1a73e8;">calculate</span>
-            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; border:none;">
-                Simulateur de budget
-            </h2>
+            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Simulateur de budget</h2>
         </div>
     """, unsafe_allow_html=True)
 
-    # 1. RÉCUPÉRATION DE LA PLAQUE (Si pas déjà fait ailleurs)
-    plaque_input = st.text_input("Entrez votre plaque d'immatriculation", placeholder="AA-123-BB").upper()
-
-    # 2. LOGIQUE DE RÉCUPÉRATION (Simulation de l'API Option A)
-    # On définit une consommation par défaut
-    conso_auto = 6.5 
-    vehicule_nom = "Inconnu"
+    plaque_input = st.text_input("Entrez votre plaque", placeholder="AB-123-CD").upper().replace("-", "").replace(" ", "")
 
     if plaque_input:
-        # Ici on simule ce que l'API renverrait après avoir scanné la plaque
-        # Dans la vraie version, tu ferais un appel API ici
-        with st.spinner('Analyse du véhicule en cours...'):
-            # Exemple de dictionnaire de résultats (à lier à ton API)
-            # Pour le test, on imagine que c'est une petite voiture si plaque commence par 'A'
-            if plaque_input.startswith("A"):
-                conso_auto = 4.8
-                vehicule_nom = "Citadine (Diesel)"
-            else:
-                conso_auto = 7.2
-                vehicule_nom = "Berline/SUV (Essence)"
+        with st.spinner('Connexion aux bases de données SIV...'):
+            type_carbu_reel, conso_auto = recuperer_infos_plaque(plaque_input)
             
-            st.info(f"🚗 Véhicule détecté : **{vehicule_nom}** | Conso estimée : **{conso_auto} L/100**")
+            if type_carbu_reel != "Inconnu":
+                st.success(f"✅ Véhicule identifié : **{type_carbu_reel}**")
+                
+                # VERIFICATION DE COHÉRENCE AVEC TON ONGLET STATION
+                if 'carbu' in locals():
+                    if type_carbu_reel == "Diesel" and "prix_gazole" not in f"prix_{carbu.lower()}":
+                        st.warning(f"⚠️ Votre plaque correspond à un **Diesel**, mais vous avez choisi **{carbu}** dans l'onglet Station.")
+            else:
+                st.error("Impossible de détecter le carburant. Utilisation d'une valeur par défaut.")
 
-    # 3. SAISIE DE LA DISTANCE
     dist = st.number_input("Distance du trajet (km)", value=100, min_value=1)
 
-    # 4. CALCUL AVEC TES DONNÉES DE STATION (df)
     if df is not None:
-        # On utilise le carburant choisi dans ton onglet 'Station' (carbu)
         p_moy = df[f"prix_{carbu.lower()}"].mean() if 'carbu' in locals() else 1.80
-        
-        # Calcul final
         cout_total = (dist / 100) * conso_auto * p_moy
         
-        # Affichage du résultat
         st.metric("Coût estimé du trajet", f"{cout_total:.2f} €")
-        
-        st.caption(f"Calculé sur la base de {p_moy:.3f} €/L ({carbu}) et une conso de {conso_auto} L/100.")
-
+        st.caption(f"Basé sur {conso_auto} L/100 (moyenne {type_carbu_reel}) et {p_moy:.3f} €/L")
 
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
