@@ -229,8 +229,8 @@ with tabs[1]:
                 except: st.error("Lieu non reconnu.")
 
 # --- ONGLET 3 : SIMULATEUR ---
+# --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
-    # On s'assure que les icônes Google sont chargées
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
     st.markdown("""
@@ -241,11 +241,45 @@ with tabs[2]:
             </h2>
         </div>
     """, unsafe_allow_html=True)
-    dist = st.number_input("Distance du trajet (km)", value=100)
-    conso = st.number_input("Consommation moyenne (L/100)", value=6.5)
+
+    # 1. RÉCUPÉRATION DE LA PLAQUE (Si pas déjà fait ailleurs)
+    plaque_input = st.text_input("Entrez votre plaque d'immatriculation", placeholder="AA-123-BB").upper()
+
+    # 2. LOGIQUE DE RÉCUPÉRATION (Simulation de l'API Option A)
+    # On définit une consommation par défaut
+    conso_auto = 6.5 
+    vehicule_nom = "Inconnu"
+
+    if plaque_input:
+        # Ici on simule ce que l'API renverrait après avoir scanné la plaque
+        # Dans la vraie version, tu ferais un appel API ici
+        with st.spinner('Analyse du véhicule en cours...'):
+            # Exemple de dictionnaire de résultats (à lier à ton API)
+            # Pour le test, on imagine que c'est une petite voiture si plaque commence par 'A'
+            if plaque_input.startswith("A"):
+                conso_auto = 4.8
+                vehicule_nom = "Citadine (Diesel)"
+            else:
+                conso_auto = 7.2
+                vehicule_nom = "Berline/SUV (Essence)"
+            
+            st.info(f"🚗 Véhicule détecté : **{vehicule_nom}** | Conso estimée : **{conso_auto} L/100**")
+
+    # 3. SAISIE DE LA DISTANCE
+    dist = st.number_input("Distance du trajet (km)", value=100, min_value=1)
+
+    # 4. CALCUL AVEC TES DONNÉES DE STATION (df)
     if df is not None:
+        # On utilise le carburant choisi dans ton onglet 'Station' (carbu)
         p_moy = df[f"prix_{carbu.lower()}"].mean() if 'carbu' in locals() else 1.80
-        st.metric("Coût estimé du trajet", f"{(dist/100) * conso * p_moy:.2f} €")
+        
+        # Calcul final
+        cout_total = (dist / 100) * conso_auto * p_moy
+        
+        # Affichage du résultat
+        st.metric("Coût estimé du trajet", f"{cout_total:.2f} €")
+        
+        st.caption(f"Calculé sur la base de {p_moy:.3f} €/L ({carbu}) et une conso de {conso_auto} L/100.")
 
 
 # --- ONGLET 4 : SUPPORT ---
