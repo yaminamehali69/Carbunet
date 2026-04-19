@@ -185,11 +185,7 @@ with tabs[1]:
                                 ).add_to(m)
                             st_folium(m, width="100%", height=400)
                             
-                            st.markdown("### ⛽ Meilleures options trouvées")
-                            for _, row in res.head(8).iterrows():
-                                w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
-                                rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
-                                stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
+
                                 
                                 # --- AFFICHAGE INTELLIGENT AVEC LOGOS ---
                                 srv_str = str(row.get('service_propose', ''))
@@ -227,28 +223,6 @@ with tabs[1]:
                                 st.markdown(card_html, unsafe_allow_html=True)
                         else: st.warning("Aucune station ne correspond.")
                 except: st.error("Lieu non reconnu.")
-import requests
-import streamlit as st
-
-# --- FONCTION API (Utilise tes accès RapidAPI) ---
-def fetch_car_data_pro(plaque):
-    url = "https://api-de-plaque-d-immatriculation-france.p.rapidapi.com/getData"
-    # Ces infos viennent directement de ton image RapidAPI
-    headers = {
-        "x-rapidapi-key": "deed37d7c3msh976ac4ec2c8fa13p1960e4jsndb4151c68278",
-        "x-rapidapi-host": "api-de-plaque-d-immatriculation-france.p.rapidapi.com",
-        "Content-Type": "application/json"
-    }
-    # Selon la doc sur ton image, la plaque passe en header
-    headers["plaque"] = plaque
-
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code == 200:
-            return response.json(), True
-    except:
-        pass
-    return None, False
 
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
