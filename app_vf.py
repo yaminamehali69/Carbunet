@@ -212,9 +212,9 @@ with tabs[1]:
                               ℹ️ <b>À savoir :</b> Les stocks sont indicatifs et basés sur les relevés officiels. 
                                Un décalage reste possible entre l'affichage et la disponibilité réelle en pompe, 
                                notamment en période de forte affluence.
-        </p>
-    </div>
-""", unsafe_allow_html=True)
+                             </p>
+                            </div>
+                            """, unsafe_allow_html=True)
                             
                             st.markdown("### ⛽ Meilleures options trouvées")
                             for _, row in res.head(8).iterrows():
