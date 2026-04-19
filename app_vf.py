@@ -280,10 +280,10 @@ with tabs[2]:
     # PRIX (Vérifie bien que ton Onglet 2 enregistre 'prix_perso')
     p_final = st.session_state.get('prix_perso', 1.859)
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
-    st.info(f"⛽ Prix actuel : **{p_final:.3f} €/L** ({nom_carbu})")
+    st.info(f" Prix actuel : **{p_final:.3f} €/L** ({nom_carbu})")
 
     # ITINÉRAIRE
-    st.markdown("##### 📍 1. Itinéraire")
+    st.markdown("#####  1. Itinéraire")
     c1, c2 = st.columns(2)
     with c1:
         dep_v = st.text_input("Départ", value="41 rue de la confiance", key="cle_dep")
@@ -291,7 +291,7 @@ with tabs[2]:
         arr_v = st.text_input("Arrivée", value="7 rue paul gauguin meyzieu", key="cle_arr")
 
     # BOUTON DE CALCUL
-    if st.button("🔍 CALCULER L'ITINÉRAIRE", use_container_width=True):
+    if st.button(" CALCULER L'ITINÉRAIRE", use_container_width=True):
         if dep_v and arr_v:
             try:
                 with st.spinner("Recherche GPS en cours..."):
@@ -312,7 +312,7 @@ with tabs[2]:
 
     # CONFIGURATION TECHNIQUE
     st.markdown("---")
-    st.markdown("##### 🛣️ 2. Paramètres du véhicule")
+    st.markdown("#####  2. Paramètres du véhicule")
     
     p_route = st.selectbox("Type de trajet", [
         "Urbain / Départementale", 
