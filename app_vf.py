@@ -207,7 +207,17 @@ with tabs[1]:
                                 ).add_to(m)
                             st_folium(m, width="100%", height=400)
                             
-                          
+                            st.markdown("### ⛽ Meilleures options trouvées")
+                            for _, row in res.head(8).iterrows():
+                                w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
+                                le_prix = row.get(col_p)
+                                maj_date = str(row.get(col_m, 'N/C'))
+
+                                if le_prix is None or le_prix == 0 or str(le_prix) == 'nan':
+                            stock_t, stock_c = "⚠️ DISPO INCERTAINE", "#f59e0b"
+                            else:
+                           stock_t, stock_c = "✅ DISPO PROBABLE", "#10b981")
+                                
                                 # --- AFFICHAGE INTELLIGENT AVEC LOGOS ---
                                 srv_str = str(row.get('service_propose', ''))
                                 badges_list = []
@@ -236,7 +246,7 @@ with tabs[1]:
 <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
 <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{all_badges}</div>
 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
-<small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
+<small style="color:#94a3b8; font-size:0.7rem;"> Dernière confirmation : {maj_date} </small>
 <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">ITINÉRAIRE WAZE 🚗</a>
 </div>
 </div>
