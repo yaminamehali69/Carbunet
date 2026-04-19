@@ -12,7 +12,8 @@ import urllib.parse
 path_logo = "logo_carbunet.png"
 path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carburant_prix_nettoye.csv"
 VERSION = "1.3.9"
-AUTEUR = "Yamina Mehali"
+AUTEUR = "Carbunet"
+AUTEUR_2 = "Yamina Mehali"
 
 
 st.set_page_config(
@@ -113,7 +114,7 @@ with tabs[0]:
 <b>Mention d'information :</b> 
 Les données de prix et de disponibilité sont issues de la plateforme nationale <b>data.gouv.fr</b>.
 
-Bien que mises à jour régulièrement, {AUTEUR} ne saurait être tenue responsable des écarts de prix constatés lors du passage en caisse.
+Bien que mises à jour régulièrement, {AUTEUR_2} ne saurait être tenue responsable des écarts de prix constatés lors du passage en caisse.
 </div>
 <div style="font-size:0.8rem; margin-top:15px; opacity:0.9;">
 Version {VERSION} | Développé par <b>{AUTEUR}</b>
