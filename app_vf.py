@@ -262,6 +262,7 @@ from geopy.distance import geodesic
 import urllib.parse
 
 # --- ONGLET 3 : SIMULATEUR PRO ---
+# --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-bottom: 25px;">
@@ -292,41 +293,37 @@ with tabs[2]:
                 if loc1 and loc2:
                     d = geodesic((loc1.latitude, loc1.longitude), (loc2.latitude, loc2.longitude)).km
                     st.session_state['dist_km'] = round(d * 1.25, 1) # +25% pour la route
+                    st.rerun() # <--- AJOUTE ÇA : C'est ça qui fait monter les km direct !
                 else: st.error("Villes non trouvées.")
             except: st.error("Service GPS indisponible.")
 
-    # 3. LE SECRET DE LA FIABILITÉ : LE TYPE DE ROUTE
+    # 3. PROFIL ET VÉHICULE
     st.markdown("---")
     st.markdown("##### 🛣️ 2. Profil du voyage")
     
-    # On définit des profils qui parlent aux gens
     profil_route = st.selectbox("Type de trajet majoritaire", [
         "Départementale / Ville (Vitesse lente)",
         "Mixte (Route + un peu d'Autoroute)",
         "Autoroute / Montagne (Vitesse 130 km/h)"
     ])
 
-    # 4. CONFIGURATION DU VÉHICULE
     type_v = st.selectbox("Votre véhicule", ["Citadine", "Berline", "SUV", "Utilitaire"])
 
-    # LOGIQUE DE CONSOMMATION RÉELLE (Pas théorique !)
-    # Base citadine à 5.5, Berline 6.5, etc.
     base_consos = {"Citadine": 5.5, "Berline": 6.8, "SUV": 8.0, "Utilitaire": 10.0}
     conso_finale = base_consos[type_v]
 
-    # AJUSTEMENT SELON LE PROFIL (C'est ça qui fait passer de 19€ à 30€)
     if profil_route == "Mixte (Route + un peu d'Autoroute)":
         conso_finale += 1.2
     elif profil_route == "Autoroute / Montagne (Vitesse 130 km/h)":
-        conso_finale += 2.8 # Une citadine à 130 grimpe vite à 8L/100
+        conso_finale += 2.8
 
-    # 5. SYNTHÈSE ET CALCUL
+    # 4. AFFICHAGE DES KM ET CALCUL
+    # Le chiffre montera enfin grâce au st.rerun() du dessus
     dist_retenue = st.number_input("Kilomètres retenus", value=float(st.session_state['dist_km']))
     
     if dist_retenue > 0:
         budget = (dist_retenue / 100) * conso_finale * p_final
         
-        # Phrase explicative pro
         st.markdown(f"""
             <p style="font-size: 0.85rem; color: #64748b; font-style: italic; background: #f1f5f9; padding: 10px; border-radius: 10px;">
                 💡 <b>Analyse :</b> Pour ce trajet en mode <b>{profil_route}</b>, votre <b>{type_v}</b> 
@@ -334,7 +331,6 @@ with tabs[2]:
             </p>
         """, unsafe_allow_html=True)
 
-        # RÉSULTAT "CLAQUE"
         st.markdown(f"""
             <div style="background-color: #1e293b; padding: 35px; border-radius: 20px; text-align: center; color: white; margin-top: 20px;">
                 <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">BUDGET CARBURANT ESTIMÉ</p>
@@ -349,27 +345,12 @@ with tabs[2]:
         q_arr = urllib.parse.quote(arr_p)
         q_dep = urllib.parse.quote(dep_p)
         waze_url = f"https://www.waze.com/ul?q={q_arr}&from={q_dep}&navigate=yes"
-        
-        # Lien alternatif pour le logo (plus stable)
         logo_waze = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Waze_logo.svg/512px-Waze_logo.svg.png"
 
         st.markdown(f"""
             <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; margin-bottom: 20px;">
                 <a href="{waze_url}" target="_blank" style="text-decoration: none; width: 100%;">
-                    <div style="
-                        background: linear-gradient(90.13deg, #33CCFF 0.11%, #2DB5E3 99.88%);
-                        color: white; 
-                        padding: 18px 25px; 
-                        border-radius: 15px; 
-                        text-align: center; 
-                        font-weight: 800; 
-                        font-size: 1.1rem;
-                        box-shadow: 0 10px 20px -5px rgba(51, 204, 255, 0.4);
-                        display: flex; 
-                        align-items: center; 
-                        justify-content: center; 
-                        gap: 15px;
-                    ">
+                    <div style="background: linear-gradient(90.13deg, #33CCFF 0.11%, #2DB5E3 99.88%); color: white; padding: 18px 25px; border-radius: 15px; text-align: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 10px 20px -5px rgba(51, 204, 255, 0.4); display: flex; align-items: center; justify-content: center; gap: 15px;">
                         <img src="{logo_waze}" width="35" height="35" style="border-radius: 5px;">
                         LANCER L'ITINÉRAIRE SUR WAZE
                     </div>
