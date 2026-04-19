@@ -121,11 +121,12 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 </div>
 </div>
 """
-        st.markdown(concept_html, unsafe_allow_html=True)
+        st.markdown(concept_html, unsafe_allow_html=True) 
+
         with tabs[3]: # Si c'est ton onglet Support & Bugs
-    st.markdown("### ⚖️ Propriété Intellectuelle")
-    st.info("""
-        **CarbuNet Pro** est une application protégée. 
+             st.markdown("### ⚖️ Propriété Intellectuelle")
+             st.info("""
+             **CarbuNet Pro** est une application protégée. 
         Le code source, l'algorithme de calcul de budget et le design de l'interface 
         sont la propriété exclusive de l'auteur. 
         
