@@ -346,20 +346,38 @@ with tabs[2]:
         """, unsafe_allow_html=True)
 
         # BOUTON WAZE
-        q_arr = urllib.parse.quote(arr_p)
+      q_arr = urllib.parse.quote(arr_p)
         q_dep = urllib.parse.quote(dep_p)
         waze_url = f"https://www.waze.com/ul?q={q_arr}&from={q_dep}&navigate=yes"
         
+        # Lien alternatif pour le logo (plus stable)
+        logo_waze = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Waze_logo.svg/512px-Waze_logo.svg.png"
+
         st.markdown(f"""
-            <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px;">
+            <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; margin-bottom: 20px;">
                 <a href="{waze_url}" target="_blank" style="text-decoration: none; width: 100%;">
-                    <div style="background: linear-gradient(90.13deg, #33CCFF 0.11%, #2DB5E3 99.88%); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 15px;">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Waze_logo.svg" width="30">
+                    <div style="
+                        background: linear-gradient(90.13deg, #33CCFF 0.11%, #2DB5E3 99.88%);
+                        color: white; 
+                        padding: 18px 25px; 
+                        border-radius: 15px; 
+                        text-align: center; 
+                        font-weight: 800; 
+                        font-size: 1.1rem;
+                        box-shadow: 0 10px 20px -5px rgba(51, 204, 255, 0.4);
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        gap: 15px;
+                    ">
+                        <img src="{logo_waze}" width="35" height="35" style="border-radius: 5px;">
                         LANCER L'ITINÉRAIRE SUR WAZE
                     </div>
                 </a>
             </div>
         """, unsafe_allow_html=True)
+
+        
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
     import streamlit.components.v1 as components
