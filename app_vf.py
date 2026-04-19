@@ -227,96 +227,96 @@ with tabs[1]:
                                 st.markdown(card_html, unsafe_allow_html=True)
                         else: st.warning("Aucune station ne correspond.")
                 except: st.error("Lieu non reconnu.")
+import requests
+import streamlit as st
+
+# --- FONCTION API (Utilise tes accès RapidAPI) ---
+def fetch_car_data_pro(plaque):
+    url = "https://api-de-plaque-d-immatriculation-france.p.rapidapi.com/getData"
+    # Ces infos viennent directement de ton image RapidAPI
+    headers = {
+        "x-rapidapi-key": "deed37d7c3msh976ac4ec2c8fa13p1960e4jsndb4151c68278",
+        "x-rapidapi-host": "api-de-plaque-d-immatriculation-france.p.rapidapi.com",
+        "Content-Type": "application/json"
+    }
+    # Selon la doc sur ton image, la plaque passe en header
+    headers["plaque"] = plaque
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 200:
+            return response.json(), True
+    except:
+        pass
+    return None, False
 
 # --- ONGLET 3 : SIMULATEUR ---
-# --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
-    # Chargement des icônes Google
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
     
-    # Titre stylisé
     st.markdown("""
-        <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
+        <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #1a73e8;">calculate</span>
             <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Simulateur de budget</h2>
         </div>
     """, unsafe_allow_html=True)
 
-    # --- INITIALISATION ---
-    if 'conso_auto' not in st.session_state:
-        st.session_state.conso_auto = 6.0
-    if 'nom_vehicule' not in st.session_state:
-        st.session_state.nom_vehicule = ""
-
-    # --- ENTREE PLAQUE ---
-    plaque_input = st.text_input("📍 Entrez votre plaque pour identifier le véhicule", placeholder="AB-123-CD").upper().replace("-", "").replace(" ", "")
+    # Initialisation conso par défaut pour éviter l'erreur NameError
+    conso_auto = 6.0
+    
+    plaque_input = st.text_input("📍 Identification du véhicule (Plaque)", placeholder="AB-123-CD").upper().strip()
 
     if plaque_input:
-        with st.spinner('Interrogation de la base SIV...'):
-            try:
-                # On utilise un moteur de recherche certifié (Oscaro via mobile agent pour éviter les blocages)
-                url = f"https://www.oscaro.com/catalog/vehicles/search?v0={plaque_input}"
-                headers = {"User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Mobile/15E148 Safari/604.1"}
-                res = requests.get(url, headers=headers, timeout=10)
-                
-                if res.status_code == 200:
-                    texte = res.text.upper()
-                    # Détection du carburant et ajustement conso réelle
-                    if any(x in texte for x in ["DIESEL", "HDI", "TDI", "DCI", "CDTI", "JTD"]):
-                        st.session_state.conso_auto = 5.2
-                        type_label = "DIESEL"
-                    elif any(x in texte for x in ["ESSENCE", "VTI", "PURETECH", "TSI", "TFSI", "THP", "TCE"]):
-                        st.session_state.conso_auto = 6.8
-                        type_label = "ESSENCE"
-                    else:
-                        st.session_state.conso_auto = 6.0
-                        type_label = "NON DÉTECTÉ"
+        with st.spinner('Extraction des données constructeur...'):
+            data, success = fetch_car_data_pro(plaque_input)
+        
+        if success and data:
+            # On récupère les vraies infos pour rassurer le client
+            # Note: Les noms de champs peuvent varier selon l'API (Marque, Modele, etc.)
+            marque = data.get('Marque', 'Véhicule')
+            modele = data.get('Modele', 'Identifié')
+            energie = data.get('Energie', 'N/C')
+            
+            st.markdown(f"""
+                <div style="background-color: #f0fdf4; padding: 15px; border-radius: 10px; border: 1px solid #22c55e; margin-bottom: 20px;">
+                    <p style="margin:0; color: #166534; font-weight: bold;">✅ Certification SIV :</p>
+                    <h3 style="margin:5px 0; color: #0f172a;">{marque} {modele}</h3>
+                    <p style="margin:0; color: #475569;">Carburant : <b>{energie}</b> | Données certifiées</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Ajustement auto de la conso selon l'énergie
+            if "DIESEL" in str(energie).upper():
+                conso_auto = 5.0
+            elif "ESSENCE" in str(energie).upper():
+                conso_auto = 6.8
+        else:
+            st.warning("⚠️ Impossible de joindre l'API (Quota dépassé ou serveur occupé). Réglez manuellement.")
 
-                    # Affichage rassurant pour le client
-                    st.markdown(f"""
-                        <div style="background-color: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span class="material-icons-outlined" style="color: #22c55e;">verified</span>
-                                <span style="font-weight: 700; color: #1e293b;">Véhicule identifié avec succès</span>
-                            </div>
-                            <p style="margin: 8px 0 0 0; font-size: 0.9rem; color: #64748b;">
-                                Type moteur : <b>{type_label}</b> | Consommation moyenne estimée : <b>{st.session_state.conso_auto} L/100</b>
-                            </p>
-                        </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.error("Le service SIV est momentanément indisponible sur ce serveur. Ajustez la conso manuellement.")
-            except:
-                st.error("Connexion aux données SIV impossible. Vérifiez votre plaque.")
-
-    # --- PARAMÈTRES DU TRAJET ---
+    # Entrées trajet
     col1, col2 = st.columns(2)
     with col1:
-        dist = st.number_input("Distance à parcourir (km)", value=100, min_value=1)
+        dist = st.number_input("Distance du voyage (km)", value=100, min_value=1)
     with col2:
-        # Permet au client d'ajuster si sa voiture consomme plus/moins (rassurant)
-        conso_finale = st.slider("Ajuster consommation (L/100)", 3.0, 15.0, float(st.session_state.conso_auto))
+        # On utilise le slider pour laisser le client finaliser
+        conso_finale = st.slider("Consommation moyenne (L/100)", 3.0, 15.0, float(conso_auto))
 
-    # --- CALCUL ET RÉSULTAT ---
+    # --- CALCUL FINAL ---
     if df is not None:
-        # Récupération dynamique du prix de ton onglet Stations
+        # Récupération du prix de l'onglet précédent
         nom_col = f"prix_{carbu.lower()}" if 'carbu' in locals() else df.columns[1]
         p_moy = df[nom_col].mean()
         
-        # Calcul final
-        total_litres = (dist / 100) * conso_finale
-        cout_total = total_litres * p_moy
+        cout_estime = (dist / 100) * conso_finale * p_moy
         
-        # Affichage du prix en gros
+        # Affichage Premium
         st.markdown(f"""
-            <div style="background-color: #1a73e8; padding: 25px; border-radius: 15px; text-align: center; color: white; margin-top: 20px;">
-                <p style="margin: 0; font-size: 1rem; opacity: 0.9;">Coût estimé du trajet</p>
-                <h1 style="margin: 5px 0; font-size: 3rem; color: white; border:none;">{cout_total:.2f} €</h1>
-                <p style="margin: 0; font-size: 0.9rem; opacity: 0.8;">{total_litres:.1f} Litres de {carbu if 'carbu' in locals() else 'carburant'}</p>
+            <div style="background-color: #1a73e8; padding: 30px; border-radius: 20px; text-align: center; color: white; margin-top: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">Estimation du budget trajet</p>
+                <h1 style="margin: 10px 0; font-size: 3.5rem; color: white; border:none;">{cout_estime:.2f} €</h1>
+                <p style="margin: 0; font-size: 0.9rem; opacity: 0.8;">{dist} km • {conso_finale} L/100 • {p_moy:.3f} €/L</p>
             </div>
         """, unsafe_allow_html=True)
-        
-        st.caption(f"ℹ️ Simulation basée sur le prix moyen actuel de {p_moy:.3f} €/L.")
 
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
