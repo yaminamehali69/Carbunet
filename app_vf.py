@@ -122,7 +122,7 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 </div>
 """
         st.markdown(concept_html, unsafe_allow_html=True) 
-
+    st.caption("© 2026 CarbuNet. Propriété exclusive de l'auteur. Toute reproduction interdite.")
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
     # 1. On charge d'abord la bibliothèque d'icônes (si ce n'est pas déjà fait en haut du code)
