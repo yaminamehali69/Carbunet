@@ -256,107 +256,81 @@ with tabs[1]:
 
 
 # --- ONGLET 3 : SIMULATEUR ---
-import streamlit as st
-from geopy.geocoders import Nominatim
-from geopy.distance import geodesic
-import urllib.parse
-
-# --- ONGLET 3 : SIMULATEUR PRO ---
-# --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
-    st.markdown("""
-        <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-bottom: 25px;">
-            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Simulateur de Budget Réel</h2>
-        </div>
-    """, unsafe_allow_html=True)
+    # INITIALISATION PROPRE
+    if 'km_memoire' not in st.session_state:
+        st.session_state['km_memoire'] = 0.0
 
-    # 1. RÉCUPÉRATION DU PRIX (Liaison Onglet Stations)
+    st.markdown("## 🚗 Simulateur de Budget Réel")
+
+    # PRIX (Vérifie bien que ton Onglet 2 enregistre 'prix_perso')
     p_final = st.session_state.get('prix_perso', 1.859)
-    nom_carbu = st.session_state.get('carbu_nom', 'Gazole')
+    nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
+    st.info(f"⛽ Prix actuel : **{p_final:.3f} €/L** ({nom_carbu})")
 
-    # 2. ITINÉRAIRE
-    st.markdown("##### 📍 1. Votre Trajet")
-    col_dep, col_arr = st.columns(2)
-    with col_dep:
-        dep_p = st.text_input("Départ", placeholder="Ex: Clermont-Ferrand", key="d1")
-    with col_arr:
-        arr_p = st.text_input("Arrivée", placeholder="Ex: Meyzieu", key="a1")
+    # ITINÉRAIRE
+    st.markdown("##### 📍 1. Itinéraire")
+    c1, c2 = st.columns(2)
+    with c1:
+        dep_v = st.text_input("Départ", value="41 rue de la confiance", key="cle_dep")
+    with c2:
+        arr_v = st.text_input("Arrivée", value="7 rue paul gauguin meyzieu", key="cle_arr")
 
-    if 'dist_km' not in st.session_state:
-        st.session_state['dist_km'] = 0.0
-
-    if st.button("🔍 CALCULER LA DISTANCE RÉELLE", use_container_width=True):
-        if dep_p and arr_p:
+    # BOUTON DE CALCUL
+    if st.button("🔍 CALCULER L'ITINÉRAIRE", use_container_width=True):
+        if dep_v and arr_v:
             try:
-                geolocator = Nominatim(user_agent="carbu_app_v6")
-                loc1, loc2 = geolocator.geocode(dep_p), geolocator.geocode(arr_p)
-                if loc1 and loc2:
-                    d = geodesic((loc1.latitude, loc1.longitude), (loc2.latitude, loc2.longitude)).km
-                    st.session_state['dist_km'] = round(d * 1.25, 1) # +25% pour la route
-                    st.rerun() # <--- AJOUTE ÇA : C'est ça qui fait monter les km direct !
-                else: st.error("Villes non trouvées.")
-            except: st.error("Service GPS indisponible.")
+                with st.spinner("Recherche GPS en cours..."):
+                    # On utilise un user_agent unique pour éviter les blocages
+                    geolocator = Nominatim(user_agent="carbunet_final_check")
+                    l1 = geolocator.geocode(dep_v)
+                    l2 = geolocator.geocode(arr_v)
+                    
+                    if l1 and l2:
+                        dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
+                        # On stocke et on force le rafraîchissement
+                        st.session_state['km_memoire'] = round(dist_gps * 1.25, 1)
+                        st.rerun() 
+                    else:
+                        st.error("❌ Adresse introuvable. Soyez précis (Ville + Code Postal).")
+            except Exception as e:
+                st.error(f"❌ Erreur technique : {e}")
 
-    # 3. PROFIL ET VÉHICULE
+    # CONFIGURATION TECHNIQUE
     st.markdown("---")
-    st.markdown("##### 🛣️ 2. Profil du voyage")
+    st.markdown("##### 🛣️ 2. Paramètres du véhicule")
     
-    profil_route = st.selectbox("Type de trajet majoritaire", [
-        "Départementale / Ville (Vitesse lente)",
-        "Mixte (Route + un peu d'Autoroute)",
-        "Autoroute / Montagne (Vitesse 130 km/h)"
-    ])
+    p_route = st.selectbox("Type de trajet", [
+        "Urbain / Départementale", 
+        "Mixte (Ville + Autoroute)", 
+        "Autoroute / Montagne (130 km/h)"
+    ], index=2)
 
-    type_v = st.selectbox("Votre véhicule", ["Citadine", "Berline", "SUV", "Utilitaire"])
+    v_type = st.selectbox("Votre voiture", ["Citadine", "Berline", "SUV", "Utilitaire"])
 
-    base_consos = {"Citadine": 5.5, "Berline": 6.8, "SUV": 8.0, "Utilitaire": 10.0}
-    conso_finale = base_consos[type_v]
+    # LOGIQUE DE CONSO (Pour tomber sur tes 30€)
+    base = {"Citadine": 5.5, "Berline": 6.8, "SUV": 8.0, "Utilitaire": 10.0}[v_type]
+    if "Mixte" in p_route: base += 1.2
+    elif "Autoroute" in p_route: base += 2.8
 
-    if profil_route == "Mixte (Route + un peu d'Autoroute)":
-        conso_finale += 1.2
-    elif profil_route == "Autoroute / Montagne (Vitesse 130 km/h)":
-        conso_finale += 2.8
+    # LE CHIFFRE QUI DOIT CHANGER
+    km_final = st.number_input("Kilomètres calculés", value=float(st.session_state['km_memoire']))
 
-    # 4. AFFICHAGE DES KM ET CALCUL
-    # Le chiffre montera enfin grâce au st.rerun() du dessus
-    dist_retenue = st.number_input("Kilomètres retenus", value=float(st.session_state['dist_km']))
-    
-    if dist_retenue > 0:
-        budget = (dist_retenue / 100) * conso_finale * p_final
+    # RÉSULTAT
+    if km_final > 0:
+        total_euros = (km_final / 100) * base * p_final
         
         st.markdown(f"""
-            <p style="font-size: 0.85rem; color: #64748b; font-style: italic; background: #f1f5f9; padding: 10px; border-radius: 10px;">
-                💡 <b>Analyse :</b> Pour ce trajet en mode <b>{profil_route}</b>, votre <b>{type_v}</b> 
-                est estimée à une consommation réelle de <b>{conso_finale:.1f} L/100</b>.
-            </p>
-        """, unsafe_allow_html=True)
-
-        st.markdown(f"""
             <div style="background-color: #1e293b; padding: 35px; border-radius: 20px; text-align: center; color: white; margin-top: 20px;">
-                <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">BUDGET CARBURANT ESTIMÉ</p>
-                <h1 style="margin: 10px 0; font-size: 4rem; color: #4ade80; border:none; font-weight:800;">{budget:.2f} €</h1>
-                <div style="display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; opacity: 0.6; border-top: 1px solid #334155; padding-top: 15px;">
-                    <span>{dist_retenue} km</span> • <span>{conso_finale:.1f} L/100</span> • <span>{p_final:.3f} €/L</span>
-                </div>
+                <p style="margin: 0; opacity: 0.8;">BUDGET ESTIMÉ</p>
+                <h1 style="margin: 10px 0; font-size: 3.8rem; color: #4ade80; border:none; font-weight:800;">{total_euros:.2f} €</h1>
+                <p style="margin: 0; opacity: 0.6;">{km_final} km • {base:.1f} L/100 • {p_final:.3f} €/L</p>
             </div>
         """, unsafe_allow_html=True)
-
-        # BOUTON WAZE
-        q_arr = urllib.parse.quote(arr_p)
-        q_dep = urllib.parse.quote(dep_p)
-        waze_url = f"https://www.waze.com/ul?q={q_arr}&from={q_dep}&navigate=yes"
-        logo_waze = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Waze_logo.svg/512px-Waze_logo.svg.png"
-
-        st.markdown(f"""
-            <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px; margin-bottom: 20px;">
-                <a href="{waze_url}" target="_blank" style="text-decoration: none; width: 100%;">
-                    <div style="background: linear-gradient(90.13deg, #33CCFF 0.11%, #2DB5E3 99.88%); color: white; padding: 18px 25px; border-radius: 15px; text-align: center; font-weight: 800; font-size: 1.1rem; box-shadow: 0 10px 20px -5px rgba(51, 204, 255, 0.4); display: flex; align-items: center; justify-content: center; gap: 15px;">
-                        <img src="{logo_waze}" width="35" height="35" style="border-radius: 5px;">
-                        LANCER L'ITINÉRAIRE SUR WAZE
-                    </div>
-                </a>
-            </div>
-        """, unsafe_allow_html=True)
+        
+        # WAZE
+        w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
+        st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER WAZE</div></a>', unsafe_allow_html=True)
 
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
