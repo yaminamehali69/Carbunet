@@ -6,6 +6,7 @@ from streamlit_folium import st_folium
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 import base64
+import urllib.parse
 
 # --- 1. CONFIGURATION ---
 path_logo = "logo_carbunet.png"
@@ -256,92 +257,100 @@ with tabs[1]:
 
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
-    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
-    
+    # 1. INITIALISATION DE LA MÉMOIRE (Session State)
+    # Important : on crée la variable 'dist_km' si elle n'existe pas encore
+    if 'dist_km' not in st.session_state:
+        st.session_state['dist_km'] = 0.0
+
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-bottom: 25px;">
-            <span class="material-icons-outlined" style="font-size: 35px; color: #1a73e8;">directions_car</span>
-            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Calculateur d'itinéraire intelligent</h2>
+            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Calculateur de trajet intelligent</h2>
         </div>
     """, unsafe_allow_html=True)
 
-    # 1. RÉCUPÉRATION DU PRIX (Liaison Onglet Stations)
+    # 2. RÉCUPÉRATION DU PRIX DE L'ONGLET STATIONS
     p_final = st.session_state.get('prix_perso', 1.859)
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
 
-    # 2. ADRESSES ET BOUTON RECHERCHE
+    # 3. SAISIE DES ADRESSES
     st.markdown("##### 📍 1. Itinéraire")
     col_dep, col_arr = st.columns(2)
     with col_dep:
-        dep_input = st.text_input("Ville de départ", placeholder="Ex: Paris")
+        dep_input = st.text_input("Ville de départ", placeholder="Ex: Lyon", key="city_start")
     with col_arr:
-        arr_input = st.text_input("Ville d'arrivée", placeholder="Ex: Lyon")
+        arr_input = st.text_input("Ville d'arrivée", placeholder="Ex: Paris", key="city_end")
 
-    # Initialisation de la distance dans le session_state
-    if 'dist_reelle' not in st.session_state:
-        st.session_state['dist_reelle'] = 100.0
-
-    if st.button("🔍 Calculer l'itinéraire", use_container_width=True):
+    # BOUTON DE RECHERCHE (Placé juste ici pour être logique)
+    if st.button("🔍 CALCULER LA DISTANCE RÉELLE", use_container_width=True):
         if dep_input and arr_input:
             try:
-                with st.spinner("Calcul de la distance en cours..."):
-                    geolocator = Nominatim(user_agent="fuel_app_simulator")
+                with st.spinner("Recherche de l'itinéraire..."):
+                    geolocator = Nominatim(user_agent="mon_app_carburant")
                     loc1 = geolocator.geocode(dep_input)
                     loc2 = geolocator.geocode(arr_input)
                     
                     if loc1 and loc2:
-                        # Calcul distance vol d'oiseau
+                        # Calcul distance + 25% pour la route
                         d = geodesic((loc1.latitude, loc1.longitude), (loc2.latitude, loc2.longitude)).km
-                        # On ajoute 25% pour simuler les virages/vraie route
-                        st.session_state['dist_reelle'] = round(d * 1.25, 1)
-                        st.success(f"Itinéraire trouvé : ~{st.session_state['dist_reelle']} km")
+                        st.session_state['dist_km'] = round(d * 1.25, 1)
                     else:
-                        st.error("Ville non trouvée. Vérifiez l'orthographe.")
+                        st.error("Impossible de trouver ces villes. Vérifiez l'orthographe.")
             except:
-                st.error("Service de localisation indisponible (timeout).")
+                st.error("Erreur de connexion au service GPS.")
         else:
-            st.warning("Veuillez entrer un départ et une arrivée.")
+            st.warning("Veuillez remplir le départ et l'arrivée.")
 
-    # 3. CONFIGURATION DU VÉHICULE
+    # 4. CONFIGURATION DU VÉHICULE
     st.markdown("---")
-    st.markdown("##### 🚗 2. Véhicule et Conduite")
+    st.markdown("##### 🚗 2. Votre Véhicule")
     
     col_v, col_c = st.columns(2)
     with col_v:
-        type_v = st.selectbox("Catégorie de véhicule", [
-            "Citadine (ex: Clio, 208)", "Berline (ex: Golf, 308)", 
-            "SUV / Familiale (ex: 3008)", "Utilitaire / Fourgon"
-        ])
+        type_v = st.selectbox("Catégorie", ["Citadine", "Berline", "SUV", "Utilitaire"])
     with col_c:
-        style_c = st.select_slider("Style de conduite", options=["Eco", "Standard", "Sportive"])
+        style_c = st.select_slider("Style de conduite", options=["Eco", "Standard", "Sportive"], value="Standard")
 
-    # Logique de consommation
-    mapping = {"Citadine (ex: Clio, 208)": 5.2, "Berline (ex: Golf, 308)": 6.3, 
-               "SUV / Familiale (ex: 3008)": 7.8, "Utilitaire / Fourgon": 9.5}
-    conso_base = mapping[type_v]
+    # Calcul de la conso de base
+    base_consos = {"Citadine": 5.2, "Berline": 6.3, "SUV": 7.8, "Utilitaire": 9.5}
+    conso_base = base_consos[type_v]
     if style_c == "Eco": conso_base *= 0.9
     elif style_c == "Sportive": conso_base *= 1.2
 
-    # 4. LE SLIDER (avec la distance mise à jour par le bouton)
-    st.markdown(f"""<p style='font-size: 0.9rem; color: #64748b; font-style: italic;'>
-    "La consommation a été pré-configurée selon les standards constructeurs ({conso_base:.1f}L/100). 
-    Ajustez-la selon votre charge réelle."</p>""", unsafe_allow_html=True)
-    
-    conso_f = st.slider("Consommation finale (L/100)", 3.0, 15.0, float(conso_base))
-    
-    # Affichage de la distance utilisée pour le calcul final
-    dist_finale = st.number_input("Distance retenue (km)", value=float(st.session_state['dist_reelle']))
+    # LE SLIDER (Prend la valeur calculée comme point de départ)
+    st.markdown(f"📖 *Moyenne estimée pour votre profil : **{conso_base:.1f} L/100***")
+    conso_f = st.slider("Ajustez votre consommation réelle (L/100)", 3.0, 20.0, float(conso_base))
 
-    # 5. RÉSULTAT FINAL
-    cout_total = (dist_finale / 100) * conso_f * p_final
+    # 5. SYNTHÈSE DES KILOMÈTRES
+    # Si la recherche a marché, dist_km n'est plus 0. 
+    # L'utilisateur peut quand même corriger à la main.
+    dist_finale = st.number_input("Nombre de kilomètres retenus", value=float(st.session_state['dist_km']))
 
-    st.markdown(f"""
-        <div style="background-color: #1e293b; padding: 30px; border-radius: 20px; text-align: center; color: white; margin-top: 20px;">
-            <p style="margin: 0; opacity: 0.8;">BUDGET ESTIMÉ ({nom_carbu.upper()})</p>
-            <h1 style="margin: 10px 0; font-size: 3.5rem; color: #3b82f6; border:none;">{cout_total:.2f} €</h1>
-            <p style="margin: 0; font-size: 0.9rem; opacity: 0.6;">{dist_finale} km • {conso_f} L/100 • {p_final:.3f} €/L</p>
-        </div>
-    """, unsafe_allow_html=True)
+    # 6. RÉSULTAT FINAL
+    if dist_finale > 0:
+        cout_total = (dist_finale / 100) * conso_f * p_final
+        
+        st.markdown(f"""
+            <div style="background-color: #1e293b; padding: 30px; border-radius: 20px; text-align: center; color: white; margin-top: 20px;">
+                <p style="margin: 0; opacity: 0.8; font-size: 0.9rem;">BUDGET ESTIMÉ ({nom_carbu.upper()})</p>
+                <h1 style="margin: 10px 0; font-size: 3.5rem; color: #3b82f6; border:none; font-weight:800;">{cout_total:.2f} €</h1>
+                <p style="margin: 0; font-size: 0.9rem; opacity: 0.5;">{dist_finale} km • {conso_f} L/100 • {p_final:.3f} €/L</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # 7. BOUTON WAZE
+        q_arr = urllib.parse.quote(arr_input)
+        q_dep = urllib.parse.quote(dep_input)
+        waze_url = f"https://www.waze.com/ul?q={q_arr}&from={q_dep}&navigate=yes"
+        
+        st.markdown(f"""
+            <a href="{waze_url}" target="_blank" style="text-decoration: none;">
+                <div style="background-color: #33ccff; color: white; padding: 12px; border-radius: 10px; text-align: center; font-weight: bold; margin-top: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Waze_logo.svg" width="20"> Ouvrir l'itinéraire sur Waze
+                </div>
+            </a>
+        """, unsafe_allow_html=True)
+    else:
+        st.info("Entrez une destination et cliquez sur 'Calculer' pour voir votre budget.")
 
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
