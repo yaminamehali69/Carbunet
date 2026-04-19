@@ -254,6 +254,7 @@ with tabs[1]:
                 except: st.error("Lieu non reconnu.")
 
 # --- ONGLET 3 : SIMULATEUR ---
+# --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
     
@@ -264,63 +265,68 @@ with tabs[2]:
         </div>
     """, unsafe_allow_html=True)
 
-    # Initialisation conso par défaut pour éviter l'erreur NameError
-    conso_auto = 6.0
+    # --- 1. RÉCUPÉRATION DU PRIX DE L'ONGLET STATIONS ---
+    # On vérifie si l'utilisateur a sélectionné une station dans l'onglet précédent
+    if 'prix_perso' in st.session_state:
+        p_final = st.session_state['prix_perso']
+        nom_carbu_utilisé = st.session_state.get('carbu_nom', 'Carburant')
+        station_nom = st.session_state.get('station_nom', 'Station sélectionnée')
+        st.info(f"⛽ **Prix utilisé : {p_final:.3f} €/L** ({nom_carbu_utilisé} chez {station_nom})")
+    else:
+        # Valeur de secours si l'utilisateur n'est pas passé par l'onglet Stations
+        p_final = 1.859 
+        st.warning("⚠️ Aucune station sélectionnée dans l'onglet 'Stations'. Prix moyen estimé utilisé.")
+
+    # --- 2. IDENTIFICATION VÉHICULE (PLAQUE) ---
+    st.markdown("##### 🚗 Identification du véhicule")
+    conso_auto = 6.0 # Valeur par défaut pour éviter le NameError
     
-    plaque_input = st.text_input("📍 Identification du véhicule (Plaque)", placeholder="AB-123-CD").upper().strip()
+    plaque_input = st.text_input("📍 Tapez votre plaque", placeholder="AB-123-CD").upper().strip()
 
     if plaque_input:
-        with st.spinner('Extraction des données constructeur...'):
+        with st.spinner('Recherche SIV en cours...'):
+            # On appelle ta fonction de recherche (assure-toi qu'elle est définie en haut de ton code)
             data, success = fetch_car_data_pro(plaque_input)
-        
-        if success and data:
-            # On récupère les vraies infos pour rassurer le client
-            # Note: Les noms de champs peuvent varier selon l'API (Marque, Modele, etc.)
-            marque = data.get('Marque', 'Véhicule')
-            modele = data.get('Modele', 'Identifié')
-            energie = data.get('Energie', 'N/C')
             
-            st.markdown(f"""
-                <div style="background-color: #f0fdf4; padding: 15px; border-radius: 10px; border: 1px solid #22c55e; margin-bottom: 20px;">
-                    <p style="margin:0; color: #166534; font-weight: bold;">✅ Certification SIV :</p>
-                    <h3 style="margin:5px 0; color: #0f172a;">{marque} {modele}</h3>
-                    <p style="margin:0; color: #475569;">Carburant : <b>{energie}</b> | Données certifiées</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            # Ajustement auto de la conso selon l'énergie
-            if "DIESEL" in str(energie).upper():
-                conso_auto = 5.0
-            elif "ESSENCE" in str(energie).upper():
-                conso_auto = 6.8
-        else:
-            st.warning("⚠️ Impossible de joindre l'API (Quota dépassé ou serveur occupé). Réglez manuellement.")
+            if success and data:
+                marque = data.get('Marque', 'Véhicule')
+                modele = data.get('Modele', 'identifié')
+                energie = data.get('Energie', 'N/C').upper()
+                
+                st.success(f"✅ **{marque} {modele}** ({energie})")
+                
+                # Ajustement automatique de la consommation selon l'énergie officielle
+                if "DIESEL" in energie:
+                    conso_auto = 5.2
+                elif "ESSENCE" in energie:
+                    conso_auto = 6.8
+            else:
+                st.error("❌ Impossible de valider la plaque (Quota API atteint ou plan non activé).")
 
-    # Entrées trajet
+    # --- 3. PARAMÈTRES DU TRAJET ---
     col1, col2 = st.columns(2)
     with col1:
-        dist = st.number_input("Distance du voyage (km)", value=100, min_value=1)
+        dist = st.number_input("Distance à parcourir (km)", value=100, min_value=1)
     with col2:
-        # On utilise le slider pour laisser le client finaliser
-        conso_finale = st.slider("Consommation moyenne (L/100)", 3.0, 15.0, float(conso_auto))
+        # Le slider permet de corriger la conso si le client connaît mieux sa voiture
+        conso_finale = st.slider("Consommation (L/100)", 3.0, 15.0, float(conso_auto))
 
-    # --- CALCUL FINAL ---
-    if df is not None:
-        # Récupération du prix de l'onglet précédent
-        nom_col = f"prix_{carbu.lower()}" if 'carbu' in locals() else df.columns[1]
-        p_moy = df[nom_col].mean()
-        
-        cout_estime = (dist / 100) * conso_finale * p_moy
-        
-        # Affichage Premium
-        st.markdown(f"""
-            <div style="background-color: #1a73e8; padding: 30px; border-radius: 20px; text-align: center; color: white; margin-top: 25px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">Estimation du budget trajet</p>
-                <h1 style="margin: 10px 0; font-size: 3.5rem; color: white; border:none;">{cout_estime:.2f} €</h1>
-                <p style="margin: 0; font-size: 0.9rem; opacity: 0.8;">{dist} km • {conso_finale} L/100 • {p_moy:.3f} €/L</p>
+    # --- 4. CALCUL ET RÉSULTAT FINAL ---
+    # Le calcul se fait avec le prix EXACT récupéré de l'onglet station
+    cout_estime = (dist / 100) * conso_finale * p_final
+    
+    st.markdown(f"""
+        <div style="background-color: #1a73e8; padding: 30px; border-radius: 20px; text-align: center; color: white; margin-top: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+            <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">VOTRE BUDGET TRAJET ESTIMÉ</p>
+            <h1 style="margin: 10px 0; font-size: 3.8rem; color: white; border:none; font-weight:800;">{cout_estime:.2f} €</h1>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px; font-size: 0.9rem;">
+                <span>⛽ {conso_finale} L/100</span>
+                <span>📍 {dist} km</span>
+                <span>💰 {p_final:.3f} €/L</span>
             </div>
-        """, unsafe_allow_html=True)
-
+        </div>
+    """, unsafe_allow_html=True)
+    
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
     import streamlit.components.v1 as components
