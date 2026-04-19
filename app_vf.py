@@ -254,92 +254,49 @@ with tabs[1]:
                 except: st.error("Lieu non reconnu.")
 
 
-# --- LE MOTEUR DE RECHERCHE (Obligatoire pour éviter l'erreur de ton image 3) ---
-@st.cache_data(ttl=604800)
-def fetch_car_data_pro(plaque):
-    # Tes infos RapidAPI (Image 1)
-    url = "https://api-de-plaque-d-immatriculation-france.p.rapidapi.com/getData"
-    headers = {
-        "x-rapidapi-key": "deed37d7c3msh976ac4ec2c8fa13p1960e4jsndb4151c68278",
-        "x-rapidapi-host": "api-de-plaque-d-immatriculation-france.p.rapidapi.com",
-        "plaque": plaque
-    }
-    try:
-        response = requests.get(url, headers=headers, timeout=5)
-        if response.status_code == 200:
-            return response.json(), True
-    except:
-        pass
-    return None, False
-
 # --- ONGLET 3 : SIMULATEUR ---
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
-    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
-    
-    st.markdown("""
-        <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-bottom: 25px;">
-            <span class="material-icons-outlined" style="font-size: 35px; color: #1a73e8;">calculate</span>
-            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Simulateur de budget</h2>
-        </div>
-    """, unsafe_allow_html=True)
-
-
-    # --- 1. RÉCUPÉRATION DU PRIX DE L'ONGLET STATIONS ---
-    # On vérifie si l'utilisateur a sélectionné une station dans l'onglet précédent
+    # 1. RÉCUPÉRATION DU CARBU ET DU PRIX SÉLECTIONNÉS
     if 'prix_perso' in st.session_state:
         p_final = st.session_state['prix_perso']
-        nom_carbu_utilisé = st.session_state.get('carbu_nom', 'Carburant')
-        station_nom = st.session_state.get('station_nom', 'Station sélectionnée')
-        st.info(f"⛽ **Prix utilisé : {p_final:.3f} €/L** ({nom_carbu_utilisé} chez {station_nom})")
+        nom_carbu = st.session_state['carbu_nom'] # <--- VOILÀ TON CARBU !
+        st.info(f"⛽ Calcul basé sur votre sélection : **{nom_carbu}** à **{p_final:.3f} €/L**")
     else:
-        # Valeur de secours si l'utilisateur n'est pas passé par l'onglet Stations
         p_final = 1.859 
-        st.warning("⚠️ Aucune station sélectionnée dans l'onglet 'Stations'. Prix moyen estimé utilisé.")
+        nom_carbu = "Gazole" # Par défaut
+        st.warning("⚠️ Aucune station choisie. Prix par défaut utilisé.")
 
-    # --- 2. IDENTIFICATION VÉHICULE (PLAQUE) ---
-    st.markdown("##### 🚗 Identification du véhicule")
-    conso_auto = 6.0 # Valeur par défaut pour éviter le NameError
-    
-    plaque_input = st.text_input("📍 Tapez votre plaque", placeholder="AB-123-CD").upper().strip()
+    # 2. INFOS VÉHICULE
+    type_v = st.selectbox("Format du véhicule", [
+        "Citadine (ex: Clio, 208)", 
+        "Berline (ex: Golf, 308)", 
+        "SUV / Familiale (ex: 3008)", 
+        "Utilitaire / Fourgon"
+    ])
 
-    if plaque_input:
-        with st.spinner('Recherche SIV en cours...'):
-            # On appelle ta fonction de recherche (assure-toi qu'elle est définie en haut de ton code)
-            data, success = fetch_car_data_pro(plaque_input)
-            
-            if success and data:
-                marque = data.get('Marque', 'Véhicule')
-                modele = data.get('Modele', 'identifié')
-                energie = data.get('Energie', 'N/C').upper()
-                
-                st.success(f"✅ **{marque} {modele}** ({energie})")
-                
-                # Ajustement automatique de la consommation selon l'énergie officielle
-                if "DIESEL" in energie:
-                    conso_auto = 5.2
-                elif "ESSENCE" in energie:
-                    conso_auto = 6.8
-            else:
-                st.error("❌ Impossible de valider la plaque (Quota API atteint ou plan non activé).")
+    # Barème de consommation
+    conso_map = {
+        "Citadine (ex: Clio, 208)": 5.2,
+        "Berline (ex: Golf, 308)": 6.3,
+        "SUV / Familiale (ex: 3008)": 7.8,
+        "Utilitaire / Fourgon": 9.5
+    }
+    conso_base = conso_map[type_v]
 
-    # --- 3. PARAMÈTRES DU TRAJET ---
-    col1, col2 = st.columns(2)
-    with col1:
-        dist = st.number_input("Distance à parcourir (km)", value=100, min_value=1)
-    with col2:
-        # Le slider permet de corriger la conso si le client connaît mieux sa voiture
-        conso_finale = st.slider("Consommation (L/100)", 3.0, 15.0, float(conso_auto))
+    # 3. TRAJET
+    dist = st.number_input("Distance à parcourir (km)", value=100)
+    conso_finale = st.slider("Ajuster conso (L/100)", 3.0, 15.0, float(conso_base))
 
-    # --- 4. CALCUL ET RÉSULTAT FINAL ---
-    # Le calcul se fait avec le prix EXACT récupéré de l'onglet station
-    cout_estime = (dist / 100) * conso_finale * p_final
-    
+    # 4. LE CALCUL FINAL
+    cout_total = (dist / 100) * conso_finale * p_final
+
+    # --- DESIGN DU RÉSULTAT ---
     st.markdown(f"""
-        <div style="background-color: #1a73e8; padding: 30px; border-radius: 20px; text-align: center; color: white; margin-top: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-            <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">VOTRE BUDGET TRAJET ESTIMÉ</p>
-            <h1 style="margin: 10px 0; font-size: 3.8rem; color: white; border:none; font-weight:800;">{cout_estime:.2f} €</h1>
-            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px; font-size: 0.9rem;">
+        <div style="background-color: #1a73e8; padding: 35px; border-radius: 20px; text-align: center; color: white; margin-top: 25px;">
+            <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">BUDGET ESTIMÉ ({nom_carbu.upper()})</p>
+            <h1 style="margin: 10px 0; font-size: 4rem; color: white; border:none; font-weight:800;">{cout_total:.2f} €</h1>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
                 <span>⛽ {conso_finale} L/100</span>
                 <span>📍 {dist} km</span>
                 <span>💰 {p_final:.3f} €/L</span>
