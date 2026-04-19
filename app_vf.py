@@ -360,7 +360,7 @@ with tabs[3]:
     <div id="form-container" style="font-family: sans-serif;">
         <div id="success-message" style="display: none; background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center;">
             <h3 style="margin:0;">✅ Message envoyé !</h3>
-            <p style="margin:10px 0 0 0;">Merci pour votre retour, Yamina vous répondra dans les plus brefs délais.</p>
+            <p style="margin:10px 0 0 0;">Merci pour votre retour, Carbunet vous répondra dans les plus brefs délais.</p>
         </div>
 
         <form id="support-form" action="https://formsubmit.co/ajax/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
@@ -416,9 +416,7 @@ with tabs[3]:
         };
     </script>
     """
-    
     # On affiche le composant
     components.html(contact_form_html, height=450)
-
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
