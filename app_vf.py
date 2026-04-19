@@ -253,6 +253,25 @@ with tabs[1]:
                         else: st.warning("Aucune station ne correspond.")
                 except: st.error("Lieu non reconnu.")
 
+
+# --- LE MOTEUR DE RECHERCHE (Obligatoire pour éviter l'erreur de ton image 3) ---
+@st.cache_data(ttl=604800)
+def fetch_car_data_pro(plaque):
+    # Tes infos RapidAPI (Image 1)
+    url = "https://api-de-plaque-d-immatriculation-france.p.rapidapi.com/getData"
+    headers = {
+        "x-rapidapi-key": "deed37d7c3msh976ac4ec2c8fa13p1960e4jsndb4151c68278",
+        "x-rapidapi-host": "api-de-plaque-d-immatriculation-france.p.rapidapi.com",
+        "plaque": plaque
+    }
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code == 200:
+            return response.json(), True
+    except:
+        pass
+    return None, False
+
 # --- ONGLET 3 : SIMULATEUR ---
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
@@ -264,6 +283,7 @@ with tabs[2]:
             <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Simulateur de budget</h2>
         </div>
     """, unsafe_allow_html=True)
+
 
     # --- 1. RÉCUPÉRATION DU PRIX DE L'ONGLET STATIONS ---
     # On vérifie si l'utilisateur a sélectionné une station dans l'onglet précédent
@@ -326,7 +346,7 @@ with tabs[2]:
             </div>
         </div>
     """, unsafe_allow_html=True)
-    
+
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
     import streamlit.components.v1 as components
