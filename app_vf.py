@@ -256,50 +256,98 @@ with tabs[1]:
 
 # --- ONGLET 3 : SIMULATEUR ---
 # --- ONGLET 3 : SIMULATEUR ---
+# --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
-    # 1. RÉCUPÉRATION DU CARBU ET DU PRIX SÉLECTIONNÉS
+    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #1a73e8; padding-left: 15px; margin-bottom: 25px;">
+            <span class="material-icons-outlined" style="font-size: 35px; color: #1a73e8;">route</span>
+            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Simulateur de Budget Trajet</h2>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # --- 1. RAPPEL DU PRIX (Liaison Onglet Stations) ---
     if 'prix_perso' in st.session_state:
         p_final = st.session_state['prix_perso']
-        nom_carbu = st.session_state['carbu_nom'] # <--- VOILÀ TON CARBU !
-        st.info(f"⛽ Calcul basé sur votre sélection : **{nom_carbu}** à **{p_final:.3f} €/L**")
+        nom_carbu = st.session_state['carbu_nom']
+        st.info(f"⛽ **Configuration actuelle :** {nom_carbu} à **{p_final:.3f} €/L** (sélectionné via l'onglet Stations)")
     else:
-        p_final = 1.859 
-        nom_carbu = "Gazole" # Par défaut
-        st.warning("⚠️ Aucune station choisie. Prix par défaut utilisé.")
+        p_final = 1.859
+        st.warning("⚠️ Aucune station sélectionnée. Utilisation du prix moyen national par défaut.")
 
-    # 2. INFOS VÉHICULE
-    type_v = st.selectbox("Format du véhicule", [
-        "Citadine (ex: Clio, 208)", 
-        "Berline (ex: Golf, 308)", 
-        "SUV / Familiale (ex: 3008)", 
-        "Utilitaire / Fourgon"
-    ])
+    # --- 2. TRAJET ---
+    st.markdown("##### 📍 1. Détails de l'itinéraire")
+    col_dep, col_arr = st.columns(2)
+    with col_dep:
+        depart = st.text_input("Point de départ", placeholder="Ex: Lyon")
+    with col_arr:
+        arrivee = st.text_input("Destination", placeholder="Ex: Marseille")
+    
+    dist = st.number_input("Distance totale estimée (km)", value=100, min_value=1)
 
-    # Barème de consommation
-    conso_map = {
+    # --- 3. CONFIGURATION VÉHICULE & CONDUITE ---
+    st.markdown("##### 🚗 2. Paramètres d'efficacité énergétique")
+    
+    col_v, col_c = st.columns(2)
+    with col_v:
+        type_v = st.selectbox("Catégorie de véhicule", [
+            "Citadine (ex: Clio, 208)", 
+            "Berline (ex: Golf, 308)", 
+            "SUV / Familiale (ex: 3008)", 
+            "Utilitaire / Fourgon"
+        ])
+    
+    with col_c:
+        style_conduite = st.select_slider("Style de conduite", 
+                                         options=["Eco", "Standard", "Sportive / Chargé"], 
+                                         value="Standard")
+
+    # Calcul de la base de consommation
+    mapping_conso = {
         "Citadine (ex: Clio, 208)": 5.2,
         "Berline (ex: Golf, 308)": 6.3,
         "SUV / Familiale (ex: 3008)": 7.8,
         "Utilitaire / Fourgon": 9.5
     }
-    conso_base = conso_map[type_v]
+    conso_base = mapping_conso[type_v]
 
-    # 3. TRAJET
-    dist = st.number_input("Distance à parcourir (km)", value=100)
-    conso_finale = st.slider("Ajuster conso (L/100)", 3.0, 15.0, float(conso_base))
+    # Ajustement selon le style de conduite
+    if style_conduite == "Eco":
+        conso_base *= 0.9  # -10%
+    elif style_conduite == "Sportive / Chargé":
+        conso_base *= 1.2  # +20%
 
-    # 4. LE CALCUL FINAL
+    # --- 4. LE SLIDER AVEC LA PHRASE PRO ---
+    st.markdown(f"""
+        <p style="font-size: 0.9rem; color: #475569; font-style: italic; margin-bottom: -10px;">
+            "La consommation a été pré-configurée selon les standards constructeurs pour votre catégorie ({conso_base:.1f}L/100). 
+            Toutefois, nous vous recommandons d'ajuster ce curseur pour refléter la charge réelle du véhicule ou les spécificités de votre motorisation."
+        </p>
+    """, unsafe_allow_html=True)
+    
+    conso_finale = st.slider("", 3.0, 15.0, float(conso_base), step=0.1)
+
+    # --- 5. RÉSULTAT FINAL ---
     cout_total = (dist / 100) * conso_finale * p_final
 
-    # --- DESIGN DU RÉSULTAT ---
     st.markdown(f"""
-        <div style="background-color: #1a73e8; padding: 35px; border-radius: 20px; text-align: center; color: white; margin-top: 25px;">
-            <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">BUDGET ESTIMÉ ({nom_carbu.upper()})</p>
-            <h1 style="margin: 10px 0; font-size: 4rem; color: white; border:none; font-weight:800;">{cout_total:.2f} €</h1>
-            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
-                <span>⛽ {conso_finale} L/100</span>
-                <span>📍 {dist} km</span>
-                <span>💰 {p_final:.3f} €/L</span>
+        <div style="background-color: #1e293b; padding: 35px; border-radius: 20px; text-align: center; color: white; margin-top: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+            <p style="margin: 0; font-size: 1rem; opacity: 0.8; letter-spacing: 1px;">ESTIMATION DU BUDGET CARBURANT</p>
+            <h1 style="margin: 10px 0; font-size: 3.8rem; color: #3b82f6; border:none; font-weight:800;">{cout_total:.2f} €</h1>
+            <div style="display: flex; justify-content: center; gap: 30px; margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px; font-size: 0.9rem;">
+                <div style="text-align: center;">
+                    <p style="margin:0; color: #94a3b8;">DISTANCE</p>
+                    <p style="margin:0; font-weight: bold;">{dist} km</p>
+                </div>
+                <div style="text-align: center;">
+                    <p style="margin:0; color: #94a3b8;">MOYENNE</p>
+                    <p style="margin:0; font-weight: bold;">{conso_finale:.1f} L/100</p>
+                </div>
+                <div style="text-align: center;">
+                    <p style="margin:0; color: #94a3b8;">PRIX UNITAIRE</p>
+                    <p style="margin:0; font-weight: bold;">{p_final:.3f} €</p>
+                </div>
             </div>
         </div>
     """, unsafe_allow_html=True)
