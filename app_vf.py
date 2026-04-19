@@ -108,7 +108,7 @@ with tabs[0]:
 <h1>CarbuNet</h1>
 <p style="font-size:1.4rem; font-weight:500;">Le prix le plus net, au kilomètre près.</p>
 <div style="background: #0f172a; color: white; padding: 10px 25px; border-radius: 50px; font-weight: 600; font-size: 0.85rem; margin-top: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-block; border: 1px solid rgba(255,255,255,0.1);">
-    🔍 Explorez les tarifs en temps réel dans l'onglet <b style="color: #32CD32;">STATIONS</b>
+     Explorez les tarifs en temps réel dans l'onglet <b style="color: #32CD32;">STATIONS</b>
 </div>
 <div class="disclaimer-text">
 <b>Mention d'information :</b> 
@@ -138,7 +138,7 @@ with tabs[1]:
         </div>
     """, unsafe_allow_html=True)
     if df is not None:
-        adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
+        adresse = st.text_input(" Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
         c1, c2 = st.columns(2)
         with c1:
             carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
@@ -146,7 +146,7 @@ with tabs[1]:
         with c2:
             rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
 
-        with st.expander("➕ Options & Services "):
+        with st.expander(" Options & Services "):
             cols_srv = st.columns(2)
             selection = []
             for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
@@ -176,14 +176,14 @@ with tabs[1]:
                             stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
                             
                             # On crée le menu de sélection
-                            choix_station = st.selectbox("🎯 Sélectionne ta station pour le calcul du budget :", options=list(stations_trouvees.keys()))
+                            choix_station = st.selectbox(" Sélectionne ta station pour le calcul du budget :", options=list(stations_trouvees.keys()))
 
                             # ON SAUVEGARDE DANS LA MÉMOIRE (Session State)
                             st.session_state['prix_perso'] = stations_trouvees[choix_station]
                             st.session_state['carbu_nom'] = carbu
                             st.session_state['station_nom'] = choix_station.split('(')[0].strip()
                             
-                            st.success(f"📍 Station choisie : {st.session_state['prix_perso']} €/L")
+                            st.success(f" Station choisie : {st.session_state['prix_perso']} €/L")
                             st.markdown("---")
                         
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
@@ -199,7 +199,7 @@ with tabs[1]:
                                 color = 'green' if is_cheapest else 'blue'
                                 icon_type = 'thumbs-up' if is_cheapest else 'spade'
                                 label_prix = f"<b>{float(row[col_p]):.3f}€</b>"
-                                popup_content = f"<div style='text-align:center;'>{'🌟 <b>LE MOINS CHER</b> 🌟<br>' if is_cheapest else ''}{label_prix}<br>MàJ: {row[col_m]}<br><a href='https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes' target='_blank'>Waze 🚗</a></div>"
+                                popup_content = f"<div style='text-align:center;'>{' <b>LE MOINS CHER</b> <br>' if is_cheapest else ''}{label_prix}<br>MàJ: {row[col_m]}<br><a href='https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes' target='_blank'>Waze 🚗</a></div>"
                                 
                                 folium.Marker(
                                     [row['latitude'], row['longitude']], 
@@ -217,7 +217,7 @@ with tabs[1]:
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            st.markdown("### ⛽ Meilleures options trouvées")
+                            st.markdown("###  Meilleures options trouvées")
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
