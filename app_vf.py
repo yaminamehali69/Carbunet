@@ -12,8 +12,8 @@ import urllib.parse
 path_logo = "logo_carbunet.png"
 path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carburant_prix_nettoye.csv"
 VERSION = "1.3.9"
-AUTEUR = "Carbunet"
-AUTEUR_2 = "Yamina Mehali"
+AUTEUR = "Yamina Mehali"
+AUTEUR_2 = "Carbunet"
 
 
 st.set_page_config(
