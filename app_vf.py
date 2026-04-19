@@ -42,6 +42,10 @@ st.markdown("""
 <style>
 header {visibility: hidden;}
 
+div[data-testid="stAppViewBlockContainer"] {
+    opacity: 1 !important;
+}
+
 /* 1. Supprime le vide en haut de la page */
 .block-container {
     padding-top: 1rem !important; 
@@ -123,12 +127,14 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 """
         st.markdown(concept_html, unsafe_allow_html=True) 
     st.caption("© 2026 CarbuNet. Propriété exclusive de l'auteur. Toute reproduction interdite.")
+
+
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
     # 1. On charge d'abord la bibliothèque d'icônes (si ce n'est pas déjà fait en haut du code)
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
-    # 2. On remplace ton ancien titre par ce bloc "Modèle 2"
+    # 2.titre 
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #32CD32; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #32CD32;">payments</span>
@@ -152,7 +158,6 @@ with tabs[1]:
             for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
                 if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
                     selection.append(srv_name)
-
         if adresse:
             with st.spinner("Analyse des prix en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_yamina_v5")
