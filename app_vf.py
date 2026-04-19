@@ -42,10 +42,6 @@ st.markdown("""
 <style>
 header {visibility: hidden;}
 
-div[data-testid="stAppViewBlockContainer"] {
-    opacity: 1 !important;
-}
-
 /* 1. Supprime le vide en haut de la page */
 .block-container {
     padding-top: 1rem !important; 
@@ -127,8 +123,7 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 """
         st.markdown(concept_html, unsafe_allow_html=True) 
     st.caption("© 2026 CarbuNet. Propriété exclusive de l'auteur. Toute reproduction interdite.")
-
-
+    
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
     # 1. On charge d'abord la bibliothèque d'icônes (si ce n'est pas déjà fait en haut du code)
@@ -158,6 +153,7 @@ with tabs[1]:
             for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
                 if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
                     selection.append(srv_name)
+
         if adresse:
             with st.spinner("Analyse des prix en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_yamina_v5")
