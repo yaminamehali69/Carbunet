@@ -346,7 +346,7 @@ with tabs[2]:
         """, unsafe_allow_html=True)
 
         # BOUTON WAZE
-      q_arr = urllib.parse.quote(arr_p)
+        q_arr = urllib.parse.quote(arr_p)
         q_dep = urllib.parse.quote(dep_p)
         waze_url = f"https://www.waze.com/ul?q={q_arr}&from={q_dep}&navigate=yes"
         
@@ -377,7 +377,6 @@ with tabs[2]:
             </div>
         """, unsafe_allow_html=True)
 
-        
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
     import streamlit.components.v1 as components
