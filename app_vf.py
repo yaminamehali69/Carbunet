@@ -185,7 +185,11 @@ with tabs[1]:
                                 ).add_to(m)
                             st_folium(m, width="100%", height=400)
                             
-
+                            st.markdown("### ⛽ Meilleures options trouvées")
+                            for _, row in res.head(8).iterrows():
+                                w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
+                                rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
+                                stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 
                                 # --- AFFICHAGE INTELLIGENT AVEC LOGOS ---
                                 srv_str = str(row.get('service_propose', ''))
