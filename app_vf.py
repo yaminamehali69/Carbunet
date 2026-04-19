@@ -383,25 +383,25 @@ with tabs[3]:
 
         <form id="support-form" action="https://formsubmit.co/ajax/minamhl@icloud.com" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
             <input type="hidden" name="_captcha" value="false">
-            <input type="hidden" name="_subject" value="🚀 Nouveau message CarbuNet !">
+            <input type="hidden" name="_subject" value=" Nouveau message CarbuNet !">
             
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <input type="text" name="name" placeholder="👤 Nom & Prénom" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
-                <input type="email" name="email" placeholder="📧 Votre Email" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
+                <input type="text" name="name" placeholder=" Nom & Prénom" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
+                <input type="email" name="email" placeholder=" Votre Email" style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;" required>
             </div>
 
             <select name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white;">
-                <option disabled selected>🎯 Objet de votre demande</option>
+                <option disabled selected> Objet de votre demande</option>
                 <option>Signaler un Bug</option>
                 <option>Suggestion d'amélioration</option>
                 <option>Erreur sur une station</option>
                 <option>Autre question</option>
             </select>
 
-            <textarea name="message" id="msg-field" placeholder="📝 Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px;" required></textarea>
+            <textarea name="message" id="msg-field" placeholder=" Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px;" required></textarea>
 
             <button type="submit" id="submit-btn" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
-                🚀 ENVOYER MA DEMANDE
+                 ENVOYER MA DEMANDE
             </button>
         </form>
     </div>
