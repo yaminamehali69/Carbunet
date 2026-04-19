@@ -346,8 +346,20 @@ with tabs[2]:
         """, unsafe_allow_html=True)
 
         # BOUTON WAZE
-        w_url = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_p)}&from={urllib.parse.quote(dep_p)}&navigate=yes"
-        st.write(f"[🚀 Lancer l'itinéraire sur Waze]({w_url})")
+        q_arr = urllib.parse.quote(arr_p)
+        q_dep = urllib.parse.quote(dep_p)
+        waze_url = f"https://www.waze.com/ul?q={q_arr}&from={q_dep}&navigate=yes"
+        
+        st.markdown(f"""
+            <div style="display: flex; justify-content: center; align-items: center; margin-top: 30px;">
+                <a href="{waze_url}" target="_blank" style="text-decoration: none; width: 100%;">
+                    <div style="background: linear-gradient(90.13deg, #33CCFF 0.11%, #2DB5E3 99.88%); color: white; padding: 18px; border-radius: 15px; text-align: center; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 15px;">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Waze_logo.svg" width="30">
+                        LANCER L'ITINÉRAIRE SUR WAZE
+                    </div>
+                </a>
+            </div>
+        """, unsafe_allow_html=True)
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
     import streamlit.components.v1 as components
