@@ -123,17 +123,6 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 """
         st.markdown(concept_html, unsafe_allow_html=True) 
 
-        with tabs[3]: # Si c'est ton onglet Support & Bugs
-             st.markdown("### ⚖️ Propriété Intellectuelle")
-             st.info("""
-             **CarbuNet Pro** est une application protégée. 
-        Le code source, l'algorithme de calcul de budget et le design de l'interface 
-        sont la propriété exclusive de l'auteur. 
-        
-        Conformément au code de la propriété intellectuelle, toute copie ou 
-        exploitation non autorisée est passible de poursuites.
-    """)
-
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
     # 1. On charge d'abord la bibliothèque d'icônes (si ce n'est pas déjà fait en haut du code)
@@ -449,3 +438,13 @@ with tabs[3]:
     components.html(contact_form_html, height=450)
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
+
+
+with tabs[3]: # Si c'est ton onglet Support & Bugs
+    st.markdown("###  Propriété Intellectuelle")
+    st.info("""
+**CarbuNet Pro** est une application protégée. 
+Le code source, l'algorithme de calcul de budget et le design de l'interface 
+        sont la propriété exclusive de l'auteur. Conformément au code de la propriété intellectuelle, toute copie ou 
+        exploitation non autorisée est passible de poursuites.
+    """)
