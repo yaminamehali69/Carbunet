@@ -206,17 +206,21 @@ with tabs[1]:
                                     icon=folium.Icon(color=color, icon=icon_type, prefix='fa', icon_color='red')
                                 ).add_to(m)
                             st_folium(m, width="100%", height=400)
+                            st.markdown(f"""
+                             <div style="background-color: #f0f7ff; padding: 15px; border-radius: 10px; border-left: 5px solid #007bff; margin-bottom: 20px;">
+                               <p style="margin: 0; font-size: 0.9rem; color: #004085; line-height: 1.5;">
+                              ℹ️ <b>À savoir :</b> Les stocks sont indicatifs et basés sur les relevés officiels. 
+                               Un décalage reste possible entre l'affichage et la disponibilité réelle en pompe, 
+                               notamment en période de forte affluence.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
                             
                             st.markdown("### ⛽ Meilleures options trouvées")
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
-                                le_prix = row.get(col_p)
-                                maj_date = str(row.get(col_m, 'N/C'))
-
-                                if le_prix is None or le_prix == 0 or str(le_prix) == 'nan':
-                            stock_t, stock_c = "⚠️ DISPO INCERTAINE", "#f59e0b"
-                            else:
-                           stock_t, stock_c = "✅ DISPO PROBABLE", "#10b981")
+                                rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
+                                stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 
                                 # --- AFFICHAGE INTELLIGENT AVEC LOGOS ---
                                 srv_str = str(row.get('service_propose', ''))
@@ -246,7 +250,7 @@ with tabs[1]:
 <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
 <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{all_badges}</div>
 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
-<small style="color:#94a3b8; font-size:0.7rem;"> Dernière confirmation : {maj_date} </small>
+<small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
 <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">ITINÉRAIRE WAZE 🚗</a>
 </div>
 </div>
