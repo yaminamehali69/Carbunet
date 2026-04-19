@@ -267,7 +267,15 @@ with tabs[2]:
     if 'km_memoire' not in st.session_state:
         st.session_state['km_memoire'] = 0.0
 
-    st.markdown("## 🚗 Simulateur de Budget Réel")
+    # --- NOUVEAU TITRE SIMULATEUR HARMONISÉ ---
+    st.markdown("""
+        <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #3b82f6; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
+            <span class="material-icons-outlined" style="font-size: 35px; color: #3b82f6;">calculate</span>
+            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; border:none;">
+                Simulateur de Budget Personnalisé
+            </h2>
+        </div>
+    """, unsafe_allow_html=True)
 
     # PRIX (Vérifie bien que ton Onglet 2 enregistre 'prix_perso')
     p_final = st.session_state.get('prix_perso', 1.859)
