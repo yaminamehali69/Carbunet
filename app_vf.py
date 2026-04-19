@@ -327,7 +327,15 @@ with tabs[2]:
                 <p style="margin: 0; opacity: 0.6;">{km_final} km • {base:.1f} L/100 • {p_final:.3f} €/L</p>
             </div>
         """, unsafe_allow_html=True)
-        
+        st.markdown(f"""
+            <div style="background-color: #f1f5f9; padding: 15px; border-radius: 10px; border-left: 5px solid #1a73e8; margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.5;">
+                    Cette estimation est calculée en temps réel selon un algorithme croisant votre itinéraire spécifique, 
+                    le profil énergétique de votre véhicule et les conditions de circulation réelles (relief et vitesse). 
+                    Elle représente le budget au plus juste pour votre trajet.
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
         # WAZE
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER WAZE</div></a>', unsafe_allow_html=True)
