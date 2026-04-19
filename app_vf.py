@@ -166,6 +166,31 @@ with tabs[1]:
                             res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
 
                         res = res.sort_values(by=col_p)
+                        # --- CETTE LIGNE EXISTE DÉJÀ DANS TON CODE ---
+                        res = res.sort_values(by=col_p)
+
+                        if not res.empty:
+                            # --- COLLE CE BLOC JUSTE ICI ---
+                            st.markdown("---")
+                            # On prépare la liste des stations pour que le simulateur puisse "lire" le prix
+                            stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
+                            
+                            # On crée le menu de sélection
+                            choix_station = st.selectbox("🎯 Sélectionne ta station pour le calcul du budget :", options=list(stations_trouvees.keys()))
+
+                            # ON SAUVEGARDE DANS LA MÉMOIRE (Session State)
+                            st.session_state['prix_perso'] = stations_trouvees[choix_station]
+                            st.session_state['carbu_nom'] = carbu
+                            st.session_state['station_nom'] = choix_station.split('(')[0].strip()
+                            
+                            st.success(f"📍 Station choisie : {st.session_state['prix_perso']} €/L")
+                            st.markdown("---")
+                            # --- FIN DU BLOC À COLLER ---
+
+                            # --- LA SUITE DE TON CODE (DÉJÀ PRÉSENTE) ---
+                            m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
+                            p_min = res[col_p].min()
+                            # ... la suite avec folium et les markers ...
 
                         if not res.empty:
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
