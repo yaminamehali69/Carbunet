@@ -123,17 +123,20 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
+    # 1. On charge d'abord la bibliothèque d'icônes (si ce n'est pas déjà fait en haut du code)
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
+    # 2. On remplace ton ancien titre par ce bloc "Modèle 2"
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #32CD32; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #32CD32;">payments</span>
-            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; border:none;">Le meilleur prix, au kilomètre près</h2>
+            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; border:none;">
+                Le meilleur prix, au kilomètre près
+            </h2>
         </div>
     """, unsafe_allow_html=True)
-
     if df is not None:
-        adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse...", key="input_stations")
+        adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
         c1, c2 = st.columns(2)
         with c1:
             carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
@@ -141,38 +144,89 @@ with tabs[1]:
         with c2:
             rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
 
+        with st.expander("➕ Options & Services "):
+            cols_srv = st.columns(2)
+            selection = []
+            for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
+                if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
+                    selection.append(srv_name)
+
         if adresse:
-            with st.spinner("Analyse des prix..."):
-                geolocator = Nominatim(user_agent="carbunet_pro_v5")
+            with st.spinner("Analyse des prix en cours..."):
+                geolocator = Nominatim(user_agent="carbunet_pro_yamina_v5")
                 try:
                     loc = geolocator.geocode(adresse + ", France")
                     if loc:
                         ma_pos = (loc.latitude, loc.longitude)
                         df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
                         df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
-                        res = df_c[df_c['distance'] <= rayon].copy().sort_values(by=col_p)
+                        res = df_c[df_c['distance'] <= rayon].copy()
+
+                        for s_filtre in selection:
+                            res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
+
+                        res = res.sort_values(by=col_p)
 
                         if not res.empty:
-                            # --- LA CONNEXION : ON MÉMORISE LA MOINS CHÈRE PAR DÉFAUT ---
-                            best_station = res.iloc[0]
-                            st.session_state['prix_perso'] = float(best_station[col_p])
-                            st.session_state['station_nom'] = best_station['adresse']
-                            st.session_state['carbu_nom'] = carbu
-
-                            st.success(f"✅ Station sélectionnée pour le simulateur : {best_station['adresse']} ({st.session_state['prix_perso']:.3f}€)")
-                            
-                            # Affichage Map et Cards (ton code actuel)
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
-                            for idx, row in res.head(10).iterrows():
-                                label_prix = f"<b>{float(row[col_p]):.3f}€</b>"
-                                folium.Marker([row['latitude'], row['longitude']], popup=label_prix).add_to(m)
-                            st_folium(m, width="100%", height=400)
+                            p_min = res[col_p].min()
 
+                            for idx, row in res.head(10).iterrows():
+                                is_cheapest = row[col_p] == p_min
+                                color = 'green' if is_cheapest else 'blue'
+                                icon_type = 'thumbs-up' if is_cheapest else 'spade'
+                                label_prix = f"<b>{float(row[col_p]):.3f}€</b>"
+                                popup_content = f"<div style='text-align:center;'>{'🌟 <b>LE MOINS CHER</b> 🌟<br>' if is_cheapest else ''}{label_prix}<br>MàJ: {row[col_m]}<br><a href='https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes' target='_blank'>Waze 🚗</a></div>"
+                                
+                                folium.Marker(
+                                    [row['latitude'], row['longitude']], 
+                                    popup=folium.Popup(popup_content, max_width=200),
+                                    icon=folium.Icon(color=color, icon=icon_type, prefix='fa', icon_color='red')
+                                ).add_to(m)
+                            st_folium(m, width="100%", height=400)
+                            
+                            st.markdown("### ⛽ Meilleures options trouvées")
                             for _, row in res.head(8).iterrows():
-                                # (Garde ici ton code HTML de cartes card_html que tu avais déjà)
-                                st.markdown(f"**{row['adresse']}** : {row[col_p]} €", unsafe_allow_html=True)
-                except:
-                    st.error("Lieu non reconnu.")
+                                w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
+                                rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
+                                stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
+                                
+                                # --- AFFICHAGE INTELLIGENT AVEC LOGOS ---
+                                srv_str = str(row.get('service_propose', ''))
+                                badges_list = []
+                                if srv_str and srv_str != 'nan':
+                                    for s in srv_str.split(','):
+                                        name = s.strip()
+                                        emoji = LOGOS_SERVICES.get(name, "🔹") # Emoji par défaut si non trouvé
+                                        badges_list.append(f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {name}</span>')
+                                    all_badges = "".join(badges_list)
+                                else:
+                                    all_badges = '<span style="font-size:10px; color:#94a3b8;">Aucun service listé</span>'
+
+                                border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
+                                label_eco = f'<span style="background:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-bottom:5px; display:inline-block;">MEILLEUR PRIX 🏆</span><br>' if row[col_p] == p_min else ''
+
+                                card_html = f"""
+<div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+{label_eco}
+<div style="display:flex; justify-content:space-between; align-items:start;">
+<span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
+<div style="text-align:right;">
+<span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row['distance']:.1f} km</span>
+<div style="color:{stock_c}; font-weight:bold; font-size:0.75rem; margin-top:4px;">{stock_t}</div>
+</div>
+</div>
+<div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
+<div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{all_badges}</div>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
+<small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
+<a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">ITINÉRAIRE WAZE 🚗</a>
+</div>
+</div>
+"""
+                                st.markdown(card_html, unsafe_allow_html=True)
+                        else: st.warning("Aucune station ne correspond.")
+                except: st.error("Lieu non reconnu.")
 
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
