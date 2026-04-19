@@ -320,20 +320,24 @@ with tabs[2]:
     if km_final > 0:
         total_euros = (km_final / 100) * base * p_final
         
+       # --- BLOC DE RÉSULTAT FINAL ---
         st.markdown(f"""
-            <div style="background-color: #1e293b; padding: 35px; border-radius: 20px; text-align: center; color: white; margin-top: 20px;">
-                <p style="margin: 0; opacity: 0.8;">BUDGET ESTIMÉ</p>
-                <h1 style="margin: 10px 0; font-size: 3.8rem; color: #4ade80; border:none; font-weight:800;">{total_euros:.2f} €</h1>
-                <p style="margin: 0; opacity: 0.6;">{km_final} km • {base:.1f} L/100 • {p_final:.3f} €/L</p>
+            <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px;">
+                <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; text-align: center;">
+                    <b>Budget estimé au plus juste</b> selon votre itinéraire (relief, vitesse) et votre profil de véhicule. <br>
+                    <span style="color: #64748b; font-size: 0.85rem; font-style: italic;">
+                        ⚠️ Ce montant est indicatif : il peut varier selon l'évolution réelle des prix à la pompe et les conditions de circulation.
+                    </span>
+                </p>
             </div>
         """, unsafe_allow_html=True)
+
+        # LE GROS CHIFFRE
         st.markdown(f"""
-            <div style="background-color: #f1f5f9; padding: 15px; border-radius: 10px; border-left: 5px solid #1a73e8; margin-bottom: 20px;">
-                <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.5;">
-                    Cette estimation est calculée en temps réel selon un algorithme croisant votre itinéraire spécifique, 
-                    le profil énergétique de votre véhicule et les conditions de circulation réelles (relief et vitesse). 
-                    Elle représente le budget au plus juste pour votre trajet.
-                </p>
+            <div style="background-color: #1e293b; padding: 35px; border-radius: 20px; text-align: center; color: white;">
+                <p style="margin: 0; opacity: 0.7; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Estimation Totale</p>
+                <h1 style="margin: 10px 0; font-size: 4rem; color: #4ade80; border:none; font-weight:800;">{total_euros:.2f} €</h1>
+                <p style="margin: 0; opacity: 0.5; font-size: 0.85rem;">{km_final} km • {base:.1f} L/100 • {p_final:.3f} €/L</p>
             </div>
         """, unsafe_allow_html=True)
         # WAZE
