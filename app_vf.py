@@ -15,7 +15,7 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "Carbunet"
 
-
+st.markdown(f'<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">', unsafe_allow_html=True)
 st.set_page_config(
     page_title=f"CarbuNet by {AUTEUR}", 
     layout="centered", 
