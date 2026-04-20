@@ -23,10 +23,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. LES LIENS POUR L'ICÔNE (Avec ton nouveau lien officiel)
+# 2. ICI : LE BLOC "FORCE BRUTE" POUR L'ICÔNE IPHONE
 st.markdown(f"""
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
-    <link rel="icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
+    <link rel="mask-icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png" color="#32CD32">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
 """, unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
