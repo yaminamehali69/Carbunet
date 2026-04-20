@@ -15,7 +15,7 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "Carbunet"
 
-# TOUJOURS EN PREMIER :
+# 1. LA CONFIGURATION DE PAGE (Toujours en premier)
 st.set_page_config(
     page_title=f"CarbuNet by {AUTEUR}", 
     layout="centered", 
@@ -23,10 +23,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# JUSTE APRÈS (Les liens pour l'icône iPhone et Android) :
+# 2. LES LIENS POUR L'ICÔNE (Avec ton nouveau lien officiel)
 st.markdown(f"""
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
-    <link rel="shortcut icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
+    <link rel="icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
 """, unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
