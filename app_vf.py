@@ -38,41 +38,54 @@ LOGOS_SERVICES = {
 }
 
 # --- STYLE CSS ---
+# --- STYLE CSS ---
 st.markdown("""
 <style>
-header {visibility: hidden;}
+    /* 1. Masquage global du header et fix transparence */
+    header {visibility: hidden;}
+    
+    div[data-testid="stAppViewBlockContainer"] {
+        opacity: 1 !important;
+    }
 
-/* 1. Supprime le vide en haut de la page */
-.block-container {
-    padding-top: 1rem !important; 
-    padding-bottom: 0rem;
-}
+    /* 2. Supprime le vide en haut de la page */
+    .block-container {
+        padding-top: 1rem !important; 
+        padding-bottom: 0rem;
+    }
 
-.stTabs [data-baseweb="tab-list"] { gap: 8px; justify-content: center; margin-bottom: 10px; }
-.stTabs [data-baseweb="tab"] { height: 40px; background-color: #f1f5f9; border-radius: 10px; padding: 4px 15px; font-weight: 600; }
-.stTabs [aria-selected="true"] { background-color: #0f172a !important; color: white !important; }
+    /* 3. OPTIMISATION MODE APP (PWA) */
+    @media (display-mode: standalone) {
+        header { display: none !important; }
+        .block-container { padding-top: 0px !important; }
+    }
 
-.hero-container {
-    background: linear-gradient(135deg, #1a73e8 0%, #32CD32 100%);
-    border-radius: 20px; 
-    padding: 25px 20px; 
-    text-align: center; 
-    color: white;
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    min-height: 380px; /* 2. Taille réduite ici */
-    justify-content: space-between;
-}
-.hero-container h1 { color: white !important; font-size: 2.8rem !important; margin-bottom: 5px; border:none; }
+    /* 4. DESIGN DES ONGLETS */
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; justify-content: center; margin-bottom: 10px; }
+    .stTabs [data-baseweb="tab"] { height: 40px; background-color: #f1f5f9; border-radius: 10px; padding: 4px 15px; font-weight: 600; }
+    .stTabs [aria-selected="true"] { background-color: #0f172a !important; color: white !important; }
 
-.disclaimer-text {
-    font-size: 0.7rem; opacity: 0.85; line-height: 1.2; max-width: 550px;
-    margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;
-}
+    /* 5. HERO CONTAINER (ACCUEIL) */
+    .hero-container {
+        background: linear-gradient(135deg, #1a73e8 0%, #32CD32 100%);
+        border-radius: 20px; 
+        padding: 25px 20px; 
+        text-align: center; 
+        color: white;
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        min-height: 380px; 
+        justify-content: space-between;
+    }
+    .hero-container h1 { color: white !important; font-size: 2.8rem !important; margin-bottom: 5px; border:none; }
+
+    .disclaimer-text {
+        font-size: 0.7rem; opacity: 0.85; line-height: 1.2; max-width: 550px;
+        margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
-
 
 # --- 2. DONNÉES ---
 @st.cache_data(ttl=3600) # Ajout d'une durée de cache (1h) pour forcer l'actu
