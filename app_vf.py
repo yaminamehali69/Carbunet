@@ -15,13 +15,19 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "Carbunet"
 
-st.markdown(f'<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">', unsafe_allow_html=True)
+# TOUJOURS EN PREMIER :
 st.set_page_config(
     page_title=f"CarbuNet by {AUTEUR}", 
     layout="centered", 
     page_icon=path_logo, 
     initial_sidebar_state="collapsed"
 )
+
+# JUSTE APRÈS (Les liens pour l'icône iPhone et Android) :
+st.markdown(f"""
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
+    <link rel="shortcut icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
+""", unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
