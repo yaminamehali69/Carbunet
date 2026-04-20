@@ -300,9 +300,9 @@ with tabs[2]:
     st.markdown("#####  1. Itinéraire")
     c1, c2 = st.columns(2)
     with c1:
-        dep_v = st.text_input("Départ", value="41 rue de la confiance", key="cle_dep")
+        dep_v = st.text_input("Départ", value="ville ou adresse complète", key="cle_dep")
     with c2:
-        arr_v = st.text_input("Arrivée", value="7 rue paul gauguin meyzieu", key="cle_arr")
+        arr_v = st.text_input("Arrivée", value="ville ou adresse complète", key="cle_arr")
 
     # BOUTON DE CALCUL
     if st.button(" CALCULER L'ITINÉRAIRE", use_container_width=True):
