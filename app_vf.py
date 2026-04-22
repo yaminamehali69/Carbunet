@@ -8,46 +8,39 @@ from geopy.distance import geodesic
 import base64
 import urllib.parse
 
-# --- 1. CONFIGURATION ---
+# --- 1. CONFIGURATION UNIQUE ---
 path_logo = "logo_carbunet.png"
 path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carburant_prix_nettoye.csv"
 VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "Carbunet"
-
-# --- 1. CONFIGURATION ---
-# Utilise le lien DIRECT "raw" pour que l'iPhone ne puisse pas se tromper
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 
+# CONFIG PAGE (UNE SEULE FOIS ET EN PREMIER)
 st.set_page_config(
     page_title="CarbuNet", 
     layout="centered", 
-    page_icon=LOGO_URL, # On met ton logo ici aussi !
+    page_icon=path_logo, 
     initial_sidebar_state="collapsed"
 )
 
-# 2. LE HACK FINAL (On force l'icône et on supprime celle de Streamlit)
+# 2. LE HACK ICÔNE (Pour iPhone et PC)
 st.markdown(f"""
     <head>
         <link rel="apple-touch-icon" href="{LOGO_URL}">
         <link rel="icon" href="{LOGO_URL}">
     </head>
     <script>
-        // Ce petit script va chercher l'icône de Streamlit et la remplacer par la tienne dès que la page charge
-        var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'shortcut icon';
-        link.href = '{LOGO_URL}';
-        document.getElementsByTagName('head')[0].appendChild(link);
-        
-        // On fait la même chose pour l'icône iPhone
-        var appleLink = document.querySelector("link[rel*='apple-touch-icon']") || document.createElement('link');
-        appleLink.rel = 'apple-touch-icon';
-        appleLink.href = '{LOGO_URL}';
-        document.getElementsByTagName('head')[0].appendChild(appleLink);
+        var changeFav = () => {{
+            var links = document.querySelectorAll("link[rel*='icon']");
+            links.forEach(l => l.href = '{LOGO_URL}');
+            var apple = document.querySelector("link[rel*='apple-touch-icon']") || document.createElement('link');
+            apple.rel = 'apple-touch-icon'; apple.href = '{LOGO_URL}';
+            document.getElementsByTagName('head')[0].appendChild(apple);
+        }};
+        setTimeout(changeFav, 500);
     </script>
 """, unsafe_allow_html=True)
-
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
     "Aire de camping-cars": "🚐", "Automate CB 24/24": "🏪", "Bar": "🍸", 
