@@ -24,23 +24,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. LE HACK ICÔNE (Pour iPhone et PC)
+# Remplace la partie Apple par ça :
 st.markdown(f"""
     <head>
-        <link rel="apple-touch-icon" href="{LOGO_URL}">
-        <link rel="icon" href="{LOGO_URL}">
+        <link rel="apple-touch-icon-precomposed" href="{LOGO_URL}?v=2">
+        <link rel="apple-touch-icon" href="{LOGO_URL}?v=2">
     </head>
-    <script>
-        var changeFav = () => {{
-            var links = document.querySelectorAll("link[rel*='icon']");
-            links.forEach(l => l.href = '{LOGO_URL}');
-            var apple = document.querySelector("link[rel*='apple-touch-icon']") || document.createElement('link');
-            apple.rel = 'apple-touch-icon'; apple.href = '{LOGO_URL}';
-            document.getElementsByTagName('head')[0].appendChild(apple);
-        }};
-        setTimeout(changeFav, 500);
-    </script>
 """, unsafe_allow_html=True)
+
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
     "Aire de camping-cars": "🚐", "Automate CB 24/24": "🏪", "Bar": "🍸", 
