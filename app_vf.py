@@ -13,24 +13,52 @@ path_logo = "logo_carbunet.png"
 path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carburant_prix_nettoye.csv"
 VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
-AUTEUR_2 = "Carbunet"
-LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
+AUTEUR_2 = "CarbuNet"
+# On change la version à v=20 pour bien forcer l'iPhone à oublier l'ancienne image
+LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png?v=20"
 
-# CONFIG PAGE (UNE SEULE FOIS ET EN PREMIER)
+# CONFIG PAGE (DOIT ÊTRE LA TOUTE PREMIÈRE COMMANDE)
 st.set_page_config(
     page_title="CarbuNet", 
     layout="centered", 
-    page_icon=path_logo, 
+    page_icon=LOGO_URL, 
     initial_sidebar_state="collapsed"
 )
 
-# Remplace la partie Apple par ça :
+# 2. INJECTION DES BALISES DANS LE HEAD (POUR APPLE & NAVIGATEURS)
 st.markdown(f"""
-    <head>
-        <link rel="apple-touch-icon-precomposed" href="{LOGO_URL}?v=2">
-        <link rel="apple-touch-icon" href="{LOGO_URL}?v=2">
-    </head>
+    <link rel="apple-touch-icon" href="{LOGO_URL}">
+    <link rel="apple-touch-icon-precomposed" href="{LOGO_URL}">
+    <link rel="shortcut icon" href="{LOGO_URL}">
+    <link rel="icon" href="{LOGO_URL}">
 """, unsafe_allow_html=True)
+
+# 3. SCRIPT "FORCEUR" (C'est lui qui va écraser le logo Streamlit)
+components.html(f"""
+    <script>
+        const updateIcons = () => {{
+            // On cherche toutes les icônes existantes (celles de Streamlit) et on les remplace
+            const links = window.parent.document.querySelectorAll("link[rel*='icon']");
+            links.forEach(link => {{
+                link.href = "{LOGO_URL}";
+            }});
+            
+            // On crée/force l'icône spécifique Apple
+            let appleLink = window.parent.document.querySelector("link[rel*='apple-touch-icon']");
+            if (!appleLink) {{
+                appleLink = window.parent.document.createElement('link');
+                appleLink.rel = 'apple-touch-icon';
+                window.parent.document.getElementsByTagName('head')[0].appendChild(appleLink);
+            }}
+            appleLink.href = "{LOGO_URL}";
+        }};
+        
+        // On lance le script plusieurs fois pour être sûr de gagner le combat contre le chargement de Streamlit
+        setTimeout(updateIcons, 500);
+        setTimeout(updateIcons, 1500);
+        setTimeout(updateIcons, 3000);
+    </script>
+""", height=0)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
