@@ -15,37 +15,36 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "Carbunet"
 
-# 1. CONFIG PAGE (OBLIGATOIRE EN PREMIER)
+# --- 1. CONFIGURATION ---
+# Utilise le lien DIRECT "raw" pour que l'iPhone ne puisse pas se tromper
+LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
+
 st.set_page_config(
-    page_title=f"CarbuNet by {AUTEUR}", 
+    page_title="CarbuNet", 
     layout="centered", 
-    page_icon="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png",
+    page_icon=LOGO_URL, # On met ton logo ici aussi !
     initial_sidebar_state="collapsed"
 )
 
-# 2. FORÇAGE ICÔNE (iPhone + navigateur)
-st.markdown("""
-    <!-- iPhone icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
-
-    <!-- Favicon -->
-    <link rel="icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
-    <link rel="shortcut icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
-
-    <!-- Mode app -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="CarbuNet">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <!-- HACK STREAMLIT (IMPORTANT) -->
+# 2. LE HACK FINAL (On force l'icône et on supprime celle de Streamlit)
+st.markdown(f"""
+    <head>
+        <link rel="apple-touch-icon" href="{LOGO_URL}">
+        <link rel="icon" href="{LOGO_URL}">
+    </head>
     <script>
-        const changeFavicon = () => {
-            let links = document.querySelectorAll("link[rel*='icon']");
-            links.forEach(link => link.href = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png");
-        };
-        setTimeout(changeFavicon, 500);
+        // Ce petit script va chercher l'icône de Streamlit et la remplacer par la tienne dès que la page charge
+        var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'shortcut icon';
+        link.href = '{LOGO_URL}';
+        document.getElementsByTagName('head')[0].appendChild(link);
+        
+        // On fait la même chose pour l'icône iPhone
+        var appleLink = document.querySelector("link[rel*='apple-touch-icon']") || document.createElement('link');
+        appleLink.rel = 'apple-touch-icon';
+        appleLink.href = '{LOGO_URL}';
+        document.getElementsByTagName('head')[0].appendChild(appleLink);
     </script>
 """, unsafe_allow_html=True)
 
