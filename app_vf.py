@@ -7,6 +7,7 @@ from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 import base64
 import urllib.parse
+import streamlit.components.v1 as components
 
 # --- 1. CONFIGURATION UNIQUE ---
 path_logo = "logo_carbunet.png"
