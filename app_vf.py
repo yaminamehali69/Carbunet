@@ -15,31 +15,38 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "Carbunet"
 
-# 1. LA CONFIGURATION DE PAGE (Toujours en premier)
+# 1. CONFIG PAGE (OBLIGATOIRE EN PREMIER)
 st.set_page_config(
     page_title=f"CarbuNet by {AUTEUR}", 
     layout="centered", 
-    page_icon=path_logo, 
+    page_icon="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png",
     initial_sidebar_state="collapsed"
 )
 
-# 2. BLOC OPTIMISÉ ICÔNE IPHONE + FAVICON
+# 2. FORÇAGE ICÔNE (iPhone + navigateur)
 st.markdown("""
-    <!-- Icônes iPhone -->
+    <!-- iPhone icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
     <link rel="apple-touch-icon" sizes="152x152" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
     <link rel="apple-touch-icon" sizes="120x120" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
 
-    <!-- Favicon navigateur -->
-    <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
-
-    <!-- Optionnel (fallback supplémentaire) -->
+    <!-- Favicon -->
+    <link rel="icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
     <link rel="shortcut icon" href="https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png">
 
-    <!-- Mode app iPhone -->
+    <!-- Mode app -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="CarbuNet">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- HACK STREAMLIT (IMPORTANT) -->
+    <script>
+        const changeFavicon = () => {
+            let links = document.querySelectorAll("link[rel*='icon']");
+            links.forEach(link => link.href = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png");
+        };
+        setTimeout(changeFavicon, 500);
+    </script>
 """, unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
