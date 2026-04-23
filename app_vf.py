@@ -20,33 +20,25 @@ LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_
 
 
 
-# --- CONFIGURATION LOGO ---
-def get_base64_of_bin_file(bin_file):
-    with open(bin_file, 'rb') as f:
-        data = f.read()
-    return base64.b64encode(data).decode()
 
-# ICI : Assure-toi que ton fichier s'appelle exactement logo_carbunet.png 
-# et qu'il est bien CARRE dans ton dossier GitHub
-try:
-    img_base64 = get_base64_of_bin_file("logo_carbunet.png")
-except:
-    img_base64 = ""
+# --- 1. CONFIGURATION ---
+# On utilise un lien direct SANS passer par le dossier local
+LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 
-# CONFIGURATION DE LA PAGE
 st.set_page_config(
-    page_title="CarbuNet",
-    page_icon="⛽", # Emoji de secours
-    layout="centered"
+    page_title="CarbuNet", 
+    layout="centered", 
+    page_icon=LOGO_URL, 
+    initial_sidebar_state="collapsed"
 )
 
-# LE HACK MANUEL (Injection forcée)
-st.markdown(f"""
-    <link rel="apple-touch-icon" href="data:image/png;base64,{img_base64}">
-    <link rel="icon" href="data:image/png;base64,{img_base64}">
+# 2. FORCE BRUTE HTML (Sans balise <head> car Streamlit les déteste)
+st.markdown(f'''
+    <link rel="apple-touch-icon" href="{LOGO_URL}?v=99">
+    <link rel="icon" type="image/png" href="{LOGO_URL}?v=99">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-""", unsafe_allow_html=True)
+    <meta name="apple-mobile-web-app-title" content="CarbuNet">
+''', unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
