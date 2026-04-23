@@ -54,25 +54,25 @@ st.markdown(f"""
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="CarbuNet">
 """, unsafe_allow_html=True)
-# --- STYLE POUR TOUT EFFACER (AVATAR + COURONNE + BARRE) ---
+
+# --- STYLE ET SCRIPT POUR TOUT EFFACER ---
 st.markdown("""
     <style>
-        /* Supprime le header, le footer et le menu */
-        header {visibility: hidden;}
-        footer {visibility: hidden;}
-        #MainMenu {visibility: hidden;}
-        
-        /* Supprime la barre d'outils entière en bas à droite (Avatar + Couronne) */
-        [data-testid="stStatusWidget"] {display:none !important;}
-        .stAppToolbar {display:none !important;}
-        .stDeployButton {display:none !important;}
-        [data-testid="stAppDeployButton"] {display:none !important;}
-        
-        /* Supprime l'espace vide en haut */
-        .block-container {
-            padding-top: 0rem !important;
+        /* CSS Radical */
+        header, footer, .stDeployButton, .stAppToolbar, [data-testid="stStatusWidget"] {
+            display: none !important;
+            visibility: hidden !important;
         }
     </style>
+    
+    <script>
+        // Ce petit script va chercher les icônes toutes les secondes pour les supprimer
+        const hideElements = () => {
+            const elements = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
+            elements.forEach(el => el.style.display = 'none');
+        };
+        setInterval(hideElements, 1000);
+    </script>
 """, unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
