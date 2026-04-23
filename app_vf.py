@@ -20,30 +20,43 @@ AUTEUR_2 = "CarbuNet"
 
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 
-# Fonction pour transformer l'image en texte (Base64)
-def get_base64_from_url(url):
+# Fonction ultra-sécurisée pour le Base64
+@st.cache_data
+def get_logo_base64(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=5)
         return base64.b64encode(response.content).decode()
     except:
         return ""
 
-logo_base64 = get_base64_from_url(LOGO_URL)
+logo_data = get_logo_base64(LOGO_URL)
 
-# CONFIG PAGE
 st.set_page_config(
     page_title="CarbuNet", 
     layout="centered",
-    page_icon=path_logo
+    page_icon=LOGO_URL
 )
 
-# L'INJECTION POUR L'IPHONE
-st.markdown(f"""
-<link rel="apple-touch-icon" href="data:image/png;base64,{logo_base64}">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="CarbuNet">
-""", unsafe_allow_html=True)
+# 2. INJECTION DIRECTE (La méthode qui se rapproche du HTML pur)
+st.write(f'''
+    <style>
+        /* On force l'icône au niveau du navigateur parent */
+        iframe {{
+            display: block;
+        }}
+    </style>
+    <script>
+        // On injecte l'icône dans le document parent (Safari)
+        var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'apple-touch-icon';
+        link.href = 'data:image/png;base64,{logo_data}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+''', unsafe_allow_html=True)
+
+# 3. BALISE DE SECOURS
+st.markdown(f'<link rel="apple-touch-icon" href="data:image/png;base64,{logo_data}">', unsafe_allow_html=True)
 
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
