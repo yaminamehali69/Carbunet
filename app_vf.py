@@ -15,30 +15,25 @@ path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carbu
 VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
-# On change la version à v=20 pour bien forcer l'iPhone à oublier l'ancienne image
-LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png?v=20"
 
-
-
-
-# --- 1. CONFIGURATION ---
-# On utilise un lien direct SANS passer par le dossier local
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
+
+def get_base64_from_url(url):
+    response = requests.get(url)
+    return base64.b64encode(response.content).decode()
+
+logo_base64 = get_base64_from_url(LOGO_URL)
 
 st.set_page_config(
     page_title="CarbuNet", 
-    layout="centered", 
-    page_icon=LOGO_URL, 
-    initial_sidebar_state="collapsed"
+    layout="centered"
 )
 
-# 2. FORCE BRUTE HTML (Sans balise <head> car Streamlit les déteste)
-st.markdown(f'''
-    <link rel="apple-touch-icon" href="{LOGO_URL}?v=99">
-    <link rel="icon" type="image/png" href="{LOGO_URL}?v=99">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="CarbuNet">
-''', unsafe_allow_html=True)
+st.markdown(f"""
+<link rel="apple-touch-icon" href="data:image/png;base64,{logo_base64}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CarbuNet">
+""", unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
