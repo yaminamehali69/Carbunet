@@ -55,23 +55,27 @@ st.markdown(f"""
     <meta name="apple-mobile-web-app-title" content="CarbuNet">
 """, unsafe_allow_html=True)
 
-# --- STYLE POUR CACHER LE MENU ET LE FOOTER STREAMLIT ---
+# --- STYLE POUR TOUT CACHER (Version Blindée) ---
 st.markdown("""
     <style>
-        /* Cache le menu en haut à droite */
+        /* Supprime le menu, le footer et la ligne rouge du haut */
         #MainMenu {visibility: hidden;}
-        
-        /* Cache le footer "Made with Streamlit" en bas */
         footer {visibility: hidden;}
-        
-        /* Cache la barre de déploiement en bas à droite (le petit bouton rouge) */
-        .stDeployButton {display:none;}
-        
-        /* Cache l'icône de statut de chargement en haut */
-        stDecoration {display:none;}
-
-        /* Optionnel : Enlève la barre blanche tout en haut pour gagner de la place */
         header {visibility: hidden;}
+        
+        /* Supprime TOUS les boutons de déploiement et de gestion en bas à droite */
+        .stDeployButton {display:none !important;}
+        .stAppDeployButton {display:none !important;}
+        .stAppToolbar {display:none !important;}
+        
+        /* Supprime la petite icône d'utilisateur en bas à droite */
+        [data-testid="stStatusWidget"] {display:none !important;}
+        
+        /* Supprime les marges inutiles pour un look appli native */
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 0rem !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
