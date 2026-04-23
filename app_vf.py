@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import requests
 import os
 import folium
 from streamlit_folium import st_folium
@@ -8,6 +9,7 @@ from geopy.distance import geodesic
 import base64
 import urllib.parse
 import streamlit.components.v1 as components
+
 
 # --- 1. CONFIGURATION UNIQUE ---
 path_logo = "logo_carbunet.png"
@@ -18,22 +20,31 @@ AUTEUR_2 = "CarbuNet"
 
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 
+# Fonction pour transformer l'image en texte (Base64)
 def get_base64_from_url(url):
-    response = requests.get(url)
-    return base64.b64encode(response.content).decode()
+    try:
+        response = requests.get(url)
+        return base64.b64encode(response.content).decode()
+    except:
+        return ""
 
 logo_base64 = get_base64_from_url(LOGO_URL)
 
+# CONFIG PAGE
 st.set_page_config(
     page_title="CarbuNet", 
-    layout="centered"
+    layout="centered",
+    page_icon=path_logo
 )
 
+# L'INJECTION POUR L'IPHONE
 st.markdown(f"""
 <link rel="apple-touch-icon" href="data:image/png;base64,{logo_base64}">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CarbuNet">
 """, unsafe_allow_html=True)
+
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {

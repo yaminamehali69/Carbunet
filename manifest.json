@@ -1,0 +1,20 @@
+{
+  "name": "CarbuNet",
+  "short_name": "CarbuNet",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "Le prix le plus net, au kilomètre près.",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
