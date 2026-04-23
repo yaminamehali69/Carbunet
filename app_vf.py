@@ -54,27 +54,23 @@ st.markdown(f"""
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="CarbuNet">
 """, unsafe_allow_html=True)
-
-# --- STYLE POUR TOUT CACHER (Version Blindée) ---
+# --- STYLE POUR TOUT EFFACER (AVATAR + COURONNE + BARRE) ---
 st.markdown("""
     <style>
-        /* Supprime le menu, le footer et la ligne rouge du haut */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
+        /* Supprime le header, le footer et le menu */
         header {visibility: hidden;}
+        footer {visibility: hidden;}
+        #MainMenu {visibility: hidden;}
         
-        /* Supprime TOUS les boutons de déploiement et de gestion en bas à droite */
-        .stDeployButton {display:none !important;}
-        .stAppDeployButton {display:none !important;}
-        .stAppToolbar {display:none !important;}
-        
-        /* Supprime la petite icône d'utilisateur en bas à droite */
+        /* Supprime la barre d'outils entière en bas à droite (Avatar + Couronne) */
         [data-testid="stStatusWidget"] {display:none !important;}
+        .stAppToolbar {display:none !important;}
+        .stDeployButton {display:none !important;}
+        [data-testid="stAppDeployButton"] {display:none !important;}
         
-        /* Supprime les marges inutiles pour un look appli native */
+        /* Supprime l'espace vide en haut */
         .block-container {
-            padding-top: 1rem !important;
-            padding-bottom: 0rem !important;
+            padding-top: 0rem !important;
         }
     </style>
 """, unsafe_allow_html=True)
