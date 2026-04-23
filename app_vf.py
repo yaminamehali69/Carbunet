@@ -18,9 +18,7 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
-LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 
-# Fonction ultra-sécurisée pour le Base64
 @st.cache_data
 def get_logo_base64(url):
     try:
@@ -37,26 +35,25 @@ st.set_page_config(
     page_icon=LOGO_URL
 )
 
-# 2. INJECTION DIRECTE (La méthode qui se rapproche du HTML pur)
-st.write(f'''
-    <style>
-        /* On force l'icône au niveau du navigateur parent */
-        iframe {{
-            display: block;
-        }}
-    </style>
+# 2. LE SCRIPT MAGIQUE (Évite la page blanche et force l'icône)
+# Ce code s'exécute DANS Streamlit mais parle à Safari
+st.components.v1.html(f"""
     <script>
-        // On injecte l'icône dans le document parent (Safari)
+        window.parent.document.title = "CarbuNet";
         var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
         link.type = 'image/png';
         link.rel = 'apple-touch-icon';
         link.href = 'data:image/png;base64,{logo_data}';
         window.parent.document.getElementsByTagName('head')[0].appendChild(link);
     </script>
-''', unsafe_allow_html=True)
+""", height=0)
 
-# 3. BALISE DE SECOURS
-st.markdown(f'<link rel="apple-touch-icon" href="data:image/png;base64,{logo_data}">', unsafe_allow_html=True)
+# 3. DOUBLURE DE SÉCURITÉ
+st.markdown(f"""
+    <link rel="apple-touch-icon" href="data:image/png;base64,{logo_data}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="CarbuNet">
+""", unsafe_allow_html=True)
 
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
