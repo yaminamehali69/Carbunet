@@ -10,7 +10,7 @@ import base64
 import urllib.parse
 import streamlit.components.v1 as components
 
-
+LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 # --- 1. CONFIGURATION UNIQUE ---
 path_logo = "logo_carbunet.png"
 path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carburant_prix_nettoye.csv"
