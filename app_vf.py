@@ -55,6 +55,25 @@ st.markdown(f"""
     <meta name="apple-mobile-web-app-title" content="CarbuNet">
 """, unsafe_allow_html=True)
 
+# --- STYLE POUR CACHER LE MENU ET LE FOOTER STREAMLIT ---
+st.markdown("""
+    <style>
+        /* Cache le menu en haut à droite */
+        #MainMenu {visibility: hidden;}
+        
+        /* Cache le footer "Made with Streamlit" en bas */
+        footer {visibility: hidden;}
+        
+        /* Cache la barre de déploiement en bas à droite (le petit bouton rouge) */
+        .stDeployButton {display:none;}
+        
+        /* Cache l'icône de statut de chargement en haut */
+        stDecoration {display:none;}
+
+        /* Optionnel : Enlève la barre blanche tout en haut pour gagner de la place */
+        header {visibility: hidden;}
+    </style>
+""", unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
