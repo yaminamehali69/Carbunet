@@ -91,36 +91,51 @@ LOGOS_SERVICES = {
 
 # --- STYLE CSS ---
 # --- STYLE CSS ---
-# --- STYLE CSS 100% RESPONSIVE (À COLLER) ---
-st.markdown(f"""
+st.markdown("""
 <style>
-    header {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    .stDeployButton, .stAppToolbar, [data-testid="stStatusWidget"] {{
-        display: none !important;
-    }}
+    /* 1. Masquage global du header et fix transparence */
+    header {visibility: hidden;}
+    
+    div[data-testid="stAppViewBlockContainer"] {
+        opacity: 1 !important;
+    }
 
-    .block-container {{
+    /* 2. Supprime le vide en haut de la page */
+    .block-container {
         padding-top: 1rem !important; 
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        max-width: 100% !important;
-    }}
+        padding-bottom: 0rem;
+    }
 
-    /* C'est ce bloc qui répare l'affichage sur ton iPhone */
-    @media (max-width: 640px) {{
-        [data-testid="column"] {{
-            width: 100% !important;
-            flex: 1 1 100% !important;
-            min-width: 100% !important;
-            margin-bottom: 15px !important;
-        }}
-        .hero-container h1 {{ font-size: 1.8rem !important; }}
-    }}
+    /* 3. OPTIMISATION MODE APP (PWA) */
+    @media (display-mode: standalone) {
+        header { display: none !important; }
+        .block-container { padding-top: 0px !important; }
+    }
 
-    .stTabs [data-baseweb="tab-list"] {{ gap: 8px; justify-content: center; overflow-x: auto; }}
-    .stTabs [data-baseweb="tab"] {{ white-space: nowrap; }}
-    .stDataFrame, .stTable {{ width: 100% !important; overflow-x: auto !important; }}
+    /* 4. DESIGN DES ONGLETS */
+    .stTabs [data-baseweb="tab-list"] { gap: 8px; justify-content: center; margin-bottom: 10px; }
+    .stTabs [data-baseweb="tab"] { height: 40px; background-color: #f1f5f9; border-radius: 10px; padding: 4px 15px; font-weight: 600; }
+    .stTabs [aria-selected="true"] { background-color: #0f172a !important; color: white !important; }
+
+    /* 5. HERO CONTAINER (ACCUEIL) */
+    .hero-container {
+        background: linear-gradient(135deg, #1a73e8 0%, #32CD32 100%);
+        border-radius: 20px; 
+        padding: 25px 20px; 
+        text-align: center; 
+        color: white;
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        min-height: 380px; 
+        justify-content: space-between;
+    }
+    .hero-container h1 { color: white !important; font-size: 2.8rem !important; margin-bottom: 5px; border:none; }
+
+    .disclaimer-text {
+        font-size: 0.7rem; opacity: 0.85; line-height: 1.2; max-width: 550px;
+        margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
