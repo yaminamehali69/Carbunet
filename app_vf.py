@@ -96,7 +96,7 @@ st.markdown("""
         opacity: 1 !important;
     }
 
-    /* 2. NETTOYAGE INTERFACE */
+    /* 2. NETTOYAGE INTERFACE (Avatar, Couronne, Menu) */
     header {visibility: hidden;}
     footer {visibility: hidden;}
     .stDeployButton, .stAppToolbar, [data-testid="stStatusWidget"] { display: none !important; }
@@ -109,9 +109,9 @@ st.markdown("""
         max-width: 100% !important;
     }
 
-    /* 4. LE FIX POUR TON TÉLÉPHONE (MEDIA QUERIES) */
+    /* 4. LE FIX POUR MOBILE (MODE PORTRAIT) */
     @media (max-width: 640px) {
-        /* Force les colonnes à s'empiler verticalement */
+        /* Force les colonnes à s'empiler (évite le débordement horizontal) */
         [data-testid="column"] {
             width: 100% !important;
             flex: 1 1 100% !important;
@@ -119,23 +119,30 @@ st.markdown("""
             margin-bottom: 10px !important;
         }
 
-        /* Ajuste ton formulaire de support pour qu'il ne déborde pas */
+        /* FORCE LE FORMULAIRE DE SUPPORT À RESTER DANS L'ÉCRAN */
         iframe {
             width: 100% !important;
+            min-width: 100% !important;
         }
         
-        /* Réduit la taille des titres pour mobile */
-        h2, h1 {
-            font-size: 1.5rem !important;
+        /* Réduit la taille des titres pour qu'ils ne poussent pas les bords */
+        h1, h2 {
+            font-size: 1.4rem !important;
+            word-wrap: break-word;
+        }
+        
+        .hero-container h1 {
+            font-size: 1.8rem !important;
         }
     }
 
-    /* 5. DESIGN DES ONGLETS (SCROLLABLE SUR MOBILE) */
+    /* 5. DESIGN DES ONGLETS (SCROLLABLE AU DOIGT) */
     .stTabs [data-baseweb="tab-list"] { 
         gap: 8px; 
         justify-content: center; 
-        overflow-x: auto; /* Permet de slider les onglets avec le doigt */
+        overflow-x: auto !important; 
         white-space: nowrap;
+        -webkit-overflow-scrolling: touch; /* Scroll fluide sur iPhone */
     }
     .stTabs [data-baseweb="tab"] { 
         height: 40px; 
@@ -154,6 +161,14 @@ st.markdown("""
         text-align: center; 
         color: white;
         min-height: auto;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 7. DISCLAIMER TEXT (S'adapte à la largeur) */
+    .disclaimer-text {
+        font-size: 0.7rem; opacity: 0.85; line-height: 1.2; width: 100%;
+        margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
