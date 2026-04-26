@@ -89,35 +89,57 @@ LOGOS_SERVICES = {
     "Vente de pétrole lampant": "🛢️", "Wifi": "📶"
 }
 
-# --- STYLE CSS ---
-# --- STYLE CSS ---
 st.markdown("""
 <style>
-    /* 1. Masquage global du header et fix transparence */
-    header {visibility: hidden;}
-    
+    /* 1. FIX CHARGEMENT & TRANSPARENCE */
+    /* Force l'affichage du contenu sans attendre la fin du script de chargement Streamlit */
     div[data-testid="stAppViewBlockContainer"] {
         opacity: 1 !important;
     }
 
-    /* 2. Supprime le vide en haut de la page */
+    /* 2. NETTOYAGE INTERFACE */
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton, .stAppToolbar, [data-testid="stStatusWidget"] { display: none !important; }
+
+    /* 3. STRUCTURE RESPONSIVE */
     .block-container {
         padding-top: 1rem !important; 
         padding-bottom: 0rem;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: 100% !important;
     }
 
-    /* 3. OPTIMISATION MODE APP (PWA) */
-    @media (display-mode: standalone) {
-        header { display: none !important; }
-        .block-container { padding-top: 0px !important; }
+    /* 4. LE SECRET DU MOBILE : Empilement des colonnes */
+    @media (max-width: 640px) {
+        [data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+            margin-bottom: 15px !important;
+        }
+        .hero-container h1 { font-size: 2rem !important; }
+        .stTabs [data-baseweb="tab-list"] { 
+            justify-content: flex-start !important; 
+            overflow-x: auto;
+            gap: 5px;
+        }
     }
 
-    /* 4. DESIGN DES ONGLETS */
+    /* 5. DESIGN DES ONGLETS */
     .stTabs [data-baseweb="tab-list"] { gap: 8px; justify-content: center; margin-bottom: 10px; }
-    .stTabs [data-baseweb="tab"] { height: 40px; background-color: #f1f5f9; border-radius: 10px; padding: 4px 15px; font-weight: 600; }
+    .stTabs [data-baseweb="tab"] { 
+        height: 40px; 
+        background-color: #f1f5f9; 
+        border-radius: 10px; 
+        padding: 4px 15px; 
+        font-weight: 600;
+        white-space: nowrap; 
+    }
     .stTabs [aria-selected="true"] { background-color: #0f172a !important; color: white !important; }
 
-    /* 5. HERO CONTAINER (ACCUEIL) */
+    /* 6. HERO CONTAINER (ACCUEIL) */
     .hero-container {
         background: linear-gradient(135deg, #1a73e8 0%, #32CD32 100%);
         border-radius: 20px; 
@@ -127,18 +149,22 @@ st.markdown("""
         display: flex; 
         flex-direction: column; 
         align-items: center; 
-        min-height: 380px; 
-        justify-content: space-between;
+        min-height: auto;
     }
     .hero-container h1 { color: white !important; font-size: 2.8rem !important; margin-bottom: 5px; border:none; }
 
     .disclaimer-text {
-        font-size: 0.7rem; opacity: 0.85; line-height: 1.2; max-width: 550px;
+        font-size: 0.7rem; opacity: 0.85; line-height: 1.2; width: 100%; max-width: 550px;
         margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;
+    }
+
+    /* 7. OPTIMISATION MODE APP (PWA) */
+    @media (display-mode: standalone) {
+        header { display: none !important; }
+        .block-container { padding-top: 0px !important; }
     }
 </style>
 """, unsafe_allow_html=True)
-
 # --- 2. DONNÉES ---
 @st.cache_data(ttl=3600) # Ajout d'une durée de cache (1h) pour forcer l'actu
 def charger_donnees():
