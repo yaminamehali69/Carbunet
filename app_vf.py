@@ -362,7 +362,7 @@ with tabs[1]:
 
 
 # --- ONGLET 3 : SIMULATEUR ---
-with tabs[2]:
+ with tabs[2]:
     # INITIALISATION PROPRE
     if 'km_memoire' not in st.session_state:
         st.session_state['km_memoire'] = 0.0
@@ -383,15 +383,15 @@ with tabs[2]:
     st.info(f" Prix actuel : **{p_final:.3f} €/L** ({nom_carbu})")
 
   # ITINÉRAIRE (Modifié pour que le texte s'efface tout seul)
-st.markdown("#####  1. Itinéraire")
-c1, c2 = st.columns(2)
-with c1:
+ st.markdown("#####  1. Itinéraire")
+ c1, c2 = st.columns(2)
+ with c1:
     # On enlève 'value' et on met 'placeholder'
     dep_v = st.text_input("Départ", placeholder="Ville ou adresse complète", key="cle_dep")
-with c2:
+ with c2:
     # Idem ici
     arr_v = st.text_input("Arrivée", placeholder="Ville ou adresse complète", key="cle_arr")
-    
+
 
     # BOUTON DE CALCUL
     if st.button(" CALCULER L'ITINÉRAIRE", use_container_width=True):
