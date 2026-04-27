@@ -374,9 +374,9 @@ with tabs[1]:
 
 
 # --- ONGLET 3 : SIMULATEUR ---
-    with tabs[2]:
+with tabs[2]:
     # INITIALISATION PROPRE
-    if 'km_memoire' not in st.session_state:
+        if 'km_memoire' not in st.session_state:
         st.session_state['km_memoire'] = 0.0
 
     # --- NOUVEAU TITRE SIMULATEUR HARMONISÉ ---
