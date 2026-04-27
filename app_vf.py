@@ -18,6 +18,18 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
+# --- À METTRE JUSTE APRÈS TES IMPORTS ---
+ID_GA = "G-1WB5KDLL0P" 
+
+st.components.v1.html(f"""
+    <script async src="https://www.googletagmanager.com/gtag/js?id={ID_GA}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', '{ID_GA}');
+    </script>
+""", height=0)
 
 @st.cache_data
 def get_logo_base64(url):
