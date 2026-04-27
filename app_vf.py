@@ -382,16 +382,15 @@ with tabs[1]:
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
     st.info(f" Prix actuel : **{p_final:.3f} €/L** ({nom_carbu})")
 
-  # ITINÉRAIRE (Modifié pour que le texte s'efface tout seul)
- st.markdown("#####  1. Itinéraire")
- c1, c2 = st.columns(2)
- with c1:
-    # On enlève 'value' et on met 'placeholder'
-    dep_v = st.text_input("Départ", placeholder="Ville ou adresse complète", key="cle_dep")
- with c2:
-    # Idem ici
-    arr_v = st.text_input("Arrivée", placeholder="Ville ou adresse complète", key="cle_arr")
-
+    # --- TOUT CE QUI SUIT EST MAINTENANT BIEN DÉCALÉ (DANS L'ONGLET) ---
+    st.markdown("#####  1. Itinéraire")
+    c1, c2 = st.columns(2)
+    with c1:
+        # On enlève 'value' et on met 'placeholder'
+        dep_v = st.text_input("Départ", placeholder="Ville ou adresse complète", key="cle_dep")
+    with c2:
+        # Idem ici
+        arr_v = st.text_input("Arrivée", placeholder="Ville ou adresse complète", key="cle_arr")
 
     # BOUTON DE CALCUL
     if st.button(" CALCULER L'ITINÉRAIRE", use_container_width=True):
@@ -425,7 +424,7 @@ with tabs[1]:
 
     v_type = st.selectbox("Votre voiture", ["Citadine", "Berline", "SUV", "Utilitaire"])
 
-    # LOGIQUE DE CONSO (Pour tomber sur tes 30€)
+    # LOGIQUE DE CONSO
     base = {"Citadine": 5.5, "Berline": 6.8, "SUV": 8.0, "Utilitaire": 10.0}[v_type]
     if "Mixte" in p_route: base += 1.2
     elif "Autoroute" in p_route: base += 2.8
@@ -437,7 +436,7 @@ with tabs[1]:
     if km_final > 0:
         total_euros = (km_final / 100) * base * p_final
         
-       # --- BLOC DE RÉSULTAT FINAL ---
+        # --- BLOC DE RÉSULTAT FINAL ---
         st.markdown(f"""
             <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px;">
                 <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; text-align: center;">
@@ -448,6 +447,8 @@ with tabs[1]:
                 </p>
             </div>
         """, unsafe_allow_html=True)
+        
+      
 
         # LE GROS CHIFFRE
         st.markdown(f"""
