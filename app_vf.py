@@ -382,7 +382,7 @@ with tabs[2]:
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
     st.info(f" Prix actuel : **{p_final:.3f} €/L** ({nom_carbu})")
 
-# ITINÉRAIRE (Modifié pour que le texte s'efface tout seul)
+  # ITINÉRAIRE (Modifié pour que le texte s'efface tout seul)
 st.markdown("#####  1. Itinéraire")
 c1, c2 = st.columns(2)
 with c1:
@@ -391,6 +391,7 @@ with c1:
 with c2:
     # Idem ici
     arr_v = st.text_input("Arrivée", placeholder="Ville ou adresse complète", key="cle_arr")
+    
 
     # BOUTON DE CALCUL
     if st.button(" CALCULER L'ITINÉRAIRE", use_container_width=True):
