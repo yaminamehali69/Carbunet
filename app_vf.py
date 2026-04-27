@@ -196,32 +196,40 @@ tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
 # --- 4. CONTENU ---
 
 # --- ONGLET 1 : CONCEPT ---
+# --- ONGLET 1 : CONCEPT ---
 with tabs[0]:
     if os.path.exists(path_logo):
         with open(path_logo, "rb") as f:
             encoded = base64.b64encode(f.read()).decode()
         
         concept_html = f"""
-<div class="hero-container">
-<img src="data:image/png;base64,{encoded}" width="170">
-<h1>CarbuNet</h1>
-<p style="font-size:1.4rem; font-weight:500;">Le prix le plus net, au kilomètre près.</p>
-<div style="background: #0f172a; color: white; padding: 10px 25px; border-radius: 50px; font-weight: 600; font-size: 0.85rem; margin-top: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-block; border: 1px solid rgba(255,255,255,0.1);">
-     Explorez les tarifs en temps réel dans l'onglet <b style="color: #32CD32;">STATIONS</b>
-</div>
-<div class="disclaimer-text">
-<b>Mention d'information :</b> 
-Les données de prix et de disponibilité sont issues de la plateforme nationale <b>data.gouv.fr</b>.
-
-Bien que mises à jour régulièrement, {AUTEUR_2} ne saurait être tenue responsable des écarts de prix constatés lors du passage en caisse.
-</div>
-<div style="font-size:0.8rem; margin-top:15px; opacity:0.9;">
-Version {VERSION} | Développé par <b>{AUTEUR}</b>
-</div>
+<div class="hero-container" style="min-height: auto; padding: 15px 10px;">
+    <img src="data:image/png;base64,{encoded}" width="140" style="margin-bottom: 5px;">
+    <h1 style="margin: 0; font-size: 2rem !important;">CarbuNet</h1>
+    <p style="font-size:1.1rem; font-weight:500; margin: 5px 0;">Le prix le plus net, au kilomètre près.</p>
+    <div style="background: #0f172a; color: white; padding: 8px 20px; border-radius: 50px; font-weight: 600; font-size: 0.75rem; margin: 10px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: inline-block;">
+         Explorez les tarifs dans l'onglet <b style="color: #32CD32;">STATIONS</b>
+    </div>
+    <div class="disclaimer-text" style="font-size: 0.65rem; margin-top: 5px; padding-top: 5px;">
+        <b>Note :</b> Données issues de <b>data.gouv.fr</b>. 
+        Mises à jour régulières. {AUTEUR_2} n'est pas responsable des écarts.
+    </div>
+    <div style="font-size:0.7rem; margin-top:10px; opacity:0.8;">
+        V{VERSION} | Par <b>{AUTEUR}</b>
+    </div>
 </div>
 """
         st.markdown(concept_html, unsafe_allow_html=True) 
     st.caption("© 2026 CarbuNet. Propriété exclusive de l'auteur. Toute reproduction interdite.")
+/* Désactive le scroll moche sur l'écran principal */
+.main {
+    overflow: hidden !important;
+}
+
+/* Empêche le rebond élastique sur iPhone */
+body {
+    overscroll-behavior-y: contain;
+}
     
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
