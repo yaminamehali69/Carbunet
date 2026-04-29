@@ -20,7 +20,7 @@ AUTEUR_2 = "CarbuNet"
 
 
 
-# --- TRACKING & SCRIPTS MAGIQUES (TOUT-EN-UN) ---
+# --- TRACKING & SCRIPTS MAGIQUES (VERSION FINALE CORRIGÉE) ---
 ID_GA = "G-1WB5KDLL0P"
 
 components.html(f"""
@@ -29,10 +29,11 @@ components.html(f"""
         window.dataLayer = window.dataLayer || [];
         function gtag(){{dataLayer.push(arguments);}}
         gtag('js', new Date());
-        gtag('config', '{ID_GA}');
+        gtag('config', '{ID_GA}', {{ 'anonymize_ip': true }});
     </script>
 
     <script>
+        // Changement du titre et de l'icône iPhone
         window.parent.document.title = "CarbuNet";
         var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
         link.type = 'image/png';
@@ -40,9 +41,10 @@ components.html(f"""
         link.href = 'data:image/png;base64,{logo_data}';
         window.parent.document.getElementsByTagName('head')[0].appendChild(link);
 
+        // Masquer les menus Streamlit
         const hideElements = () => {{
             const elements = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
-            elements.forEach(el => el.style.display = 'none');
+            elements.forEach(el => {{ el.style.display = 'none'; el.style.visibility = 'hidden'; }});
         }};
         setInterval(hideElements, 1000);
     </script>
