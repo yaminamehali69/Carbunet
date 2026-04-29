@@ -18,16 +18,33 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
-# --- À METTRE JUSTE APRÈS TES IMPORTS ---
-ID_GA = "G-1WB5KDLL0P" 
 
-st.components.v1.html(f"""
+
+# --- TRACKING & SCRIPTS MAGIQUES (TOUT-EN-UN) ---
+ID_GA = "G-1WB5KDLL0P"
+
+components.html(f"""
     <script async src="https://www.googletagmanager.com/gtag/js?id={ID_GA}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){{dataLayer.push(arguments);}}
         gtag('js', new Date());
         gtag('config', '{ID_GA}');
+    </script>
+
+    <script>
+        window.parent.document.title = "CarbuNet";
+        var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'apple-touch-icon';
+        link.href = 'data:image/png;base64,{logo_data}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
+
+        const hideElements = () => {{
+            const elements = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
+            elements.forEach(el => el.style.display = 'none');
+        }};
+        setInterval(hideElements, 1000);
     </script>
 """, height=0)
 
