@@ -18,6 +18,23 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
+
+
+@st.cache_data
+def get_logo_base64(url):
+    try:
+        response = requests.get(url, timeout=5)
+        return base64.b64encode(response.content).decode()
+    except:
+        return ""
+
+logo_data = get_logo_base64(LOGO_URL)
+
+st.set_page_config(
+    page_title="CarbuNet", 
+    layout="centered",
+    page_icon=LOGO_URL
+)
 # --- INJECTION GOOGLE ANALYTICS (CORRECTIF FINAL) ---
 ID_GA = "G-1WB5KDLL0P"
 
@@ -55,23 +72,6 @@ components.html(f"""
     setInterval(hide, 1000);
 </script>
 """, height=0)
-
-@st.cache_data
-def get_logo_base64(url):
-    try:
-        response = requests.get(url, timeout=5)
-        return base64.b64encode(response.content).decode()
-    except:
-        return ""
-
-logo_data = get_logo_base64(LOGO_URL)
-
-st.set_page_config(
-    page_title="CarbuNet", 
-    layout="centered",
-    page_icon=LOGO_URL
-)
-
 # 2. LE SCRIPT MAGIQUE (Évite la page blanche et force l'icône)
 # Ce code s'exécute DANS Streamlit mais parle à Safari
 st.components.v1.html(f"""
