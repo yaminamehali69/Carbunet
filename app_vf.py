@@ -18,7 +18,43 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
+# --- INJECTION GOOGLE ANALYTICS (CORRECTIF FINAL) ---
+ID_GA = "G-1WB5KDLL0P"
 
+components.html(f"""
+<script>
+    var parentHead = window.parent.document.getElementsByTagName('head')[0];
+
+    // 1. On crée et on injecte la balise script principale
+    var scriptTag = window.parent.document.createElement('script');
+    scriptTag.async = true;
+    scriptTag.src = 'https://www.googletagmanager.com/gtag/js?id={ID_GA}';
+    parentHead.appendChild(scriptTag);
+
+    // 2. On injecte la configuration de suivi
+    var configTag = window.parent.document.createElement('script');
+    configTag.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', '{ID_GA}', {{ 'anonymize_ip': true }});
+    `;
+    parentHead.appendChild(configTag);
+
+    // 3. Tes autres réglages (Titre, Icône, Masquage Menu)
+    window.parent.document.title = "CarbuNet";
+    var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
+    link.type = 'image/png'; link.rel = 'apple-touch-icon';
+    link.href = 'data:image/png;base64,{logo_data}';
+    parentHead.appendChild(link);
+
+    const hide = () => {{
+        const el = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
+        el.forEach(e => {{ e.style.display = 'none'; e.style.visibility = 'hidden'; }});
+    }};
+    setInterval(hide, 1000);
+</script>
+""", height=0)
 
 @st.cache_data
 def get_logo_base64(url):
