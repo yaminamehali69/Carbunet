@@ -20,36 +20,6 @@ AUTEUR_2 = "CarbuNet"
 
 
 
-# --- TRACKING & SCRIPTS MAGIQUES (VERSION FINALE CORRIGÉE) ---
-ID_GA = "G-1WB5KDLL0P"
-
-components.html(f"""
-    <script async src="https://www.googletagmanager.com/gtag/js?id={ID_GA}"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){{dataLayer.push(arguments);}}
-        gtag('js', new Date());
-        gtag('config', '{ID_GA}', {{ 'anonymize_ip': true }});
-    </script>
-
-    <script>
-        // Changement du titre et de l'icône iPhone
-        window.parent.document.title = "CarbuNet";
-        var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'apple-touch-icon';
-        link.href = 'data:image/png;base64,{logo_data}';
-        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
-
-        // Masquer les menus Streamlit
-        const hideElements = () => {{
-            const elements = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
-            elements.forEach(el => {{ el.style.display = 'none'; el.style.visibility = 'hidden'; }});
-        }};
-        setInterval(hideElements, 1000);
-    </script>
-""", height=0)
-
 @st.cache_data
 def get_logo_base64(url):
     try:
@@ -571,3 +541,33 @@ with tabs[3]:
     st.components.v1.html(contact_form_html, height=520, scrolling=False)
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
+
+    # --- TRACKING & SCRIPTS MAGIQUES (VERSION FINALE CORRIGÉE) ---
+ID_GA = "G-1WB5KDLL0P"
+
+components.html(f"""
+    <script async src="https://www.googletagmanager.com/gtag/js?id={ID_GA}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', '{ID_GA}', {{ 'anonymize_ip': true }});
+    </script>
+
+    <script>
+        // Changement du titre et de l'icône iPhone
+        window.parent.document.title = "CarbuNet";
+        var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'apple-touch-icon';
+        link.href = 'data:image/png;base64,{logo_data}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
+
+        // Masquer les menus Streamlit
+        const hideElements = () => {{
+            const elements = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
+            elements.forEach(el => {{ el.style.display = 'none'; el.style.visibility = 'hidden'; }});
+        }};
+        setInterval(hideElements, 1000);
+    </script>
+""", height=0)
