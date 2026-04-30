@@ -316,31 +316,31 @@ with tabs[1]:
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
                             p_min = res[col_p].min()
 
+                            # --- 1. CARTE FOLIUM (Une seule fois) ---
                             for idx, row in res.head(10).iterrows():
                                 is_cheapest = row[col_p] == p_min
                                 color = 'green' if is_cheapest else 'blue'
-                                icon_type = 'thumbs-up' if is_cheapest else 'gas-pump'
-                                label_prix_map = f"<b>{float(row[col_p]):.3f}€</b>"
-                                popup_content = f"<div style='text-align:center;'>{'<b>MOINS CHER</b><br>' if is_cheapest else ''}{label_prix_map}<br>MàJ: {row[col_m]}<br><a href='https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes' target='_blank'>Waze 🚗</a></div>"
-                                
+                                popup_content = f"<b>{float(row[col_p]):.3f}€</b>"
                                 folium.Marker(
                                     [row['latitude'], row['longitude']], 
                                     popup=folium.Popup(popup_content, max_width=200),
-                                    icon=folium.Icon(color=color, icon=icon_type, prefix='fa')
+                                    icon=folium.Icon(color=color, icon='gas-pump', prefix='fa')
                                 ).add_to(m)
                             
                             st_folium(m, width="100%", height=400)
 
+                            # --- 2. MESSAGES D'INFO ---
                             st.markdown("""<div style="background-color: #f0f7ff; padding: 15px; border-radius: 10px; border-left: 5px solid #007bff; margin-bottom: 20px;"><p style="margin: 0; font-size: 0.9rem; color: #004085; line-height: 1.5;">ℹ️ <b>À savoir :</b> Les stocks sont indicatifs. Un décalage reste possible.</p></div>""", unsafe_allow_html=True)
                             
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # --- BOUCLE UNIQUE D'AFFICHAGE DES CARTES ---
+                            # --- 3. BOUCLE D'AFFICHAGE DES CARTES (UNE SEULE BOUCLE ICI) ---
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 
+                                # Badges services
                                 srv_str = str(row.get('service_propose', ''))
                                 badges_list = []
                                 if srv_str and srv_str != 'nan':
@@ -355,8 +355,8 @@ with tabs[1]:
                                 border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
                                 label_eco = f'<span style="background:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-bottom:5px; display:inline-block;">MEILLEUR PRIX 🏆</span><br>' if row[col_p] == p_min else ''
 
-                                # Construction de la carte (renommée en card_html pour correspondre au markdown)
-                                card_html = f"""
+                                # Construction du HTML
+                                html_final = f"""
                                 <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                     {label_eco}
                                     <div style="display:flex; justify-content:space-between; align-items:start;">
@@ -374,15 +374,14 @@ with tabs[1]:
                                     </div>
                                 </div>
                                 """
-                                st.markdown(card_html, unsafe_allow_html=True)
+                                # AFFICHAGE (On utilise html_final avec unsafe_allow_html=True)
+                                st.markdown(html_final, unsafe_allow_html=True)
 
                         else:
-                            st.warning("⚠️ Aucune station ne correspond à vos critères.")
-                    else:
-                        st.error("❌ Lieu non reconnu. Précisez la ville ou le code postal.")
+                            st.warning("Aucune station trouvée.")
                 except Exception as e:
-                    st.error(f"⚠️ Erreur technique : {e}")
-                    
+                    st.error(f"Erreur : {e}")
+
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     # INITIALISATION PROPRE
