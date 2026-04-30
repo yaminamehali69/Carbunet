@@ -247,9 +247,7 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
     st.caption("© 2026 CarbuNet. Propriété exclusive de l'auteur. Toute reproduction interdite.")
     
 
-# --- ONGLET 2 : STATIONS ---
-# --- ONGLET 2 : STATIONS ---
-# --- ONGLET 2 : STATIONS ---
+
 # --- ONGLET 2 : STATIONS ---
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
@@ -259,32 +257,22 @@ with tabs[1]:
         st.session_state.recherche_lancee = False
 
     if df is not None:
-        # 1. FORMULAIRE DE RECHERCHE
         with st.form("recherche_stations_form"):
-            adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
+            adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse...", key="input_stations")
             c1, c2 = st.columns(2)
             with c1:
                 carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
                 col_p, col_m = f"prix_{carbu.lower()}", f"prix_{carbu.lower()}_maj"
             with c2:
                 rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
-
-            # --- FILTRAGE PAR SERVICES ---
-            with st.expander("⚙️ Options & Services"):
-                cols_srv = st.columns(2)
-                selection_services = []
-                for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
-                    if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
-                        selection_services.append(srv_name)
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
         if submit_search and adresse:
             st.session_state.recherche_lancee = True
 
-        # 2. AFFICHAGE DES RÉSULTATS
         if st.session_state.recherche_lancee and adresse:
-            with st.spinner("Analyse des prix..."):
+            with st.spinner("Analyse en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_v5")
                 try:
                     loc = geolocator.geocode(adresse + ", France")
@@ -292,15 +280,10 @@ with tabs[1]:
                         ma_pos = (loc.latitude, loc.longitude)
                         df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
                         df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
-                        res = df_c[df_c['distance'] <= rayon].copy()
+                        res = df_c[df_c['distance'] <= rayon].sort_values(by=col_p).copy()
 
-                        for s_filtre in selection_services:
-                            res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
-
-                        res = res.sort_values(by=col_p)
-            
                         if not res.empty:
-                            # Carte Folium
+                            # 1. CARTE
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
                             p_min = res[col_p].min()
                             for _, r in res.head(10).iterrows():
@@ -310,30 +293,15 @@ with tabs[1]:
 
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # --- LA SEULE ET UNIQUE BOUCLE D'AFFICHAGE ---
+                            # 2. BOUCLE D'AFFICHAGE UNIQUE (BIEN INDENTÉE)
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
-                                
-                                # Badges services
-                                srv_str = str(row.get('service_propose', ''))
-                                badges_list = []
-                                if srv_str and srv_str != 'nan':
-                                    for s in srv_str.split(','):
-                                        name = s.strip()
-                                        emoji = LOGOS_SERVICES.get(name, "🔹")
-                                        badges_list.append(f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {name}</span>')
-                                    all_badges = "".join(badges_list)
-                                else:
-                                    all_badges = '<span style="font-size:10px; color:#94a3b8;">Aucun service listé</span>'
-
                                 border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
-                                label_eco = f'<span style="background:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-bottom:5px; display:inline-block;">MEILLEUR PRIX 🏆</span><br>' if row[col_p] == p_min else ''
-
+                                
                                 card_html = f"""
                                 <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                    {label_eco}
                                     <div style="display:flex; justify-content:space-between; align-items:start;">
                                         <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
                                         <div style="text-align:right;">
@@ -342,7 +310,6 @@ with tabs[1]:
                                         </div>
                                     </div>
                                     <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
-                                    <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{all_badges}</div>
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
                                         <small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
                                         <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a>
@@ -355,8 +322,7 @@ with tabs[1]:
                     else:
                         st.error("Lieu non reconnu.")
                 except Exception as e:
-                    st.error(f"Erreur : {e}")
-                    
+                    st.error(f"Erreur technique : {e}")
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     # INITIALISATION PROPRE
