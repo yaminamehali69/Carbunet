@@ -20,25 +20,23 @@ AUTEUR_2 = "CarbuNet"
 
 
 
-@st.cache_data
-def get_logo_base64(url):
-    try:
-        response = requests.get(url, timeout=5)
-        return base64.b64encode(response.content).decode()
-    except:
-        return ""
-
+# 1. D'abord le logo
 logo_data = get_logo_base64(LOGO_URL)
-# --- TRACKING DE SECOURS (PIXEL METHOD) ---
-ID_GA = "G-1WB5KDLL0P"
 
-# On crée une URL de mesure que Google comprendra direct
+# 2. ENSUITE la config (OBLIGATOIREMENT EN PREMIER)
+st.set_page_config(
+    page_title="CarbuNet", 
+    layout="centered",
+    page_icon=LOGO_URL
+)
+
+# 3. ENFIN le tracking
+ID_GA = "G-1WB5KDLL0P"
 measurement_url = f"https://www.google-analytics.com/collect?v=1&tid={ID_GA}&cid=555&t=pageview&dp=%2Fhome"
 
 st.markdown(f"""
     <img src="{measurement_url}" style="display:none !important;">
     <script>
-        // On injecte aussi le titre et l'icône ici pour que tout soit groupé
         window.parent.document.title = "CarbuNet";
         var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
         link.type = 'image/png'; link.rel = 'apple-touch-icon';
@@ -46,11 +44,6 @@ st.markdown(f"""
         window.parent.document.getElementsByTagName('head')[0].appendChild(link);
     </script>
 """, unsafe_allow_html=True)
-st.set_page_config(
-    page_title="CarbuNet", 
-    layout="centered",
-    page_icon=LOGO_URL
-)
 
 # 2. LE SCRIPT MAGIQUE (Évite la page blanche et force l'icône)
 # Ce code s'exécute DANS Streamlit mais parle à Safari
