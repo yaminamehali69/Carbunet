@@ -246,17 +246,18 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
         st.markdown(concept_html, unsafe_allow_html=True) 
     st.caption("© 2026 CarbuNet. Propriété exclusive de l'auteur. Toute reproduction interdite.")
     
-# --- ONGLET 2 : STATIONS ---
+
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
-    # 1. On charge d'abord la bibliothèque d'icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
+    # INITIALISATION DE LA MÉMOIRE DE RECHERCHE
+    if 'recherche_lancee' not in st.session_state:
+        st.session_state.recherche_lancee = False
+
     if df is not None:
-        # --- 1. LE FORMULAIRE DE RECHERCHE ---
         with st.form("recherche_stations_form"):
             adresse = st.text_input(" Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
-            
             c1, c2 = st.columns(2)
             with c1:
                 carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
@@ -271,12 +272,14 @@ with tabs[1]:
                     if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
                         selection.append(srv_name)
             
-            # Le bouton magique qui valide tout d'un coup
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
-        # --- FIN DU FORMULAIRE ---
 
-        # 2. LA LOGIQUE (Uniquement si on clique sur le bouton ET que l'adresse n'est pas vide)
-        if submit_search and adresse:
+        # SI ON CLIQUE : ON ACTIVE LA MÉMOIRE
+        if submit_search:
+            st.session_state.recherche_lancee = True
+
+        # ON AFFICHE SI LA MÉMOIRE EST ACTIVÉE ET QU'IL Y A UNE ADRESSE
+        if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse des prix en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_yamina_v5")
                 try:
@@ -294,11 +297,11 @@ with tabs[1]:
             
                         if not res.empty:
                             st.markdown("---")
-                            # Sélection pour le simulateur
                             stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
+                            
+                            # ICI : Le selectbox ne fera plus disparaître la page !
                             choix_station = st.selectbox(" Sélectionne ta station pour le calcul du budget :", options=list(stations_trouvees.keys()))
 
-                            # SAUVEGARDE Session State
                             st.session_state['prix_perso'] = stations_trouvees[choix_station]
                             st.session_state['carbu_nom'] = carbu
                             st.session_state['station_nom'] = choix_station.split('(')[0].strip()
@@ -306,7 +309,6 @@ with tabs[1]:
                             st.success(f" Station choisie : {st.session_state['prix_perso']} €/L")
                             st.markdown("---")
                         
-                            # Affichage Carte Folium
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
                             p_min = res[col_p].min()
 
@@ -324,27 +326,17 @@ with tabs[1]:
                                 ).add_to(m)
                             
                             st_folium(m, width="100%", height=400)
-# --- 1. INFO BULLES ---
-                            st.markdown("""
-                             <div style="background-color: #f0f7ff; padding: 15px; border-radius: 10px; border-left: 5px solid #007bff; margin-bottom: 20px;">
-                               <p style="margin: 0; font-size: 0.9rem; color: #004085; line-height: 1.5;">
-                                 ℹ️ <b>À savoir :</b> Les stocks sont indicatifs. Un décalage reste possible.
-                               </p>
-                             </div>
-                            """, unsafe_allow_html=True)
-                            
+
+                            st.markdown("""<div style="background-color: #f0f7ff; padding: 15px; border-radius: 10px; border-left: 5px solid #007bff; margin-bottom: 20px;"><p style="margin: 0; font-size: 0.9rem; color: #004085; line-height: 1.5;">ℹ️ <b>À savoir :</b> Les stocks sont indicatifs. Un décalage reste possible.</p></div>""", unsafe_allow_html=True)
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # --- 2. BOUCLE D'AFFICHAGE DES CARTES ---
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 
-                                # --- LOGOS ET SERVICES ---
                                 srv_str = str(row.get('service_propose', ''))
                                 badges_list = []
-                                
                                 if srv_str and srv_str != 'nan':
                                     for s in srv_str.split(','):
                                         name = s.strip()
@@ -376,12 +368,11 @@ with tabs[1]:
                                 </div>
                                 """
                                 st.markdown(card_html, unsafe_allow_html=True)
-                        
                         else:
                             st.warning("Aucune station ne correspond.")
-
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
+                    
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     # INITIALISATION PROPRE
