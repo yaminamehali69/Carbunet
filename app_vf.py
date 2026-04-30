@@ -251,30 +251,33 @@ with tabs[1]:
     # 1. On charge d'abord la bibliothèque d'icônes (si ce n'est pas déjà fait en haut du code)
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
-    # 2.titre 
-    st.markdown("""
-        <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #32CD32; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
-            <span class="material-icons-outlined" style="font-size: 35px; color: #32CD32;">payments</span>
-            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; border:none;">
-                Le meilleur prix, au kilomètre près
-            </h2>
-        </div>
-    """, unsafe_allow_html=True)
-    if df is not None:
-        adresse = st.text_input(" Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
-        c1, c2 = st.columns(2)
-        with c1:
-            carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
-            col_p, col_m = f"prix_{carbu.lower()}", f"prix_{carbu.lower()}_maj"
-        with c2:
-            rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
+        if df is not None:
+        # --- DÉBUT DU FORMULAIRE DE RECHERCHE ---
+        with st.form("recherche_stations_form"):
+            adresse = st.text_input(" Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
+                col_p, col_m = f"prix_{carbu.lower()}", f"prix_{carbu.lower()}_maj"
+            with c2:
+                rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
 
-        with st.expander(" Options & Services "):
-            cols_srv = st.columns(2)
-            selection = []
-            for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
-                if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
-                    selection.append(srv_name)
+            with st.expander(" Options & Services "):
+                cols_srv = st.columns(2)
+                selection = []
+                for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
+                    if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
+                        selection.append(srv_name)
+            
+            # Le bouton magique qui valide tout d'un coup
+            submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
+        # --- FIN DU FORMULAIRE ---
+
+        # On change la condition : au lieu de "if adresse:", on met "if submit_search and adresse:"
+        if submit_search and adresse:
+            with st.spinner("Analyse des prix en cours..."):
+                # ... la suite de ton code (geolocator, filtrage, etc.) ne bouge pas !
 
         if adresse:
             with st.spinner("Analyse des prix en cours..."):
