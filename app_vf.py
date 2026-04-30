@@ -254,7 +254,6 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 with tabs[1]:
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
-    # INITIALISATION DE LA MÉMOIRE DE RECHERCHE
     if 'recherche_lancee' not in st.session_state:
         st.session_state.recherche_lancee = False
 
@@ -269,27 +268,26 @@ with tabs[1]:
             with c2:
                 rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
 
-            # --- RÉINTÉGRATION DES SERVICES ---
+            # --- RÉINTÉGRATION DES SERVICES DANS LE FORMULAIRE ---
             with st.expander("⚙️ Options & Services"):
                 cols_srv = st.columns(2)
-                selection = []
+                selection_services = []
                 for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
                     if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
-                        selection.append(srv_name)
+                        selection_services.append(srv_name)
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
         # SI ON CLIQUE : ON ACTIVE LA MÉMOIRE
-        if submit_search:
-            if adresse:
-                st.session_state.recherche_lancee = True
-            else:
-                st.error("⚠️ Veuillez saisir une adresse.")
+        if submit_search and adresse:
+            st.session_state.recherche_lancee = True
+        elif submit_search and not adresse:
+            st.error("⚠️ Veuillez saisir une adresse.")
 
         # 2. AFFICHAGE DES RÉSULTATS
         if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse des prix en cours..."):
-                geolocator = Nominatim(user_agent="carbunet_pro_yamina_v5")
+                geolocator = Nominatim(user_agent="carbunet_pro_v5")
                 try:
                     loc = geolocator.geocode(adresse + ", France")
                     if loc:
@@ -299,16 +297,15 @@ with tabs[1]:
                         res = df_c[df_c['distance'] <= rayon].copy()
 
                         # Filtrage par services sélectionnés
-                        for s_filtre in selection:
+                        for s_filtre in selection_services:
                             res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
 
                         res = res.sort_values(by=col_p)
             
                         if not res.empty:
-                            st.markdown("---")
-                            # Sélection pour le simulateur
+                            # Sélection de la station pour la mémoire (Simulateur)
                             stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
-                            choix_station = st.selectbox("🎯 Sélectionne ta station pour le calcul du budget :", options=list(stations_trouvees.keys()))
+                            choix_station = st.selectbox("🎯 Sélectionne ta station pour le simulateur :", options=list(stations_trouvees.keys()))
 
                             st.session_state['prix_perso'] = stations_trouvees[choix_station]
                             st.session_state['carbu_nom'] = carbu
@@ -317,7 +314,7 @@ with tabs[1]:
                             st.success(f"✅ Station choisie : {st.session_state['prix_perso']} €/L")
                             st.markdown("---")
                         
-                            # Carte Folium
+                            # CARTE FOLIUM
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
                             p_min = res[col_p].min()
                             for idx, row in res.head(10).iterrows():
@@ -331,13 +328,15 @@ with tabs[1]:
 
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # --- BOUCLE D'AFFICHAGE DES CARTES ---
+                            # BOUCLE D'AFFICHAGE DES CARTES AVEC BADGES
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
-                                
-                                # Badges logos des services
+                                border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
+                                label_eco = f'<span style="background:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-bottom:5px; display:inline-block;">MEILLEUR PRIX 🏆</span><br>' if row[col_p] == p_min else ''
+
+                                # Traitement des badges services
                                 srv_str = str(row.get('service_propose', ''))
                                 badges_list = []
                                 if srv_str and srv_str != 'nan':
@@ -348,9 +347,6 @@ with tabs[1]:
                                     all_badges = "".join(badges_list)
                                 else:
                                     all_badges = '<span style="font-size:10px; color:#94a3b8;">Aucun service listé</span>'
-
-                                border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
-                                label_eco = f'<span style="background:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-bottom:5px; display:inline-block;">MEILLEUR PRIX 🏆</span><br>' if row[col_p] == p_min else ''
 
                                 card_html = f"""
                                 <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
@@ -372,11 +368,11 @@ with tabs[1]:
                                 """
                                 st.markdown(card_html, unsafe_allow_html=True)
                         else:
-                            st.warning("⚠️ Aucune station ne correspond.")
+                            st.warning("Aucune station trouvée avec ces critères.")
                     else:
-                        st.error("❌ Lieu non reconnu.")
+                        st.error("Lieu non reconnu.")
                 except Exception as e:
-                    st.error(f"⚠️ Erreur technique : {e}")
+                    st.error(f"Erreur technique : {e}")
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     # INITIALISATION PROPRE
