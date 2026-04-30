@@ -18,6 +18,10 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
+st.markdown("""
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
+""", unsafe_allow_html=True)
+
 # --- FONCTION LOGO (À PLACER AVANT SON UTILISATION) ---
 @st.cache_data
 def get_logo_base64(url):
