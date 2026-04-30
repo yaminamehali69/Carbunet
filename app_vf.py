@@ -220,6 +220,8 @@ tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
 
 # --- ONGLET 1 : CONCEPT ---
 with tabs[0]:
+    with tabs[0]:
+        st.components.v1.html("""<script>window.parent.umami.track('Vue Onglet Concept');</script>""", height=0)
     if os.path.exists(path_logo):
         with open(path_logo, "rb") as f:
             encoded = base64.b64encode(f.read()).decode()
