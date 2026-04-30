@@ -19,6 +19,7 @@ AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
 
+
 # 1. D'abord le logo
 logo_data = get_logo_base64(LOGO_URL)
 
@@ -29,19 +30,20 @@ st.set_page_config(
     page_icon=LOGO_URL
 )
 
-# --- TRACKER UMAMI (ENFIN LA SOLUTION !) ---
-st.components.v1.html(f"""
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
+# 3. ENFIN le tracking
+ID_GA = "G-1WB5KDLL0P"
+measurement_url = f"https://www.google-analytics.com/collect?v=1&tid={ID_GA}&cid=555&t=pageview&dp=%2Fhome"
+
+st.markdown(f"""
+    <img src="{measurement_url}" style="display:none !important;">
     <script>
-        // Gestion du titre et de l'icône iPhone (ne pas supprimer)
         window.parent.document.title = "CarbuNet";
         var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
-        link.type = 'image/png'; 
-        link.rel = 'apple-touch-icon';
+        link.type = 'image/png'; link.rel = 'apple-touch-icon';
         link.href = 'data:image/png;base64,{logo_data}';
         window.parent.document.getElementsByTagName('head')[0].appendChild(link);
     </script>
-""", height=0)
+""", unsafe_allow_html=True)
 
 # 2. LE SCRIPT MAGIQUE (Évite la page blanche et force l'icône)
 # Ce code s'exécute DANS Streamlit mais parle à Safari
