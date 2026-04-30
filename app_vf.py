@@ -29,49 +29,29 @@ def get_logo_base64(url):
         return ""
 
 logo_data = get_logo_base64(LOGO_URL)
+# --- TRACKING DE SECOURS (PIXEL METHOD) ---
+ID_GA = "G-1WB5KDLL0P"
 
+# On crée une URL de mesure que Google comprendra direct
+measurement_url = f"https://www.google-analytics.com/collect?v=1&tid={ID_GA}&cid=555&t=pageview&dp=%2Fhome"
+
+st.markdown(f"""
+    <img src="{measurement_url}" style="display:none !important;">
+    <script>
+        // On injecte aussi le titre et l'icône ici pour que tout soit groupé
+        window.parent.document.title = "CarbuNet";
+        var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
+        link.type = 'image/png'; link.rel = 'apple-touch-icon';
+        link.href = 'data:image/png;base64,{logo_data}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+""", unsafe_allow_html=True)
 st.set_page_config(
     page_title="CarbuNet", 
     layout="centered",
     page_icon=LOGO_URL
 )
-# --- INJECTION GOOGLE ANALYTICS (CORRECTIF FINAL) ---
-ID_GA = "G-1WB5KDLL0P"
 
-components.html(f"""
-<script>
-    var parentHead = window.parent.document.getElementsByTagName('head')[0];
-
-    // 1. On crée et on injecte la balise script principale
-    var scriptTag = window.parent.document.createElement('script');
-    scriptTag.async = true;
-    scriptTag.src = 'https://www.googletagmanager.com/gtag/js?id={ID_GA}';
-    parentHead.appendChild(scriptTag);
-
-    // 2. On injecte la configuration de suivi
-    var configTag = window.parent.document.createElement('script');
-    configTag.innerHTML = `
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){{dataLayer.push(arguments);}}
-        gtag('js', new Date());
-        gtag('config', '{ID_GA}', {{ 'anonymize_ip': true }});
-    `;
-    parentHead.appendChild(configTag);
-
-    // 3. Tes autres réglages (Titre, Icône, Masquage Menu)
-    window.parent.document.title = "CarbuNet";
-    var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
-    link.type = 'image/png'; link.rel = 'apple-touch-icon';
-    link.href = 'data:image/png;base64,{logo_data}';
-    parentHead.appendChild(link);
-
-    const hide = () => {{
-        const el = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
-        el.forEach(e => {{ e.style.display = 'none'; e.style.visibility = 'hidden'; }});
-    }};
-    setInterval(hide, 1000);
-</script>
-""", height=0)
 # 2. LE SCRIPT MAGIQUE (Évite la page blanche et force l'icône)
 # Ce code s'exécute DANS Streamlit mais parle à Safari
 st.components.v1.html(f"""
@@ -577,31 +557,3 @@ with tabs[3]:
     st.components.v1.html(contact_form_html, height=520, scrolling=False)
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
-
-   # --- TRACKING & SCRIPTS MAGIQUES (VERSION FINALE CORRIGÉE) ---
-ID_GA = "G-1WB5KDLL0P"
-
-components.html(f"""
-<script async src="https://www.googletagmanager.com/gtag/js?id={ID_GA}"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){{dataLayer.push(arguments);}}
-    gtag('js', new Date());
-    gtag('config', '{ID_GA}', {{ 'anonymize_ip': true }});
-</script>
-
-<script>
-    window.parent.document.title = "CarbuNet";
-    var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
-    link.type = 'image/png';
-    link.rel = 'apple-touch-icon';
-    link.href = 'data:image/png;base64,{logo_data}';
-    window.parent.document.getElementsByTagName('head')[0].appendChild(link);
-
-    const hideElements = () => {{
-        const elements = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
-        elements.forEach(el => {{ el.style.display = 'none'; el.style.visibility = 'hidden'; }});
-    }};
-    setInterval(hideElements, 1000);
-</script>
-""", height=0)
