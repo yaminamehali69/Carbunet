@@ -18,35 +18,30 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
-# 1. On prépare la donnée du logo d'abord (Indispensable pour la suite)
+
+# 1. D'abord le logo
 logo_data = get_logo_base64(LOGO_URL)
 
-# 2. On configure la page (Toujours la première commande Streamlit)
+# 2. ENSUITE la config (OBLIGATOIREMENT EN PREMIER)
 st.set_page_config(
     page_title="CarbuNet", 
     layout="centered",
     page_icon=LOGO_URL
 )
 
-# 3. On lance Umami et le fix du titre/logo
+# --- TRACKER UMAMI (ENFIN LA SOLUTION !) ---
 st.components.v1.html(f"""
     <script defer src="https://cloud.umami.is/script.js" data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
     <script>
+        // Gestion du titre et de l'icône iPhone (ne pas supprimer)
         window.parent.document.title = "CarbuNet";
         var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
-        link.type = 'image/png';
+        link.type = 'image/png'; 
         link.rel = 'apple-touch-icon';
         link.href = 'data:image/png;base64,{logo_data}';
         window.parent.document.getElementsByTagName('head')[0].appendChild(link);
-
-        const hide = () => {{
-            const el = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
-            el.forEach(e => {{ e.style.display = 'none'; e.style.visibility = 'hidden'; }});
-        }};
-        setInterval(hide, 1000);
     </script>
 """, height=0)
-
 
 # 2. LE SCRIPT MAGIQUE (Évite la page blanche et force l'icône)
 # Ce code s'exécute DANS Streamlit mais parle à Safari
