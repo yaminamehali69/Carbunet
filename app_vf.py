@@ -258,7 +258,7 @@ with tabs[1]:
     if df is not None:
         # 1. LE FORMULAIRE DE RECHERCHE
         with st.form("recherche_stations_form"):
-            adresse = st.text_input(" Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
+            adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse complète...", key="input_stations")
             c1, c2 = st.columns(2)
             with c1:
                 carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
@@ -266,7 +266,7 @@ with tabs[1]:
             with c2:
                 rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
 
-            with st.expander(" Options & Services "):
+            with st.expander("⚙️ Options & Services"):
                 cols_srv = st.columns(2)
                 selection = []
                 for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
@@ -301,18 +301,18 @@ with tabs[1]:
             
                         if not res.empty:
                             st.markdown("---")
-                            # Sélection de la station
+                            # Sélection de la station pour le simulateur
                             stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
-                            choix_station = st.selectbox(" Sélectionne ta station pour le calcul du budget :", options=list(stations_trouvees.keys()))
+                            choix_station = st.selectbox("🎯 Sélectionne ta station pour le calcul du budget :", options=list(stations_trouvees.keys()))
 
                             st.session_state['prix_perso'] = stations_trouvees[choix_station]
                             st.session_state['carbu_nom'] = carbu
                             st.session_state['station_nom'] = choix_station.split('(')[0].strip()
                             
-                            st.success(f" Station choisie : {st.session_state['prix_perso']} €/L")
+                            st.success(f"✅ Station choisie : {st.session_state['prix_perso']} €/L")
                             st.markdown("---")
                         
-                            # Carte Folium
+                            # Affichage de la Carte
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
                             p_min = res[col_p].min()
 
@@ -335,14 +335,12 @@ with tabs[1]:
                             
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-
                             # --- BOUCLE UNIQUE D'AFFICHAGE DES CARTES ---
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 
-                                # Gestion des services/logos
                                 srv_str = str(row.get('service_propose', ''))
                                 badges_list = []
                                 if srv_str and srv_str != 'nan':
@@ -357,8 +355,8 @@ with tabs[1]:
                                 border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
                                 label_eco = f'<span style="background:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-bottom:5px; display:inline-block;">MEILLEUR PRIX 🏆</span><br>' if row[col_p] == p_min else ''
 
-                                # On construit la carte
-                                card_content = f"""
+                                # Construction de la carte (renommée en card_html pour correspondre au markdown)
+                                card_html = f"""
                                 <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                     {label_eco}
                                     <div style="display:flex; justify-content:space-between; align-items:start;">
@@ -376,17 +374,15 @@ with tabs[1]:
                                     </div>
                                 </div>
                                 """
-
-# --- AFFICHAGE DE LA CARTE DANS LA BOUCLE ---
                                 st.markdown(card_html, unsafe_allow_html=True)
 
                         else:
-                            st.warning("Aucune station ne correspond à vos critères.")
+                            st.warning("⚠️ Aucune station ne correspond à vos critères.")
                     else:
-                        st.error("Lieu non reconnu. Précisez la ville ou le code postal.")
+                        st.error("❌ Lieu non reconnu. Précisez la ville ou le code postal.")
                 except Exception as e:
-                    st.error(f"Erreur technique : {e}")
-
+                    st.error(f"⚠️ Erreur technique : {e}")
+                    
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     # INITIALISATION PROPRE
