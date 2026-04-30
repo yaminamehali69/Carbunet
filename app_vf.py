@@ -220,12 +220,13 @@ tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
 
 # --- ONGLET 1 : CONCEPT ---
 with tabs[0]:
-    with tabs[0]:
-        st.components.v1.html("""<script>window.parent.umami.track('Vue Onglet Concept');</script>""", height=0)
+    # 1. Le mouchard Umami (en premier !)
+    st.components.v1.html("""<script>window.parent.umami.track('Vue Onglet Concept');</script>""", height=0)
+    
+    # 2. Ton code existant pour le logo et le contenu
     if os.path.exists(path_logo):
         with open(path_logo, "rb") as f:
             encoded = base64.b64encode(f.read()).decode()
-        
         concept_html = f"""
 <div class="hero-container">
 <img src="data:image/png;base64,{encoded}" width="170">
