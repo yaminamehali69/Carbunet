@@ -276,9 +276,12 @@ with tabs[1]:
 
         # SI ON CLIQUE : ON ACTIVE LA MÉMOIRE
         if submit_search:
-            st.session_state.recherche_lancee = True
+            if adresse: # On n'active que si une adresse est saisie
+                st.session_state.recherche_lancee = True
+            else:
+                st.error("⚠️ Veuillez saisir une adresse avant de lancer la recherche.")
 
-        # ON AFFICHE SI LA MÉMOIRE EST ACTIVÉE ET QU'IL Y A UNE ADRESSE
+        # ON AFFICHE SI LA MÉMOIRE EST ACTIVÉE
         if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse des prix en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_yamina_v5")
@@ -370,6 +373,8 @@ with tabs[1]:
                                 st.markdown(card_html, unsafe_allow_html=True)
                         else:
                             st.warning("Aucune station ne correspond.")
+                    else:
+                        st.error("Lieu non reconnu.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
                     
