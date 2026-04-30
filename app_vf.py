@@ -250,6 +250,7 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 
 # --- ONGLET 2 : STATIONS ---
 # --- ONGLET 2 : STATIONS ---
+# --- ONGLET 2 : STATIONS ---
 with tabs[1]:
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
@@ -257,6 +258,7 @@ with tabs[1]:
         st.session_state.recherche_lancee = False
 
     if df is not None:
+        # 1. LE FORMULAIRE DE RECHERCHE
         with st.form("recherche_stations_form"):
             adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse...", key="input_stations")
             c1, c2 = st.columns(2)
@@ -265,12 +267,21 @@ with tabs[1]:
                 col_p, col_m = f"prix_{carbu.lower()}", f"prix_{carbu.lower()}_maj"
             with c2:
                 rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
+
+            # AJOUT DE LA PARTIE SERVICES
+            with st.expander("⚙️ Filtrer par services (Boutique, Lavage, etc.)"):
+                cols_srv = st.columns(2)
+                selection_services = []
+                for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
+                    if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
+                        selection_services.append(srv_name)
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
         if submit_search and adresse:
             st.session_state.recherche_lancee = True
 
+        # 2. AFFICHAGE DES RÉSULTATS
         if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_v5")
@@ -280,9 +291,26 @@ with tabs[1]:
                         ma_pos = (loc.latitude, loc.longitude)
                         df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
                         df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
-                        res = df_c[df_c['distance'] <= rayon].sort_values(by=col_p).copy()
+                        res = df_c[df_c['distance'] <= rayon].copy()
+
+                        # Filtrage par services sélectionnés
+                        for s_filtre in selection_services:
+                            res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
+
+                        res = res.sort_values(by=col_p)
 
                         if not res.empty:
+                            st.markdown("---")
+                            # Mémoire pour le simulateur
+                            stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
+                            choix_station = st.selectbox("🎯 Choisir cette station pour le simulateur :", options=list(stations_trouvees.keys()))
+                            
+                            st.session_state['prix_perso'] = stations_trouvees[choix_station]
+                            st.session_state['carbu_nom'] = carbu
+                            st.session_state['station_nom'] = choix_station.split('(')[0].strip()
+                            
+                            st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
+
                             # 1. CARTE
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
                             p_min = res[col_p].min()
@@ -293,13 +321,22 @@ with tabs[1]:
 
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # 2. BOUCLE D'AFFICHAGE UNIQUE (BIEN INDENTÉE)
+                            # 2. BOUCLE D'AFFICHAGE UNIQUE
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
                                 
+                                # Génération des badges de services
+                                srv_str = str(row.get('service_propose', ''))
+                                badges_html = ""
+                                if srv_str and srv_str != 'nan':
+                                    for s in srv_str.split(','):
+                                        s = s.strip()
+                                        emoji = LOGOS_SERVICES.get(s, "🔹")
+                                        badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s}</span>'
+
                                 card_html = f"""
                                 <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                     <div style="display:flex; justify-content:space-between; align-items:start;">
@@ -310,6 +347,7 @@ with tabs[1]:
                                         </div>
                                     </div>
                                     <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
+                                    <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{badges_html}</div>
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
                                         <small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
                                         <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a>
