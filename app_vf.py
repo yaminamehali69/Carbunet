@@ -294,7 +294,7 @@ with tabs[1]:
 
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # --- LA SEULE BOUCLE AUTORISÉE DANS TOUT LE FICHIER ---
+                            # --- BOUCLE D'AFFICHAGE ---
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
@@ -320,14 +320,15 @@ with tabs[1]:
                                     </div>
                                 </div>
                                 """
-                                # L'affichage magique
                                 st.markdown(card_html, unsafe_allow_html=True)
 
                         else:
                             st.warning("Aucune station trouvée.")
+                    else:
+                        st.error("Lieu non reconnu.")
                 except Exception as e:
-                    st.error(f"Erreur : {e}")
-                    
+                    st.error(f"Erreur technique : {e}")
+
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     # INITIALISATION PROPRE
