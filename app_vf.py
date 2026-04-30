@@ -390,101 +390,119 @@ with tabs[2]:
     if 'km_memoire' not in st.session_state:
         st.session_state['km_memoire'] = 0.0
 
-    # --- NOUVEAU TITRE SIMULATEUR HARMONISÉ ---
+    # --- TITRE HARMONISÉ ---
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #3b82f6; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #3b82f6;">calculate</span>
             <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; border:none;">
-                Simulateur de Budget Personnalisé
+                Simulateur de Budget Professionnel
             </h2>
         </div>
     """, unsafe_allow_html=True)
 
-    # PRIX (Vérifie bien que ton Onglet 2 enregistre 'prix_perso')
+    # PRIX RÉCUPÉRÉ
     p_final = st.session_state.get('prix_perso', 1.859)
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
-    st.info(f" Prix actuel : **{p_final:.3f} €/L** ({nom_carbu})")
+    st.info(f" Prix actuel utilisé : **{p_final:.3f} €/L** ({nom_carbu})")
 
-    # --- TOUT CE QUI SUIT EST MAINTENANT BIEN DÉCALÉ (DANS L'ONGLET) ---
-    st.markdown("#####  1. Itinéraire")
+    # --- 1. ITINÉRAIRE ---
+    st.markdown("##### 📍 1. Itinéraire")
     c1, c2 = st.columns(2)
     with c1:
-        # On enlève 'value' et on met 'placeholder'
-        dep_v = st.text_input("Départ", placeholder="Ville ou adresse complète", key="cle_dep")
+        dep_v = st.text_input("Départ", placeholder="Ville ou adresse", key="cle_dep")
     with c2:
-        # Idem ici
-        arr_v = st.text_input("Arrivée", placeholder="Ville ou adresse complète", key="cle_arr")
+        arr_v = st.text_input("Arrivée", placeholder="Ville ou adresse", key="cle_arr")
 
-    # BOUTON DE CALCUL
-    if st.button(" CALCULER L'ITINÉRAIRE", use_container_width=True):
+    if st.button("🔍 CALCULER LA DISTANCE GPS", use_container_width=True):
         if dep_v and arr_v:
             try:
-                with st.spinner("Recherche GPS en cours..."):
-                    # On utilise un user_agent unique pour éviter les blocages
-                    geolocator = Nominatim(user_agent="carbunet_final_check")
+                with st.spinner("Calcul de l'itinéraire..."):
+                    geolocator = Nominatim(user_agent="carbunet_pro_sim")
                     l1 = geolocator.geocode(dep_v)
                     l2 = geolocator.geocode(arr_v)
-                    
                     if l1 and l2:
                         dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
-                        # On stocke et on force le rafraîchissement
+                        # On applique un coefficient de détour réel (25%)
                         st.session_state['km_memoire'] = round(dist_gps * 1.25, 1)
                         st.rerun() 
                     else:
-                        st.error("❌ Adresse introuvable. Soyez précis (Ville + Code Postal).")
+                        st.error("❌ Adresse introuvable.")
             except Exception as e:
-                st.error(f"❌ Erreur technique : {e}")
+                st.error(f"❌ Erreur : {e}")
 
-    # CONFIGURATION TECHNIQUE
+    km_final = st.number_input("Distance retenue (km)", value=float(st.session_state['km_memoire']))
+
+    # --- 2. PARAMÈTRES AVANCÉS (LE COEUR DU CALCUL) ---
     st.markdown("---")
-    st.markdown("#####  2. Paramètres du véhicule")
+    st.markdown("##### ⚙️ 2. Configuration du trajet")
     
-    p_route = st.selectbox("Type de trajet", [
-        "Urbain / Départementale", 
-        "Mixte (Ville + Autoroute)", 
-        "Autoroute / Montagne (130 km/h)"
-    ], index=2)
+    col_v, col_t = st.columns(2)
+    with col_v:
+        v_type = st.selectbox("Votre véhicule", ["Citadine", "Berline", "SUV", "Utilitaire"])
+    with col_t:
+        p_route = st.selectbox("Type de parcours", [
+            "Urbain (100% Ville / Bouchons)", 
+            "Mixte (Ville + Route)", 
+            "Autoroute Éco (110 km/h)",
+            "Autoroute Standard (130 km/h)"
+        ], index=1)
 
-    v_type = st.selectbox("Votre voiture", ["Citadine", "Berline", "SUV", "Utilitaire"])
+    col_p, col_r = st.columns(2)
+    with col_p:
+        passagers = st.slider("Passagers / Charge", 1, 5, 1, help="+0.4L/100km par personne")
+    with col_r:
+        relief = st.selectbox("Relief", ["Plat", "Vallonné", "Montagne"])
 
-    # LOGIQUE DE CONSO
-    base = {"Citadine": 5.5, "Berline": 6.8, "SUV": 8.0, "Utilitaire": 10.0}[v_type]
-    if "Mixte" in p_route: base += 1.2
-    elif "Autoroute" in p_route: base += 2.8
+    # --- LOGIQUE DE CONSOMMATION "BÉTON" ---
+    # Base véhicule
+    base_conso = {"Citadine": 5.2, "Berline": 6.5, "SUV": 7.8, "Utilitaire": 9.5}[v_type]
+    
+    # Impact du parcours
+    impact_route = {
+        "Urbain (100% Ville / Bouchons)": 2.8,
+        "Mixte (Ville + Route)": 0.8,
+        "Autoroute Éco (110 km/h)": 0.4,
+        "Autoroute Standard (130 km/h)": 2.2
+    }[p_route]
 
-    # LE CHIFFRE QUI DOIT CHANGER
-    km_final = st.number_input("Kilomètres calculés", value=float(st.session_state['km_memoire']))
+    # Impact Relief & Poids
+    coeff_relief = {"Plat": 1.0, "Vallonné": 1.12, "Montagne": 1.35}[relief]
+    poids_extra = (passagers - 1) * 0.4
 
-    # RÉSULTAT
+    # Calcul final de la consommation
+    conso_finale = (base_conso + impact_route + poids_extra) * coeff_relief
+
+    # --- RÉSULTATS ---
     if km_final > 0:
-        total_euros = (km_final / 100) * base * p_final
-        
-        # --- BLOC DE RÉSULTAT FINAL ---
+        total_euros = (km_final / 100) * conso_finale * p_final
+        # Ajout du coût d'usure (Pneus/Entretien) moyen FR : 0.12€/km
+        cout_reel_total = total_euros + (km_final * 0.12)
+
+        st.markdown("---")
+        # BLOC INFO
         st.markdown(f"""
-            <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px;">
-                <p style="margin: 0; font-size: 0.95rem; color: #1e293b; line-height: 1.6; text-align: center;">
-                    <b>Budget estimé au plus juste</b> selon votre itinéraire (relief, vitesse) et votre profil de véhicule. <br>
-                    <span style="color: #64748b; font-size: 0.85rem; font-style: italic;">
-                        ⚠️ Ce montant est indicatif : il peut varier selon l'évolution réelle des prix à la pompe et les conditions de circulation.
-                    </span>
+            <div style="background-color: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; text-align: center;">
+                <p style="margin: 0; font-size: 0.9rem; color: #475569;">
+                    Consommation estimée : <b>{conso_finale:.1f} L/100km</b><br>
+                    Prix du carburant : <b>{p_final:.3f} €/L</b>
                 </p>
             </div>
         """, unsafe_allow_html=True)
-        
-      
 
         # LE GROS CHIFFRE
         st.markdown(f"""
-            <div style="background-color: #1e293b; padding: 35px; border-radius: 20px; text-align: center; color: white;">
-                <p style="margin: 0; opacity: 0.7; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Estimation Totale</p>
-                <h1 style="margin: 10px 0; font-size: 4rem; color: #4ade80; border:none; font-weight:800;">{total_euros:.2f} €</h1>
-                <p style="margin: 0; opacity: 0.5; font-size: 0.85rem;">{km_final} km • {base:.1f} L/100 • {p_final:.3f} €/L</p>
+            <div style="background-color: #1e293b; padding: 30px; border-radius: 20px; text-align: center; color: white;">
+                <p style="margin: 0; opacity: 0.7; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Budget Carburant</p>
+                <h1 style="margin: 10px 0; font-size: 3.8rem; color: #4ade80; border:none; font-weight:800;">{total_euros:.2f} €</h1>
+                <div style="border-top: 1px solid #334155; margin-top: 15px; padding-top: 15px;">
+                    <p style="margin: 0; opacity: 0.6; font-size: 0.8rem;">COÛT RÉEL TOTAL (AVEC USURE) : <b>{cout_reel_total:.2f} €</b></p>
+                </div>
             </div>
         """, unsafe_allow_html=True)
+
         # WAZE
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
-        st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER WAZE</div></a>', unsafe_allow_html=True)
-
+        st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
     # Style des icônes
