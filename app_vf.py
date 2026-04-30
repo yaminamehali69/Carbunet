@@ -334,7 +334,9 @@ with tabs[1]:
                             
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # --- 3. BOUCLE D'AFFICHAGE DES CARTES (UNE SEULE BOUCLE ICI) ---
+
+
+                            # --- UNE SEULE BOUCLE ICI ---
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
@@ -355,8 +357,8 @@ with tabs[1]:
                                 border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
                                 label_eco = f'<span style="background:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-bottom:5px; display:inline-block;">MEILLEUR PRIX 🏆</span><br>' if row[col_p] == p_min else ''
 
-                                # Construction du HTML
-                                html_final = f"""
+                                # Construction du HTML dans une variable UNIQUE
+                                rendu_html = f"""
                                 <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                     {label_eco}
                                     <div style="display:flex; justify-content:space-between; align-items:start;">
@@ -374,13 +376,13 @@ with tabs[1]:
                                     </div>
                                 </div>
                                 """
-                                # AFFICHAGE (On utilise html_final avec unsafe_allow_html=True)
-                                st.markdown(html_final, unsafe_allow_html=True)
+                                # AFFICHAGE CRITIQUE : Vérifie bien cette ligne précise
+                                st.markdown(rendu_html, unsafe_allow_html=True)
 
                         else:
                             st.warning("Aucune station trouvée.")
                 except Exception as e:
-                    st.error(f"Erreur : {e}")
+                    st.error(f"Erreur technique : {e}")
 
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
