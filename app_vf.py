@@ -335,14 +335,13 @@ with tabs[1]:
                             st.markdown("### 🏆 Meilleures options trouvées")
 
 
-
-                            # --- UNE SEULE BOUCLE ICI ---
+                            # --- 2. LA SEULE ET UNIQUE BOUCLE D'AFFICHAGE ---
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 
-                                # Badges services
+                                # Traitement des services (Badges)
                                 srv_str = str(row.get('service_propose', ''))
                                 badges_list = []
                                 if srv_str and srv_str != 'nan':
@@ -357,8 +356,8 @@ with tabs[1]:
                                 border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
                                 label_eco = f'<span style="background:#10b981; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-bottom:5px; display:inline-block;">MEILLEUR PRIX 🏆</span><br>' if row[col_p] == p_min else ''
 
-                                # Construction du HTML dans une variable UNIQUE
-                                rendu_html = f"""
+                                # ON PRÉPARE LE DESIGN DANS UNE VARIABLE
+                                design_final = f"""
                                 <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                                     {label_eco}
                                     <div style="display:flex; justify-content:space-between; align-items:start;">
@@ -376,14 +375,15 @@ with tabs[1]:
                                     </div>
                                 </div>
                                 """
-                                # AFFICHAGE CRITIQUE : Vérifie bien cette ligne précise
-                                st.markdown(rendu_html, unsafe_allow_html=True)
+                                # ON L'AFFICHE (C'est la SEULE ligne st.markdown autorisée ici)
+                                st.markdown(design_final, unsafe_allow_html=True)
 
                         else:
-                            st.warning("Aucune station trouvée.")
+                            st.warning("Aucune station ne correspond à vos critères.")
+                    else:
+                        st.error("Lieu non reconnu. Précisez la ville ou le code postal.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
-
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
     # INITIALISATION PROPRE
