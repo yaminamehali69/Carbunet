@@ -10,97 +10,67 @@ import base64
 import urllib.parse
 import streamlit.components.v1 as components
 
-LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 # --- 1. CONFIGURATION UNIQUE ---
+LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 path_logo = "logo_carbunet.png"
 path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carburant_prix_nettoye.csv"
 VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
-st.markdown("""
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
-""", unsafe_allow_html=True)
-
-# --- FONCTION LOGO (À PLACER AVANT SON UTILISATION) ---
-@st.cache_data
-def get_logo_base64(url):
-    try:
-        response = requests.get(url, timeout=5)
-        return base64.b64encode(response.content).decode()
-    except:
-        return ""
-
-# 1. On crée la variable logo_data
-logo_data = get_logo_base64(LOGO_URL)
-
-# 2. Configuration de la page (DOIT être la première commande Streamlit)
+# --- 2. CONFIGURATION DE LA PAGE (TOUJOURS EN PREMIER) ---
 st.set_page_config(
     page_title="CarbuNet", 
     layout="centered",
     page_icon=LOGO_URL
 )
 
-# 3. TRACKER UMAMI + FIX LOGO/TITRE
-st.components.v1.html(f"""
-    <script defer src="https://cloud.umami.is/script.js" data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
-    <script>
-        // On force le titre et l'icône proprement
-        window.parent.document.title = "CarbuNet";
-        var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'apple-touch-icon';
-        link.href = 'data:image/png;base64,{logo_data}';
-        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
-
-        // Masquage des menus Streamlit
-        const hide = () => {{
-            const el = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
-            el.forEach(e => {{ e.style.display = 'none'; e.style.visibility = 'hidden'; }});
-        }};
-        setInterval(hide, 1000);
-    </script>
-""", height=0)
-
-# 2. LE SCRIPT MAGIQUE (Évite la page blanche et force l'icône)
-# Ce code s'exécute DANS Streamlit mais parle à Safari
-st.components.v1.html(f"""
-    <script>
-        window.parent.document.title = "CarbuNet";
-        var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
-        link.type = 'image/png';
-        link.rel = 'apple-touch-icon';
-        link.href = 'data:image/png;base64,{logo_data}';
-        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
-    </script>
-""", height=0)
-
-# 3. DOUBLURE DE SÉCURITÉ
-st.markdown(f"""
-    <link rel="apple-touch-icon" href="data:image/png;base64,{logo_data}">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="CarbuNet">
-""", unsafe_allow_html=True)
-
-# --- STYLE ET SCRIPT POUR TOUT EFFACER ---
+# --- 3. LE CERVEAU UMAMI (S'occupe des vues et écoute les onglets) ---
 st.markdown("""
+    <script async src="https://cloud.umami.is/script.js" data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
+    <script>
+        // Ce script permet de recevoir les clics provenant des onglets (iframes)
+        window.addEventListener('message', function(e) {
+            if (e.data.umamiEvent && window.umami) {
+                window.umami.track(e.data.umamiEvent);
+            }
+        }, false);
+    </script>
     <style>
-        /* CSS Radical */
         header, footer, .stDeployButton, .stAppToolbar, [data-testid="stStatusWidget"] {
             display: none !important;
             visibility: hidden !important;
         }
     </style>
-    
-    <script>
-        // Ce petit script va chercher les icônes toutes les secondes pour les supprimer
-        const hideElements = () => {
-            const elements = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
-            elements.forEach(el => el.style.display = 'none');
-        };
-        setInterval(hideElements, 1000);
-    </script>
 """, unsafe_allow_html=True)
+
+# --- 4. PRÉPARATION LOGO ---
+@st.cache_data
+def get_logo_base64(url):
+    try:
+        response = requests.get(url, timeout=5)
+        return base64.b64encode(response.content).decode()
+    except: return ""
+
+logo_data = get_logo_base64(LOGO_URL)
+
+# --- 5. FIX VISUEL FINAL (Une seule fois !) ---
+components.html(f"""
+    <script>
+        window.parent.document.title = "CarbuNet";
+        var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'icon';
+        link.href = 'data:image/png;base64,{logo_data}';
+        window.parent.document.getElementsByTagName('head')[0].appendChild(link);
+
+        const hide = () => {{
+            const el = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
+            el.forEach(e => {{ e.style.display = 'none'; }});
+        }};
+        setInterval(hide, 1000);
+    </script>
+""", height=0)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
@@ -224,8 +194,12 @@ tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
 
 # --- ONGLET 1 : CONCEPT ---
 with tabs[0]:
-    # 1. Le mouchard Umami (en premier !)
-    st.components.v1.html("""<script>window.parent.umami.track('Vue Onglet Concept');</script>""", height=0)
+    # 1. Le mouchard Umami (Version robuste avec postMessage)
+    components.html("""
+        <script>
+            window.parent.postMessage({umamiEvent: 'Vue Onglet Concept'}, '*');
+        </script>
+    """, height=0)
     
     # 2. Ton code existant pour le logo et le contenu
     if os.path.exists(path_logo):
@@ -256,9 +230,15 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 
 
 # --- ONGLET 2 : STATIONS ---
-# --- ONGLET 2 : STATIONS ---
-# --- ONGLET 2 : STATIONS ---
 with tabs[1]:
+    # --- LE MOUCHARD POUR L'ONGLET STATIONS ---
+    components.html("""
+        <script>
+            window.parent.postMessage({umamiEvent: 'Vue Onglet Stations'}, '*');
+        </script>
+    """, height=0)
+
+    # --- TON CODE EXISTANT ---
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
     if 'recherche_lancee' not in st.session_state:
