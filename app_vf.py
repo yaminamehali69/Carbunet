@@ -26,23 +26,48 @@ st.set_page_config(
 )
 
 # --- 3. LE CERVEAU UMAMI (S'occupe des vues et écoute les onglets) ---
-st.markdown("""
-    <script async src="https://cloud.umami.is/script.js" data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
+components.html("""
+    <script async src="https://cloud.umami.is/script.js" 
+        data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
     <script>
-        // Ce script permet de recevoir les clics provenant des onglets (iframes)
-        window.addEventListener('message', function(e) {
-            if (e.data.umamiEvent && window.umami) {
-                window.umami.track(e.data.umamiEvent);
+        // Ce composant vit dans une iframe → on écoute les messages du parent
+        // ET on injecte Umami dans la page parent
+        window.addEventListener('load', function() {
+            // Injecte le script Umami dans la page PARENT (pas l'iframe)
+            var parentDoc = window.parent.document;
+            if (!parentDoc.getElementById('umami-script')) {
+                var s = parentDoc.createElement('script');
+                s.id = 'umami-script';
+                s.async = true;
+                s.src = 'https://cloud.umami.is/script.js';
+                s.setAttribute('data-website-id', '59711f44-7480-4e9d-a9b3-16deb35257c7');
+                parentDoc.head.appendChild(s);
             }
-        }, false);
+
+            // Écoute les events postMessage depuis les autres iframes
+            window.parent.addEventListener('message', function(e) {
+                if (e.data && e.data.umamiEvent) {
+                    // Attend qu'Umami soit prêt dans le parent
+                    var tries = 0;
+                    var interval = setInterval(function() {
+                        tries++;
+                        if (window.parent.umami) {
+                            window.parent.umami.track(e.data.umamiEvent);
+                            clearInterval(interval);
+                        }
+                        if (tries > 20) clearInterval(interval);
+                    }, 300);
+                }
+            }, false);
+        });
     </script>
     <style>
-        header, footer, .stDeployButton, .stAppToolbar, [data-testid="stStatusWidget"] {
+        header, footer, .stDeployButton, .stAppToolbar, 
+        [data-testid="stStatusWidget"] {
             display: none !important;
-            visibility: hidden !important;
         }
     </style>
-""", unsafe_allow_html=True)
+""", height=0)
 
 # --- 4. PRÉPARATION LOGO ---
 @st.cache_data
