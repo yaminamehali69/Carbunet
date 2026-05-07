@@ -25,48 +25,48 @@ st.set_page_config(
     page_icon=LOGO_URL
 )
 
-# --- 3. LE CERVEAU UMAMI (S'occupe des vues et écoute les onglets) ---
+# --- 3. UMAMI TRACKING DIRECT (VERSION CORRIGÉE) ---
 components.html("""
-    <script async src="https://cloud.umami.is/script.js" 
-        data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
     <script>
-        // Ce composant vit dans une iframe → on écoute les messages du parent
-        // ET on injecte Umami dans la page parent
-        window.addEventListener('load', function() {
-            // Injecte le script Umami dans la page PARENT (pas l'iframe)
+        (function() {
             var parentDoc = window.parent.document;
-            if (!parentDoc.getElementById('umami-script')) {
-                var s = parentDoc.createElement('script');
-                s.id = 'umami-script';
-                s.async = true;
-                s.src = 'https://cloud.umami.is/script.js';
-                s.setAttribute('data-website-id', '59711f44-7480-4e9d-a9b3-16deb35257c7');
-                parentDoc.head.appendChild(s);
-            }
+            if (parentDoc.getElementById('umami-script')) return;
 
-            // Écoute les events postMessage depuis les autres iframes
-            window.parent.addEventListener('message', function(e) {
-                if (e.data && e.data.umamiEvent) {
-                    // Attend qu'Umami soit prêt dans le parent
+            var s = parentDoc.createElement('script');
+            s.id = 'umami-script';
+            s.async = true;
+            s.defer = true;
+            s.src = 'https://cloud.umami.is/script.js';
+            s.setAttribute('data-website-id', '59711f44-7480-4e9d-a9b3-16deb35257c7');
+            s.setAttribute('data-auto-track', 'false');
+            parentDoc.head.appendChild(s);
+
+            // Track la visite initiale quand Umami est chargé
+            s.onload = function() {
+                if (window.parent.umami) {
+                    window.parent.umami.track('Visite CarbuNet');
+                }
+            };
+
+            // Écoute les vrais clics sur les onglets Streamlit dans le parent
+            parentDoc.addEventListener('click', function(e) {
+                var tab = e.target.closest('[data-baseweb="tab"]');
+                if (tab) {
+                    var label = tab.innerText.trim();
+                    // Attend qu'Umami soit prêt
                     var tries = 0;
-                    var interval = setInterval(function() {
+                    var iv = setInterval(function() {
                         tries++;
                         if (window.parent.umami) {
-                            window.parent.umami.track(e.data.umamiEvent);
-                            clearInterval(interval);
+                            window.parent.umami.track('Onglet: ' + label);
+                            clearInterval(iv);
                         }
-                        if (tries > 20) clearInterval(interval);
-                    }, 300);
+                        if (tries > 20) clearInterval(iv);
+                    }, 200);
                 }
-            }, false);
-        });
+            });
+        })();
     </script>
-    <style>
-        header, footer, .stDeployButton, .stAppToolbar, 
-        [data-testid="stStatusWidget"] {
-            display: none !important;
-        }
-    </style>
 """, height=0)
 
 # --- 4. PRÉPARATION LOGO ---
@@ -79,7 +79,7 @@ def get_logo_base64(url):
 
 logo_data = get_logo_base64(LOGO_URL)
 
-# --- 5. FIX VISUEL FINAL (Une seule fois !) ---
+# --- 5. FIX VISUEL FINAL ---
 components.html(f"""
     <script>
         window.parent.document.title = "CarbuNet";
@@ -113,58 +113,33 @@ LOGOS_SERVICES = {
 
 st.markdown("""
 <style>
-    /* 1. FIX CHARGEMENT & TRANSPARENCE */
-    div[data-testid="stAppViewBlockContainer"] {
-        opacity: 1 !important;
-    }
-
-    /* 2. NETTOYAGE INTERFACE (Avatar, Couronne, Menu) */
+    div[data-testid="stAppViewBlockContainer"] { opacity: 1 !important; }
     header {visibility: hidden;}
     footer {visibility: hidden;}
     .stDeployButton, .stAppToolbar, [data-testid="stStatusWidget"] { display: none !important; }
-
-    /* 3. STRUCTURE RESPONSIVE GLOBALE */
     .block-container {
         padding-top: 1rem !important; 
         padding-left: 1rem !important;
         padding-right: 1rem !important;
         max-width: 100% !important;
     }
-
-    /* 4. LE FIX POUR MOBILE (MODE PORTRAIT) */
     @media (max-width: 640px) {
-        /* Force les colonnes à s'empiler (évite le débordement horizontal) */
         [data-testid="column"] {
             width: 100% !important;
             flex: 1 1 100% !important;
             min-width: 100% !important;
             margin-bottom: 10px !important;
         }
-
-        /* FORCE LE FORMULAIRE DE SUPPORT À RESTER DANS L'ÉCRAN */
-        iframe {
-            width: 100% !important;
-            min-width: 100% !important;
-        }
-        
-        /* Réduit la taille des titres pour qu'ils ne poussent pas les bords */
-        h1, h2 {
-            font-size: 1.4rem !important;
-            word-wrap: break-word;
-        }
-        
-        .hero-container h1 {
-            font-size: 1.8rem !important;
-        }
+        iframe { width: 100% !important; min-width: 100% !important; }
+        h1, h2 { font-size: 1.4rem !important; word-wrap: break-word; }
+        .hero-container h1 { font-size: 1.8rem !important; }
     }
-
-    /* 5. DESIGN DES ONGLETS (SCROLLABLE AU DOIGT) */
     .stTabs [data-baseweb="tab-list"] { 
         gap: 8px; 
         justify-content: center; 
         overflow-x: auto !important; 
         white-space: nowrap;
-        -webkit-overflow-scrolling: touch; /* Scroll fluide sur iPhone */
+        -webkit-overflow-scrolling: touch;
     }
     .stTabs [data-baseweb="tab"] { 
         height: 40px; 
@@ -174,8 +149,6 @@ st.markdown("""
         font-weight: 600;
     }
     .stTabs [aria-selected="true"] { background-color: #0f172a !important; color: white !important; }
-
-    /* 6. HERO CONTAINER (ACCUEIL) */
     .hero-container {
         background: linear-gradient(135deg, #1a73e8 0%, #32CD32 100%);
         border-radius: 20px; 
@@ -186,8 +159,6 @@ st.markdown("""
         width: 100%;
         box-sizing: border-box;
     }
-
-    /* 7. DISCLAIMER TEXT (S'adapte à la largeur) */
     .disclaimer-text {
         font-size: 0.7rem; opacity: 0.85; line-height: 1.2; width: 100%;
         margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;
@@ -195,12 +166,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 2. DONNÉES ---
-@st.cache_data(ttl=3600) # Ajout d'une durée de cache (1h) pour forcer l'actu
+# --- DONNÉES ---
+@st.cache_data(ttl=3600)
 def charger_donnees():
     try:
-        # On lit directement l'URL GitHub
-        df = pd.read_csv(path_csv, sep=',', low_memory=False) # Attention sep=',' car mon script robot utilise la virgule
+        df = pd.read_csv(path_csv, sep=',', low_memory=False)
         for c in ['prix_gazole', 'prix_sp95', 'prix_sp98', 'prix_e10', 'prix_e85']:
             if c in df.columns: 
                 df[c] = pd.to_numeric(df[c], errors='coerce')
@@ -211,22 +181,11 @@ def charger_donnees():
 
 df = charger_donnees()
 
-
-# --- 3. NAVIGATION ---
+# --- NAVIGATION ---
 tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
-
-# --- 4. CONTENU ---
 
 # --- ONGLET 1 : CONCEPT ---
 with tabs[0]:
-    # 1. Le mouchard Umami (Version robuste avec postMessage)
-    components.html("""
-        <script>
-            window.parent.postMessage({umamiEvent: 'Vue Onglet Concept'}, '*');
-        </script>
-    """, height=0)
-    
-    # 2. Ton code existant pour le logo et le contenu
     if os.path.exists(path_logo):
         with open(path_logo, "rb") as f:
             encoded = base64.b64encode(f.read()).decode()
@@ -251,26 +210,15 @@ Version {VERSION} | Développé par <b>{AUTEUR}</b>
 """
         st.markdown(concept_html, unsafe_allow_html=True) 
     st.caption("© 2026 CarbuNet. Propriété exclusive de l'auteur. Toute reproduction interdite.")
-    
-
 
 # --- ONGLET 2 : STATIONS ---
 with tabs[1]:
-    # --- LE MOUCHARD POUR L'ONGLET STATIONS ---
-    components.html("""
-        <script>
-            window.parent.postMessage({umamiEvent: 'Vue Onglet Stations'}, '*');
-        </script>
-    """, height=0)
-
-    # --- TON CODE EXISTANT ---
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
     if 'recherche_lancee' not in st.session_state:
         st.session_state.recherche_lancee = False
 
     if df is not None:
-        # 1. LE FORMULAIRE DE RECHERCHE
         with st.form("recherche_stations_form"):
             adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse...", key="input_stations")
             c1, c2 = st.columns(2)
@@ -280,7 +228,6 @@ with tabs[1]:
             with c2:
                 rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
 
-            # AJOUT DE LA PARTIE SERVICES
             with st.expander("⚙️ Filtrer par services (Boutique, Lavage, etc.)"):
                 cols_srv = st.columns(2)
                 selection_services = []
@@ -293,7 +240,6 @@ with tabs[1]:
         if submit_search and adresse:
             st.session_state.recherche_lancee = True
 
-        # 2. AFFICHAGE DES RÉSULTATS
         if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_v5")
@@ -305,7 +251,6 @@ with tabs[1]:
                         df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
                         res = df_c[df_c['distance'] <= rayon].copy()
 
-                        # Filtrage par services sélectionnés
                         for s_filtre in selection_services:
                             res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
 
@@ -313,7 +258,6 @@ with tabs[1]:
 
                         if not res.empty:
                             st.markdown("---")
-                            # Mémoire pour le simulateur
                             stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
                             choix_station = st.selectbox("🎯 Choisir cette station pour le simulateur :", options=list(stations_trouvees.keys()))
                             
@@ -323,7 +267,6 @@ with tabs[1]:
                             
                             st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
-                            # 1. CARTE
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
                             p_min = res[col_p].min()
                             for _, r in res.head(10).iterrows():
@@ -333,14 +276,12 @@ with tabs[1]:
 
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # 2. BOUCLE D'AFFICHAGE UNIQUE
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
                                 
-                                # Génération des badges de services
                                 srv_str = str(row.get('service_propose', ''))
                                 badges_html = ""
                                 if srv_str and srv_str != 'nan':
@@ -373,13 +314,12 @@ with tabs[1]:
                         st.error("Lieu non reconnu.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
+
 # --- ONGLET 3 : SIMULATEUR ---
 with tabs[2]:
-    # INITIALISATION PROPRE
     if 'km_memoire' not in st.session_state:
         st.session_state['km_memoire'] = 0.0
 
-    # --- TITRE HARMONISÉ ---
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #3b82f6; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #3b82f6;">calculate</span>
@@ -389,12 +329,10 @@ with tabs[2]:
         </div>
     """, unsafe_allow_html=True)
 
-    # PRIX RÉCUPÉRÉ
     p_final = st.session_state.get('prix_perso', 1.859)
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
     st.info(f" Prix actuel utilisé : **{p_final:.3f} €/L** ({nom_carbu})")
 
-    # --- 1. ITINÉRAIRE ---
     st.markdown("##### 📍 1. Itinéraire")
     c1, c2 = st.columns(2)
     with c1:
@@ -411,7 +349,6 @@ with tabs[2]:
                     l2 = geolocator.geocode(arr_v)
                     if l1 and l2:
                         dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
-                        # On applique un coefficient de détour réel (25%)
                         st.session_state['km_memoire'] = round(dist_gps * 1.25, 1)
                         st.rerun() 
                     else:
@@ -421,7 +358,6 @@ with tabs[2]:
 
     km_final = st.number_input("Distance retenue (km)", value=float(st.session_state['km_memoire']))
 
-    # --- 2. PARAMÈTRES AVANCÉS (LE COEUR DU CALCUL) ---
     st.markdown("---")
     st.markdown("##### ⚙️ 2. Configuration du trajet")
     
@@ -442,33 +378,22 @@ with tabs[2]:
     with col_r:
         relief = st.selectbox("Relief", ["Plat", "Vallonné", "Montagne"])
 
-    # --- LOGIQUE DE CONSOMMATION "BÉTON" ---
-    # Base véhicule
     base_conso = {"Citadine": 5.2, "Berline": 6.5, "SUV": 7.8, "Utilitaire": 9.5}[v_type]
-    
-    # Impact du parcours
     impact_route = {
         "Urbain (100% Ville / Bouchons)": 2.8,
         "Mixte (Ville + Route)": 0.8,
         "Autoroute Éco (110 km/h)": 0.4,
         "Autoroute Standard (130 km/h)": 2.2
     }[p_route]
-
-    # Impact Relief & Poids
     coeff_relief = {"Plat": 1.0, "Vallonné": 1.12, "Montagne": 1.35}[relief]
     poids_extra = (passagers - 1) * 0.4
-
-    # Calcul final de la consommation
     conso_finale = (base_conso + impact_route + poids_extra) * coeff_relief
 
-    # --- RÉSULTATS ---
     if km_final > 0:
         total_euros = (km_final / 100) * conso_finale * p_final
-        # Ajout du coût d'usure (Pneus/Entretien) moyen FR : 0.12€/km
         cout_reel_total = total_euros + (km_final * 0.12)
 
         st.markdown("---")
-        # BLOC INFO
         st.markdown(f"""
             <div style="background-color: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; text-align: center;">
                 <p style="margin: 0; font-size: 0.9rem; color: #475569;">
@@ -478,7 +403,6 @@ with tabs[2]:
             </div>
         """, unsafe_allow_html=True)
 
-        # LE GROS CHIFFRE
         st.markdown(f"""
             <div style="background-color: #1e293b; padding: 30px; border-radius: 20px; text-align: center; color: white;">
                 <p style="margin: 0; opacity: 0.7; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Budget Carburant</p>
@@ -489,15 +413,13 @@ with tabs[2]:
             </div>
         """, unsafe_allow_html=True)
 
-        # WAZE
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
+
 # --- ONGLET 4 : SUPPORT ---
 with tabs[3]:
-    # Style des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
-    # Titre 
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #f59e0b; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #f59e0b;">contact_support</span>
@@ -505,7 +427,6 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    # --- LE FORMULAIRE CORRIGÉ POUR MOBILE ---
     contact_form_html = """
     <div id="form-container" style="font-family: sans-serif; max-width: 100%; overflow: hidden;">
         <div id="success-message" style="display: none; background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center;">
@@ -566,7 +487,6 @@ with tabs[3]:
         };
     </script>
     """
-    # On force la largeur à 100% ici aussi
     st.components.v1.html(contact_form_html, height=520, scrolling=False)
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
