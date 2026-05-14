@@ -219,7 +219,7 @@ with tabs[1]:
         # 3. AFFICHAGE DES RÉSULTATS
         if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse en cours..."):
-                geolocator = Nominatim(user_agent="carbunet_pro_v5")
+                geolocator = Nominatim(user_agent="carbunet_pro_v5", timeout=10)
                 try:
                     loc = geolocator.geocode(adresse + ", France")
                     if loc:
@@ -298,7 +298,6 @@ with tabs[1]:
                     st.error(f"Erreur technique : {e}")
 
 
-
 # --- ONGLET 2 : SIMULATEUR ---
 with tabs[2]:
     # 1. TRACKING : On enregistre l'arrivée sur le simulateur
@@ -317,8 +316,6 @@ with tabs[2]:
             </h2>
         </div>
     """, unsafe_allow_html=True)
-
-
 
     # PRIX RÉCUPÉRÉ
     p_final = st.session_state.get('prix_perso', 1.859)
