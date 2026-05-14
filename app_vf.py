@@ -98,7 +98,7 @@ df = charger_donnees()
 # --- 1. LA FONCTION DE TRACKING (A mettre en haut de ton fichier) ---
 def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A"):
     # URL de ton formulaire spécifique
-    url = "https://docs.google.com/forms/d/e/1FAIpQLSdrK4vXE69rQ_cFHqVddPBRNlc6MEzyghifGQ0Jy7Ly8A69tA/formResponse"
+    url = "https://docs.google.com/forms/d/1FRdR-I7TUAi6drgMY3lSCuODhkogY3vtsGpFJhVr3wk/edit#responses"
     
     # Date et heure actuelle
     horodatage = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
