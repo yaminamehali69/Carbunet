@@ -19,7 +19,7 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
-# --- 2. CONFIGURATION DE LA PAGE (TOUJOURS EN PREMIER) ---
+# --- 2. CONFIGURATION DE LA PAGE ---
 st.set_page_config(
     page_title="CarbuNet", 
     layout="centered",
@@ -36,22 +36,49 @@ def get_logo_base64(url):
 
 logo_data = get_logo_base64(LOGO_URL)
 
-# --- 5. FIX VISUEL (Titre & Icône Navigateur) ---
-components.html(f"""
+# --- 5. FIX VISUEL & CSS RESPONSIVE (CORRIGÉ) ---
+# On met le JS et le CSS ensemble pour éviter les sauts de page
+st.markdown(f"""
     <script>
+        // Changement de l'icône et du titre
         window.parent.document.title = "CarbuNet";
         var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
         link.type = 'image/png'; link.rel = 'icon';
         link.href = 'data:image/png;base64,{logo_data}';
         window.parent.document.getElementsByTagName('head')[0].appendChild(link);
 
+        // Cacher les boutons Streamlit
         const hide = () => {{
             const el = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
             el.forEach(e => {{ e.style.display = 'none'; }});
         }};
         setInterval(hide, 1000);
     </script>
-""", height=0)
+    
+    <style>
+        /* FIX MARGE HAUTE : On décolle un peu du bord */
+        .block-container {{
+            padding-top: 2.5rem !important; 
+            padding-bottom: 1rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }}
+        
+        /* RESPONSIVE : On s'assure que la boîte bleue ne déborde pas sur téléphone */
+        .hero-container {{
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            margin: 0 auto !important;
+        }}
+
+        @media (max-width: 640px) {{
+            .hero-container h1 {{ font-size: 1.8rem !important; }}
+            .hero-container p {{ font-size: 1.1rem !important; }}
+            .block-container {{ padding-top: 1.5rem !important; }}
+        }}
+    </style>
+""", unsafe_allow_html=True)
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
