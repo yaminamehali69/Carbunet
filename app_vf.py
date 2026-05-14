@@ -36,47 +36,49 @@ def get_logo_base64(url):
 
 logo_data = get_logo_base64(LOGO_URL)
 
-# --- 5. FIX VISUEL & CSS RESPONSIVE (CORRIGÉ) ---
-# On met le JS et le CSS ensemble pour éviter les sauts de page
-st.markdown(f"""
+# --- 5. FIX VISUEL & CSS (VERSION NETTOYÉE) ---
+
+# Le Script (JS) : On l'isole pour qu'il ne crée pas de marge
+components.html(f"""
     <script>
-        // Changement de l'icône et du titre
         window.parent.document.title = "CarbuNet";
         var link = window.parent.document.querySelector("link[rel*='icon']") || window.parent.document.createElement('link');
         link.type = 'image/png'; link.rel = 'icon';
         link.href = 'data:image/png;base64,{logo_data}';
         window.parent.document.getElementsByTagName('head')[0].appendChild(link);
 
-        // Cacher les boutons Streamlit
         const hide = () => {{
             const el = window.parent.document.querySelectorAll('.stAppToolbar, .stDeployButton, [data-testid="stStatusWidget"]');
             el.forEach(e => {{ e.style.display = 'none'; }});
         }};
         setInterval(hide, 1000);
     </script>
-    
-    <style>
-        /* FIX MARGE HAUTE : On décolle un peu du bord */
-        .block-container {{
-            padding-top: 2.5rem !important; 
-            padding-bottom: 1rem !important;
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-        }}
-        
-        /* RESPONSIVE : On s'assure que la boîte bleue ne déborde pas sur téléphone */
-        .hero-container {{
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            margin: 0 auto !important;
-        }}
+""", height=0)
 
-        @media (max-width: 640px) {{
-            .hero-container h1 {{ font-size: 1.8rem !important; }}
-            .hero-container p {{ font-size: 1.1rem !important; }}
-            .block-container {{ padding-top: 1.5rem !important; }}
-        }}
+# Le Style (CSS) : On force la suppression des marges Streamlit
+st.markdown("""
+    <style>
+        /* On supprime le header Streamlit vide */
+        header {visibility: hidden;}
+        
+        /* On remonte tout le contenu vers le haut */
+        .main .block-container {
+            padding-top: 0rem !important;
+            padding-bottom: 1rem !important;
+            margin-top: -30px !important;
+        }
+
+        /* Responsive pour la boîte Hero */
+        .hero-container {
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        @media (max-width: 640px) {
+            .hero-container h1 { font-size: 1.6rem !important; }
+            .hero-container p { font-size: 1.1rem !important; }
+            .main .block-container { padding-top: 0rem !important; }
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -156,21 +158,20 @@ with tabs[0]:
     
     logo_src = f"data:image/png;base64,{logo_data}" if logo_data else LOGO_URL
     
-    # On met tout dans un seul bloc pour éviter que Streamlit n'espace les lignes
     st.markdown(f"""
-    <div class="hero-container">
-        <img src="{logo_src}" width="160">
-        <h1>CarbuNet</h1>
-        <p style="font-size:1.3rem; font-weight:500; opacity:0.9; margin-top:10px;">
-            Le prix le plus net, au kilomètre près.
-        </p>
-        <div style="width:80%; height:1px; background:rgba(255,255,255,0.2); margin:20px 0;"></div>
-        <div style="font-size:0.75rem; opacity:0.8;">
-            <b>Mention d'information :</b> Données data.gouv.fr.
-        </div>
-        <div style="font-size:0.8rem; margin-top:10px;">
-            Version {VERSION} | Développé par <b>{AUTEUR}</b>
-        </div>
+    <div class="hero-container" style="
+        background: linear-gradient(135deg, #1a73e8 0%, #32CD32 100%);
+        border-radius: 20px;
+        padding: 40px 20px;
+        text-align: center;
+        color: white;
+        margin-bottom: 20px;">
+        <img src="{logo_src}" width="160" style="margin-bottom: 15px;">
+        <h1 style="color: white; border: none; margin: 0; font-size: 2.2rem;">CarbuNet</h1>
+        <p style="font-size: 1.3rem; opacity: 0.95; margin-top: 10px;">Le prix le plus net, au kilomètre près.</p>
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 20px 0;">
+        <p style="font-size: 0.75rem; opacity: 0.8;">Mention d'information : Données data.gouv.fr.</p>
+        <p style="font-size: 0.8rem; margin-top: 10px;">Version {VERSION} | Développé par Yamina Mehali</p>
     </div>
     """, unsafe_allow_html=True)
     
