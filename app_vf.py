@@ -9,6 +9,7 @@ from geopy.distance import geodesic
 import base64
 import urllib.parse
 import streamlit.components.v1 as components
+from datetime import datetime
 
 # --- 1. CONFIGURATION UNIQUE ---
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
@@ -24,26 +25,6 @@ st.set_page_config(
     layout="centered",
     page_icon=LOGO_URL
 )
-
-# --- 3. LE CERVEAU UMAMI (Tracking Visiteurs + Temps + Écoute Onglets) ---
-# J'ai mis ça dans st.markdown pour que ce soit sur la "vraie" page et pas une iframe
-st.markdown("""
-    <script async src="https://cloud.umami.is/script.js" 
-    data-website-id="59711f44-7480-4e9d-a9b3-16deb35257c7"></script>
-    <script>
-        window.addEventListener('message', function(e) {
-            if (e.data && e.data.umamiEvent && window.umami) {
-                window.umami.track(e.data.umamiEvent);
-            }
-        }, false);
-    </script>
-    <style>
-        header, footer, .stDeployButton, .stAppToolbar, [data-testid="stStatusWidget"] {
-            display: none !important;
-            visibility: hidden !important;
-        }
-    </style>
-""", unsafe_allow_html=True)
 
 # --- 4. PRÉPARATION LOGO ---
 @st.cache_data
@@ -114,12 +95,39 @@ def charger_donnees():
 
 df = charger_donnees()
 
+# --- 1. LA FONCTION DE TRACKING (A mettre en haut de ton fichier) ---
+def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A"):
+    # URL de ton formulaire spécifique
+    url = "https://docs.google.com/forms/d/e/1FAIpQLSdrK4vXE69rQ_cFHqVddPBRNlc6MEzyghifGQ0Jy7Ly8A69tA/formResponse"
+    
+    # Date et heure actuelle
+    horodatage = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    
+    # On utilise TES numéros entry.XXXX trouvés dans ton lien
+    data = {
+        "entry.444917946": horodatage,  # Date et Heure
+        "entry.15775607": nom_onglet,   # Onglet
+        "entry.116783663": ville,       # Ville
+        "entry.2094833025": carburant   # Carburant
+    }
+    
+    try:
+        # Envoi silencieux à Google Sheets
+        requests.post(url, data=data)
+    except:
+        pass
+
+
 # --- NAVIGATION ---
 tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
 
+
 # --- ONGLET 0 : CONCEPT ---
 with tabs[0]:
-    components.html("<script>window.parent.postMessage({umamiEvent: 'Vue Onglet Concept'}, '*');</script>", height=0)
+    # 1. On envoie les infos au Google Sheet
+    log_to_sheets("Concept")
+    
+    # 2. Ton code d'affichage (Design)
     concept_html = f"""
     <div class="hero-container">
     <img src="data:image/png;base64,{logo_data}" width="170">
@@ -129,58 +137,15 @@ with tabs[0]:
     <div style="font-size:0.8rem; margin-top:15px; opacity:0.9;">Version {VERSION} | Développé par <b>{AUTEUR}</b></div>
     </div>
     """
-    st.markdown(concept_html, unsafe_allow_html=True) 
+    st.markdown(concept_html, unsafe_allow_html=True)
+
+
+# --- ONGLET 1 : STATIONS ---
 
 # --- ONGLET 1 : STATIONS ---
 with tabs[1]:
-    components.html("<script>window.parent.postMessage({umamiEvent: 'Vue Onglet Stations'}, '*');</script>", height=0)
-    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
-    if 'recherche_lancee' not in st.session_state: st.session_state.recherche_lancee = False
-
-    if df is not None:
-        with st.form("recherche_stations_form"):
-            adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse...")
-            c1, c2 = st.columns(2)
-            with c1:
-                carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
-                col_p, col_m = f"prix_{carbu.lower()}", f"prix_{carbu.lower()}_maj"
-            with c2:
-                rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
-            with st.expander("⚙️ Filtrer par services"):
-                cols_srv = st.columns(2)
-                selection_services = [s for i, s in enumerate(LOGOS_SERVICES.keys()) if cols_srv[i%2].checkbox(f"{LOGOS_SERVICES[s]} {s}")]
-            submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
-
-        if submit_search and adresse:
-            st.session_state.recherche_lancee = True
-            with st.spinner("Analyse en cours..."):
-                geolocator = Nominatim(user_agent="carbunet_pro_v5")
-                loc = geolocator.geocode(adresse + ", France")
-                if loc:
-                    ma_pos = (loc.latitude, loc.longitude)
-                    df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
-                    df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
-                    res = df_c[df_c['distance'] <= rayon].copy()
-                    for s in selection_services: res = res[res['service_propose'].str.contains(s, na=False)]
-                    res = res.sort_values(by=col_p)
-                    
-                    if not res.empty:
-                        m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
-                        for _, r in res.head(10).iterrows():
-                            folium.Marker([r['latitude'], r['longitude']], icon=folium.Icon(color='blue', icon='gas-pump', prefix='fa')).add_to(m)
-                        st_folium(m, width="100%", height=400)
-                        for _, row in res.head(8).iterrows():
-                            st.markdown(f'<div style="border:1px solid #ddd; padding:10px; border-radius:10px; margin-bottom:5px;"><b>{row[col_p]:.3f} €</b> - {row["adresse"]}</div>', unsafe_allow_html=True)
-                else: st.error("Lieu non reconnu.")
-                
-# --- ONGLET 2 : STATIONS ---
-with tabs[1]:
-    # --- LE MOUCHARD POUR L'ONGLET STATIONS ---
-    components.html("""
-        <script>
-            window.parent.postMessage({umamiEvent: 'Vue Onglet Stations'}, '*');
-        </script>
-    """, height=0)
+    # 1. TRACKING : On enregistre que l'utilisateur est sur l'onglet Stations
+    log_to_sheets("Stations")
 
     # --- TON CODE EXISTANT ---
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
@@ -209,10 +174,14 @@ with tabs[1]:
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
+        # 2. TRACKING & ACTION LORS DE LA RECHERCHE
         if submit_search and adresse:
+            # ON LOGUE LA RECHERCHE DANS GOOGLE SHEET AVEC LA VILLE ET LE CARBURANT
+            log_to_sheets("Recherche Active", ville=adresse, carburant=carbu)
+            
             st.session_state.recherche_lancee = True
 
-        # 2. AFFICHAGE DES RÉSULTATS
+        # 3. AFFICHAGE DES RÉSULTATS
         if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_v5")
@@ -292,8 +261,14 @@ with tabs[1]:
                         st.error("Lieu non reconnu.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
-# --- ONGLET 3 : SIMULATEUR ---
+
+
+
+# --- ONGLET 2 : SIMULATEUR ---
 with tabs[2]:
+    # 1. TRACKING : On enregistre l'arrivée sur le simulateur
+    log_to_sheets("Simulateur")
+
     # INITIALISATION PROPRE
     if 'km_memoire' not in st.session_state:
         st.session_state['km_memoire'] = 0.0
@@ -307,6 +282,8 @@ with tabs[2]:
             </h2>
         </div>
     """, unsafe_allow_html=True)
+
+
 
     # PRIX RÉCUPÉRÉ
     p_final = st.session_state.get('prix_perso', 1.859)
@@ -411,8 +388,11 @@ with tabs[2]:
         # WAZE
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
-# --- ONGLET 4 : SUPPORT ---
+# --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
+    # 1. TRACKING : On enregistre l'arrivée sur l'onglet Support
+    log_to_sheets("Support & Bugs")
+
     # Style des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
