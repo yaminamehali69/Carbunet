@@ -152,30 +152,28 @@ tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
 # --- ONGLET 0 : CONCEPT ---
 # --- ONGLET 0 : CONCEPT ---
 with tabs[0]:
-    # On lance le mouchard en premier (invisible pour l'utilisateur)
     log_to_sheets("Concept")
     
-    # On prépare l'image (soit base64 soit URL brute si le base64 a foiré)
     logo_src = f"data:image/png;base64,{logo_data}" if logo_data else LOGO_URL
     
-    # On injecte le HTML EXACTEMENT comme avant, sans marges parasites
-    concept_html = f"""
-    <div class="hero-container" style="margin-top: 0px;">
-        <img src="{logo_src}" width="170" style="display: block; margin: 0 auto 15px auto;">
-        <h1 style="color: white; border: none; margin: 0; padding: 0;">CarbuNet</h1>
-        <p style="font-size:1.4rem; font-weight:500; color: white; margin-top: 5px;">
+    # On met tout dans un seul bloc pour éviter que Streamlit n'espace les lignes
+    st.markdown(f"""
+    <div class="hero-container">
+        <img src="{logo_src}" width="160">
+        <h1>CarbuNet</h1>
+        <p style="font-size:1.3rem; font-weight:500; opacity:0.9; margin-top:10px;">
             Le prix le plus net, au kilomètre près.
         </p>
-        <div class="disclaimer-text">
+        <div style="width:80%; height:1px; background:rgba(255,255,255,0.2); margin:20px 0;"></div>
+        <div style="font-size:0.75rem; opacity:0.8;">
             <b>Mention d'information :</b> Données data.gouv.fr.
         </div>
-        <div style="font-size:0.8rem; margin-top:15px; opacity:0.9; color: white;">
+        <div style="font-size:0.8rem; margin-top:10px;">
             Version {VERSION} | Développé par <b>{AUTEUR}</b>
         </div>
     </div>
-    """
-    st.markdown(concept_html, unsafe_allow_html=True)
-
+    """, unsafe_allow_html=True)
+    
 # --- ONGLET 1 : STATIONS ---
 
 # --- ONGLET 1 : STATIONS ---
