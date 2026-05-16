@@ -432,12 +432,21 @@ with tabs[2]:
                     km_calcule = round(dist_gps * 1.25, 1)
                     st.session_state['km_memoire'] = km_calcule
                     
-                    # 🎯 ENVOI CORRIGÉ ET LOGIQUE POUR LE TABLEAU :
+                    # 🧠 NETTOYAGE INTELLIGENT : On extrait uniquement les villes pour le tableau
+                    ville_dep_propre = dep_v
+                    ville_arr_propre = arr_v
+                    
+                    sug_dep = obtenir_suggestions_adresses(dep_v)
+                    sug_arr = obtenir_suggestions_adresses(arr_v)
+                    if sug_dep: ville_dep_propre = sug_dep[0]["ville"]
+                    if sug_arr: ville_arr_propre = sug_arr[0]["ville"]
+                    
+                    # 🎯 ENVOI TOTALEMENT PROPRE AU GOOGLE SHEET
                     log_to_sheets(
                         nom_onglet="Simulateur", 
-                        ville=f"{dep_v} -> {arr_v} ({km_calcule} km)", # Les kilomètres s'écrivent ici avec le trajet !
+                        ville=f"{ville_dep_propre} -> {ville_arr_propre} ({km_calcule} km)", 
                         carburant=nom_carbu, 
-                        rayon="N/A" # On met N/A ici pour ne plus polluer ta colonne rayon !
+                        rayon="N/A"
                     )
                     st.rerun() 
                 else:
@@ -509,7 +518,7 @@ with tabs[2]:
 
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
-
+        
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
     # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Support & Bugs")
