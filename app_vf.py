@@ -182,25 +182,25 @@ df = charger_donnees()
 
 # --- 1. LA FONCTION DE TRACKING (CORRIGÉE) ---
 def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A"):
-    # L'URL publique correcte pour l'envoi des données :
     url = "https://docs.google.com/forms/d/e/1FAIpQLSdrK4vXE69rQ_cFHqVddPBRNlc6MEzyghifGQ0Jy7Ly8A69tA/formResponse"
-    
-    # Date et heure actuelle
     horodatage = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     
-    # Tes numéros d'entrées magiques
     data = {
-        "entry.444917946": horodatage,  # Date et Heure
-        "entry.15775607": nom_onglet,   # Onglet
-        "entry.116783663": ville,       # Ville
-        "entry.2094833025": carburant   # Carburant
+        "entry.444917946": horodatage,
+        "entry.15775607": nom_onglet,
+        "entry.116783663": ville,
+        "entry.2094833025": carburant
     }
     
     try:
-        # Envoi avec un timeout de 3 secondes pour ne pas ralentir ton Streamlit
-        requests.post(url, data=data, timeout=3)
-    except:
-        pass
+        reponse = requests.post(url, data=data, timeout=3)
+        # Ceci va s'afficher dans ton terminal de commande (pas sur l'écran de l'appli)
+        print(f"[TRACKING] Onglet: {nom_onglet} | Code Retour Google : {reponse.status_code}")
+        
+        # Si tu veux le voir sur ton écran Streamlit pour valider le test, active cette ligne :
+        # st.toast(f"Tracking envoyé ! Code : {reponse.status_code}")
+    except Exception as e:
+        print(f"[TRACKING ERREUR] Impossible d'envoyer : {e}")
 
 
 # --- NAVIGATION ---
