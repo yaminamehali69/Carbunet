@@ -356,7 +356,7 @@ with tabs[2]:
     if 'km_memoire' not in st.session_state:
 
     # --- TITRE HARMONISÉ ---
-    st.markdown("""
+       st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #3b82f6; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #3b82f6;">calculate</span>
             <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; border:none;">
