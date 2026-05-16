@@ -190,39 +190,22 @@ df = charger_donnees()
 
 
 # --- 1. LA FONCTION DE TRACKING (CORRIGÉE) ---
-def log_to_sheets(nom_onglet, action="Navigation", ville="N/A", carburant="N/A", rayon="N/A"):
+def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A", rayon="N/A"):
     url = "https://docs.google.com/forms/d/e/1FAIpQLSdrK4vXE69rQ_cFHqVddPBRNlc6MEzyghifGQ0Jy7Ly8A69tA/formResponse"
     horodatage = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    
-    # 📱 DÉTECTION MOBILE BLINDÉE VIA LES HEADERS PYTHON
-    appareil = "Ordinateur"
-    try:
-        # On récupère TOUS les en-têtes possibles combinés en un seul gros texte
-        headers_dict = st.context.headers
-        headers_text = str(headers_dict).lower()
-        
-        # Liste de ce qui trahit un smartphone / tablette dans le flux réseau
-        indices_mobile = ["mobi", "android", "iphone", "ipad", "phone", "ios", "touch"]
-        
-        if any(indice in headers_text for indice in indices_mobile):
-            appareil = "Mobile / Tablette"
-    except Exception as e:
-        print(f"[DEBUG] Erreur détection appareil : {e}")
-        pass
 
-    # Tes données pour le Google Form
+    # Données pour le Google Form (On a viré la ligne de l'appareil)
     data = {
         "entry.444917946": horodatage,      # Date et Heure
         "entry.15775607": nom_onglet,       # Onglet visité
         "entry.116783663": ville,           # Ville / Trajet
         "entry.2094833025": carburant,      # Type de carburant
-        "entry.1118479884": appareil,       # "Mobile / Tablette" ou "Ordinateur"
         "entry.2024538065": rayon           # Rayon max ou N/A
     }
     
     try:
         reponse = requests.post(url, data=data, timeout=3)
-        print(f"[TRACKING] {nom_onglet} | Appareil : {appareil} | Code : {reponse.status_code}")
+        print(f"[TRACKING] {nom_onglet} | Code : {reponse.status_code}")
     except Exception as e:
         print(f"[TRACKING ERREUR] Impossible d'envoyer : {e}")
 
