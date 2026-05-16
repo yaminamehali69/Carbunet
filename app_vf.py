@@ -207,11 +207,10 @@ def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A"):
 tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
 
 
-# --- ONGLET 0 : CONCEPT ---
+
 # --- ONGLET 0 : CONCEPT ---
 with tabs[0]:
-    log_to_sheets("Concept")
-    
+    # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Concept") pour ne plus saturer le tableau !
     logo_src = f"data:image/png;base64,{logo_data}" if logo_data else LOGO_URL
     
     st.markdown(f"""
@@ -235,10 +234,7 @@ with tabs[0]:
 
 # --- ONGLET 1 : STATIONS ---
 with tabs[1]:
-    # 1. TRACKING : On enregistre que l'utilisateur est sur l'onglet Stations
-    log_to_sheets("Stations")
-
-    # --- TON CODE EXISTANT ---
+    # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Stations")
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
     if 'recherche_lancee' not in st.session_state:
@@ -356,12 +352,8 @@ with tabs[1]:
 
 # --- ONGLET 2 : SIMULATEUR ---
 with tabs[2]:
-    # 1. TRACKING : On enregistre l'arrivée sur le simulateur
-    log_to_sheets("Simulateur")
-
-    # INITIALISATION PROPRE
+    # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Simulateur")
     if 'km_memoire' not in st.session_state:
-        st.session_state['km_memoire'] = 0.0
 
     # --- TITRE HARMONISÉ ---
     st.markdown("""
@@ -478,10 +470,7 @@ with tabs[2]:
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
-    # 1. TRACKING : On enregistre l'arrivée sur l'onglet Support
-    log_to_sheets("Support & Bugs")
-
-    # Style des icônes
+    # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Support & Bugs")
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
     # Titre 
