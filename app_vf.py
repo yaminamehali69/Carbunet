@@ -232,9 +232,7 @@ with tabs[0]:
     
 # --- ONGLET 1 : STATIONS ---
 
-# --- ONGLET 1 : STATIONS ---
 with tabs[1]:
-    # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Stations")
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
     if 'recherche_lancee' not in st.session_state:
@@ -261,11 +259,14 @@ with tabs[1]:
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
-        # 2. TRACKING & ACTION LORS DE LA RECHERCHE
+        # 2. TRACKING & ACTION LORS DE LA RECHERCHE (UNIQUE ET PROPRE)
         if submit_search and adresse:
-            # ON LOGUE LA RECHERCHE DANS GOOGLE SHEET AVEC LA VILLE ET LE CARBURANT
-            log_to_sheets("Recherche Active", ville=adresse, carburant=carbu)
-            
+            log_to_sheets(
+                nom_onglet="Stations", 
+                ville=adresse, 
+                carburant=carbu, 
+                rayon=str(rayon)
+            )
             st.session_state.recherche_lancee = True
 
         # 3. AFFICHAGE DES RÉSULTATS
@@ -280,7 +281,6 @@ with tabs[1]:
                         df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
                         res = df_c[df_c['distance'] <= rayon].copy()
 
-                        # Filtrage par services sélectionnés
                         for s_filtre in selection_services:
                             res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
 
@@ -288,7 +288,6 @@ with tabs[1]:
 
                         if not res.empty:
                             st.markdown("---")
-                            # Mémoire pour le simulateur
                             stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
                             choix_station = st.selectbox("🎯 Choisir cette station pour le simulateur :", options=list(stations_trouvees.keys()))
                             
@@ -298,7 +297,7 @@ with tabs[1]:
                             
                             st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
-                            # 1. CARTE
+                            # Carte Folium
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
                             p_min = res[col_p].min()
                             for _, r in res.head(10).iterrows():
@@ -308,14 +307,13 @@ with tabs[1]:
 
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # 2. BOUCLE D'AFFICHAGE UNIQUE
+                            # Cartes HTML des stations
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                                 stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
                                 border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
                                 
-                                # Génération des badges de services
                                 srv_str = str(row.get('service_propose', ''))
                                 badges_html = ""
                                 if srv_str and srv_str != 'nan':
@@ -350,13 +348,10 @@ with tabs[1]:
                     st.error(f"Erreur technique : {e}")
 
 
-# --- ONGLET 2 : SIMULATEUR ---
-# --- INITIALISATION DES VARIABLES DE SESSIONS GLOBALES (ANTI-CRASH) ---
-    if 'km_memoire' not in st.session_state:
-        st.session_state['km_memoire'] = 0.0
-    if 'recherche_lancee' not in st.session_state:
-        st.session_state.recherche_lancee = False
-
+# =====================================================================
+# 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
+# =====================================================================
+with tabs[2]:
     # --- TITRE HARMONISÉ ---
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #3b82f6; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
@@ -389,18 +384,25 @@ with tabs[1]:
                     l2 = geolocator.geocode(arr_v)
                     if l1 and l2:
                         dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
-                        # On applique un coefficient de détour réel (25%)
                         st.session_state['km_memoire'] = round(dist_gps * 1.25, 1)
+                        
+                        # Tracking de l'itinéraire calculé !
+                        log_to_sheets(
+                            nom_onglet="Simulateur", 
+                            ville=f"{dep_v} -> {arr_v}", 
+                            carburant=nom_carbu, 
+                            rayon=str(round(dist_gps * 1.25, 1))
+                        )
                         st.rerun() 
                     else:
                         st.error("❌ Adresse introuvable.")
             except Exception as e:
                 st.error(f"❌ Erreur : {e}")
 
-   # Le .get('km_memoire', 0.0) donne une valeur de secours (0.0) si la clé disparait
+    # Le .get sécurisé empêche le plantage si l'utilisateur arrive sans clé
     km_final = st.number_input("Distance retenue (km)", value=float(st.session_state.get('km_memoire', 0.0)))
 
-    # --- 2. PARAMÈTRES AVANCÉS (LE COEUR DU CALCUL) ---
+    # --- 2. PARAMÈTRES AVANCÉS ---
     st.markdown("---")
     st.markdown("##### ⚙️ 2. Configuration du trajet")
     
@@ -421,11 +423,8 @@ with tabs[1]:
     with col_r:
         relief = st.selectbox("Relief", ["Plat", "Vallonné", "Montagne"])
 
-    # --- LOGIQUE DE CONSOMMATION "BÉTON" ---
-    # Base véhicule
+    # LOGIQUE DE CALCUL
     base_conso = {"Citadine": 5.2, "Berline": 6.5, "SUV": 7.8, "Utilitaire": 9.5}[v_type]
-    
-    # Impact du parcours
     impact_route = {
         "Urbain (100% Ville / Bouchons)": 2.8,
         "Mixte (Ville + Route)": 0.8,
@@ -433,21 +432,16 @@ with tabs[1]:
         "Autoroute Standard (130 km/h)": 2.2
     }[p_route]
 
-    # Impact Relief & Poids
     coeff_relief = {"Plat": 1.0, "Vallonné": 1.12, "Montagne": 1.35}[relief]
     poids_extra = (passagers - 1) * 0.4
-
-    # Calcul final de la consommation
     conso_finale = (base_conso + impact_route + poids_extra) * coeff_relief
 
-    # --- RÉSULTATS ---
+    # AFFICHAGE DES RÉSULTATS DU SIMULATEUR
     if km_final > 0:
         total_euros = (km_final / 100) * conso_finale * p_final
-        # Ajout du coût d'usure (Pneus/Entretien) moyen FR : 0.12€/km
         cout_reel_total = total_euros + (km_final * 0.12)
 
         st.markdown("---")
-        # BLOC INFO
         st.markdown(f"""
             <div style="background-color: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; text-align: center;">
                 <p style="margin: 0; font-size: 0.9rem; color: #475569;">
@@ -457,7 +451,6 @@ with tabs[1]:
             </div>
         """, unsafe_allow_html=True)
 
-        # LE GROS CHIFFRE
         st.markdown(f"""
             <div style="background-color: #1e293b; padding: 30px; border-radius: 20px; text-align: center; color: white;">
                 <p style="margin: 0; opacity: 0.7; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Budget Carburant</p>
@@ -468,9 +461,9 @@ with tabs[1]:
             </div>
         """, unsafe_allow_html=True)
 
-        # WAZE
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
+        
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
     # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Support & Bugs")
