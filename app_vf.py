@@ -179,15 +179,16 @@ def charger_donnees():
 
 df = charger_donnees()
 
-# --- 1. LA FONCTION DE TRACKING (A mettre en haut de ton fichier) ---
+
+# --- 1. LA FONCTION DE TRACKING (CORRIGÉE) ---
 def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A"):
-    # URL de ton formulaire spécifique
-    url = "https://docs.google.com/forms/d/1FRdR-I7TUAi6drgMY3lSCuODhkogY3vtsGpFJhVr3wk/edit#responses"
+    # L'URL publique correcte pour l'envoi des données :
+    url = "https://docs.google.com/forms/d/e/1FAIpQLSdrK4vXE69rQ_cFHqVddPBRNlc6MEzyghifGQ0Jy7Ly8A69tA/formResponse"
     
     # Date et heure actuelle
     horodatage = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     
-    # On utilise TES numéros entry.XXXX trouvés dans ton lien
+    # Tes numéros d'entrées magiques
     data = {
         "entry.444917946": horodatage,  # Date et Heure
         "entry.15775607": nom_onglet,   # Onglet
@@ -196,8 +197,8 @@ def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A"):
     }
     
     try:
-        # Envoi silencieux à Google Sheets
-        requests.post(url, data=data)
+        # Envoi avec un timeout de 3 secondes pour ne pas ralentir ton Streamlit
+        requests.post(url, data=data, timeout=3)
     except:
         pass
 
