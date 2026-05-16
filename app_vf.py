@@ -193,11 +193,15 @@ def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A"):
     }
     
     try:
-        reponse = requests.post(url, data=data, timeout=5)
-        # CETTE LIGNE VA FAIRE APPARAÎTRE UNE NOTIFICATION EN BAS À DROITE DE TON ÉCRAN
-        st.toast(f"📡 Test Google Sheets - Code : {reponse.status_code}")
+        reponse = requests.post(url, data=data, timeout=3)
+        # Ceci va s'afficher dans ton terminal de commande (pas sur l'écran de l'appli)
+        print(f"[TRACKING] Onglet: {nom_onglet} | Code Retour Google : {reponse.status_code}")
+        
+        # Si tu veux le voir sur ton écran Streamlit pour valider le test, active cette ligne :
+        # st.toast(f"Tracking envoyé ! Code : {reponse.status_code}")
     except Exception as e:
-        st.toast(f"❌ Erreur de connexion : {e}")
+        print(f"[TRACKING ERREUR] Impossible d'envoyer : {e}")
+
 
 # --- NAVIGATION ---
 tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
