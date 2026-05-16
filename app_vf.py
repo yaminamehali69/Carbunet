@@ -192,31 +192,45 @@ def log_to_sheets(nom_onglet, action="Navigation", ville="N/A", carburant="N/A",
     url = "https://docs.google.com/forms/d/e/1FAIpQLSdrK4vXE69rQ_cFHqVddPBRNlc6MEzyghifGQ0Jy7Ly8A69tA/formResponse"
     horodatage = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     
-    # 📱 Détection automatique du type d'appareil (PC ou Smartphone)
+    # 📱 DÉTECTION MOBILE AMÉLIORÉE (ANTI-PROXY STREAMLIT)
     appareil = "Ordinateur"
     try:
-        user_agent = st.context.headers.get("User-Agent", "").lower()
-        if "mobi" in user_agent or "android" in user_agent or "iphone" in user_agent:
+        # On teste d'abord l'en-tête standard de Streamlit
+        user_agent = st.context.headers.get("User-Agent", "")
+        
+        # Si Streamlit Cloud bloque, on cherche dans l'en-tête de transfert Cloudflare/GCP
+        if not user_agent:
+            user_agent = st.context.headers.get("X-Forwarded-User-Agent", "")
+        if not user_agent:
+            user_agent = st.context.headers.get("Sec-Ch-Ua-Platform", "")
+            
+        user_agent_clean = str(user_agent).lower()
+        
+        # Liste des mots-clés qui grillent un smartphone ou une tablette
+        mots_cles_mobile = ["mobi", "android", "iphone", "ipad", "phone", "ios"]
+        
+        if any(mot in user_agent_clean for mot in mots_cles_mobile):
             appareil = "Mobile / Tablette"
-    except:
+    except Exception as e:
+        # En cas de bug de lecture, on laisse "Ordinateur" par défaut sans crasher
+        print(f"[DEBUG APPAREIL ERREUR] {e}")
         pass
 
-    # Données organisées avec tes vrais numéros d'identification
+    # Tes données de formulaire Google Form
     data = {
         "entry.444917946": horodatage,      # Date et Heure
-        "entry.15775607": nom_onglet,       # Onglet visité / Page
-        "entry.116783663": ville,           # Ville recherchée
+        "entry.15775607": nom_onglet,       # Onglet visité
+        "entry.116783663": ville,           # Ville / Trajet
         "entry.2094833025": carburant,      # Type de carburant
-        "entry.1118479884": appareil,       # NOUVEAU : Appareil (PC ou Mobile)
-        "entry.2024538065": rayon           # NOUVEAU : Rayon max (en km)
+        "entry.1118479884": appareil,       # Résultat de la détection (Mobile ou Ordinateur)
+        "entry.2024538065": rayon           # Rayon max ou N/A
     }
     
     try:
         reponse = requests.post(url, data=data, timeout=3)
-        # Permet de voir instantanément dans la console si Google valide (Code 200)
-        print(f"[TRACKING] {nom_onglet} | Appareil: {appareil} | Code Google : {reponse.status_code}")
+        print(f"[TRACKING] {nom_onglet} | Appareil détecté: {appareil} | Code : {reponse.status_code}")
     except Exception as e:
-        print(f"[TRACKING ERREUR] Échec de l'envoi : {e}")
+        print(f"[TRACKING ERREUR] Impossible d'envoyer : {e}")
 
 # --- NAVIGATION ---
 tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
