@@ -264,50 +264,26 @@ with tabs[1]:
         st.session_state.recherche_lancee = False
 
     if df is not None:
-        # 🟢 1. ZONE DE RECHERCHE DYNAMIQUE (AVEC AUTO-FERMETURE DE LA LISTE)
-        if "adresse_validee" not in st.session_state:
-            st.session_state["adresse_validee"] = ""
-
-        # La barre de recherche affiche automatiquement le choix mémorisé
-        saisie = st.text_input(
-            "📍 Où cherchez-vous ?", 
-            placeholder="Commencez à taper une ville ou adresse...", 
-            value=st.session_state["adresse_validee"] if st.session_state["adresse_validee"] else "",
-            key="input_stations"
-        )
+        # 🟢 1. LA ZONE DE RECHERCHE SIMPLE ET PROPRE
+        saisie = st.text_input("📍 Où cherchez-vous ?", placeholder="Commencez à taper une ville ou adresse...", key="input_stations")
         
         adresse_selectionnee = saisie
         ville_propre = saisie
         
-        # On affiche les suggestions uniquement si l'utilisateur tape et n'a pas encore validé son choix
-        if len(saisie) >= 3 and saisie != st.session_state["adresse_validee"]:
+        # On affiche les choix UNIQUEMENT si l'utilisateur a écrit au moins 3 lettres
+        if len(saisie) >= 3:
             suggestions = obtenir_suggestions_adresses(saisie)
             if suggestions:
-                options_labels = ["-- Cliquez sur votre adresse dans la liste --"] + [s["label"] for s in suggestions]
-                
                 choix = st.radio(
                     "📌 Choisissez l'adresse exacte :", 
-                    options=options_labels,
+                    options=[s["label"] for s in suggestions],
                     key="choix_adresse_radio"
                 )
-                
-                # Dès qu'un vrai choix est sélectionné
-                if choix != "-- Cliquez sur votre adresse dans la liste --":
-                    for s in suggestions:
-                        if s["label"] == choix:
-                            # On mémorise, on injecte dans le champ et on force la fermeture en rechargeant
-                            st.session_state["adresse_validee"] = s["label"]
-                            st.rerun()
-        
-        # Si l'adresse est validée et présente dans le champ, on traite les données
-        if st.session_state["adresse_validee"] and saisie == st.session_state["adresse_validee"]:
-            adresse_selectionnee = st.session_state["adresse_validee"]
-            suggestions_validation = obtenir_suggestions_adresses(adresse_selectionnee)
-            if suggestions_validation:
-                ville_propre = suggestions_validation[0]["ville"]
-        else:
-            # Si l'utilisateur efface ou modifie le texte à la main, on réinitialise la mémoire
-            st.session_state["adresse_validee"] = ""
+                # On met à jour les variables avec le choix cliqué
+                for s in suggestions:
+                    if s["label"] == choix:
+                        adresse_selectionnee = s["label"]
+                        ville_propre = s["ville"] # 🎯 Ville propre pour ton Google Sheet !
 
         # ⚙️ 2. LE FORMULAIRE DE RECHERCHE RESSERRÉ
         with st.form("recherche_stations_form"):
@@ -328,11 +304,11 @@ with tabs[1]:
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
-        # 📈 3. TRACKING LORS DE LA RECHERCHE (ENVOI DE LA COMMUNE SEULE)
+        # 📈 3. TRACKING LORS DE LA RECHERCHE
         if submit_search and adresse_selectionnee:
             log_to_sheets(
                 nom_onglet="Stations", 
-                ville=ville_propre,  # Envoie uniquement la commune (ex: Meyzieu)
+                ville=ville_propre,  # Envoie la ville seule (ex: Meyzieu)
                 carburant=carbu, 
                 rayon=str(rayon)
             )
@@ -415,6 +391,7 @@ with tabs[1]:
                         st.error("Lieu non reconnu.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
+
 
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
@@ -564,7 +541,7 @@ with tabs[2]:
 
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_selectionne)}&from={urllib.parse.quote(dep_selectionne)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
-
+        
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
     # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Support & Bugs")
