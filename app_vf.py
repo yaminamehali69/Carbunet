@@ -19,7 +19,25 @@ if 'recherche_lancee' not in st.session_state:
 
 if 'km_memoire' not in st.session_state:
     st.session_state['km_memoire'] = 0.0
-    
+
+# Permet l'autoclémentation dans les recherches d'adresse 
+
+def obtenir_suggestions_adresses(texte):
+    if not texte or len(texte) < 3:  # On cherche seulement à partir de 3 lettres
+        return []
+    url = f"https://api-adresse.data.gouv.fr/search/?q={requests.utils.quote(texte)}&limit=5"
+    try:
+        reponse = requests.get(url, timeout=2).json()
+        # On récupère l'adresse complète ET la ville propre séparément !
+        return [
+            {
+                "label": feat["properties"]["label"], 
+                "ville": feat["properties"]["city"]
+            } 
+            for feat in reponse.get("features", [])
+        ]
+    except:
+        return []
 
 # --- 1. CONFIGURATION UNIQUE ---
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
@@ -241,10 +259,35 @@ with tabs[0]:
 with tabs[1]:
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
+    rayon = 5  # Valeur de secours par défaut
+    if 'recherche_lancee' not in st.session_state:
+        st.session_state.recherche_lancee = False
+
     if df is not None:
-        # 1. LE FORMULAIRE DE RECHERCHE
+        # 🟢 1. BARRE DE RECHERCHE INTELLIGENTE (HORS DU FORMULAIRE POUR L'AUTOCOMPLÉTION)
+        saisie = st.text_input("📍 Où cherchez-vous ?", placeholder="Commencez à taper une ville ou adresse...", key="input_stations")
+        
+        # On appelle l'API du gouvernement pour avoir les suggestions
+        suggestions = obtenir_suggestions_adresses(saisie)
+        
+        adresse_selectionnee = None
+        ville_propre = "N/A"
+        
+        # Si l'API trouve des adresses correspondantes, on les propose dans une liste déroulante
+        if suggestions:
+            choix = st.selectbox("📌 Sélectionnez l'adresse exacte :", options=[s["label"] for s in suggestions])
+            # On extrait l'adresse complète ET la ville seule correspondante
+            for s in suggestions:
+                if s["label"] == choix:
+                    adresse_selectionnee = s["label"]
+                    ville_propre = s["ville"]  # 🎯 LA VILLE PROPRE SÉPARÉE !
+        else:
+            # Si l'utilisateur n'a rien écrit ou que rien n'est trouvé, on prend le texte brut
+            adresse_selectionnee = saisie
+            ville_propre = saisie
+
+        # ⚙️ 2. LE FORMULAIRE DE RECHERCHE (POUR LE RESTE DES OPTIONS)
         with st.form("recherche_stations_form"):
-            adresse = st.text_input("📍 Où cherchez-vous ?", placeholder="Ville ou adresse...", key="input_stations")
             c1, c2 = st.columns(2)
             with c1:
                 carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
@@ -262,21 +305,22 @@ with tabs[1]:
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
-        # 2. TRACKING & ACTION LORS DE LA RECHERCHE (UNIQUE ET PROPRE)
-        if submit_search and adresse:
+        # 📈 3. TRACKING INTELLIGENT LORS DE LA RECHERCHE (ON ENVOIE LA VILLE PROPRE)
+        if submit_search and adresse_selectionnee:
             log_to_sheets(
                 nom_onglet="Stations", 
-                ville=adresse, 
+                ville=ville_propre,  # 🎯 C'est ici qu'on envoie "Paris" ou "Lyon" au lieu de la rue entière !
                 carburant=carbu, 
                 rayon=str(rayon)
             )
             st.session_state.recherche_lancee = True
-        # 3. AFFICHAGE DES RÉSULTATS
-        if st.session_state.recherche_lancee and adresse:
+
+        # 🗺️ 4. AFFICHAGE DES RÉSULTATS (On utilise l'adresse complète sélectionnée)
+        if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
             with st.spinner("Analyse en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_v5")
                 try:
-                    loc = geolocator.geocode(adresse + ", France")
+                    loc = geolocator.geocode(adresse_selectionnee + ", France")
                     if loc:
                         ma_pos = (loc.latitude, loc.longitude)
                         df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
@@ -348,7 +392,7 @@ with tabs[1]:
                         st.error("Lieu non reconnu.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
-
+                    
 
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
