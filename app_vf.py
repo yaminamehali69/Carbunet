@@ -412,36 +412,59 @@ with tabs[2]:
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
     st.info(f" Prix actuel utilisé : **{p_final:.3f} €/L** ({nom_carbu})")
 
-    # --- 1. ITINÉRAIRE ---
+    # --- 1. ITINÉRAIRE AVEC AUTOCOMPLÉTION ---
     st.markdown("##### 📍 1. Itinéraire")
     c1, c2 = st.columns(2)
+    
     with c1:
-        dep_v = st.text_input("Départ", placeholder="Ville ou adresse", key="cle_dep")
+        saisie_dep = st.text_input("Départ", placeholder="Tapez une ville de départ...", key="cle_dep_brute")
+        dep_selectionne = saisie_dep
+        ville_dep_propre = saisie_dep
+        
+        if len(saisie_dep) >= 3:
+            sug_dep = obtenir_suggestions_adresses(saisie_dep)
+            if sug_dep:
+                choix_dep = st.radio(
+                    "📌 Confirmez le départ :", 
+                    options=[s["label"] for s in sug_dep],
+                    key="radio_dep_choix"
+                )
+                for s in sug_dep:
+                    if s["label"] == choix_dep:
+                        dep_selectionne = s["label"]
+                        ville_dep_propre = s["ville"]
+
     with c2:
-        arr_v = st.text_input("Arrivée", placeholder="Ville ou adresse", key="cle_arr")
+        saisie_arr = st.text_input("Arrivée", placeholder="Tapez une ville d'arrivée...", key="cle_arr_brute")
+        arr_selectionne = saisie_arr
+        ville_arr_propre = saisie_arr
+        
+        if len(saisie_arr) >= 3:
+            sug_arr = obtenir_suggestions_adresses(saisie_arr)
+            if sug_arr:
+                choix_arr = st.radio(
+                    "📌 Confirmez l'arrivée :", 
+                    options=[s["label"] for s in sug_arr],
+                    key="radio_arr_choix"
+                )
+                for s in sug_arr:
+                    if s["label"] == choix_arr:
+                        arr_selectionne = s["label"]
+                        ville_arr_propre = s["ville"]
 
     if st.button("🔍 CALCULER LA DISTANCE GPS", use_container_width=True):
-        if dep_v and arr_v:
+        if dep_selectionne and arr_selectionne:
             try:
                 with st.spinner("Calcul de l'itinéraire..."):
                     geolocator = Nominatim(user_agent="carbunet_pro_sim")
-                    l1 = geolocator.geocode(dep_v)
-                    l2 = geolocator.geocode(arr_v)
+                    l1 = geolocator.geocode(dep_selectionne)
+                    l2 = geolocator.geocode(arr_selectionne)
                 if l1 and l2:
                     dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
                     km_calcule = round(dist_gps * 1.25, 1)
                     st.session_state['km_memoire'] = km_calcule
                     
-                    # 🧠 NETTOYAGE INTELLIGENT : On extrait uniquement les villes pour le tableau
-                    ville_dep_propre = dep_v
-                    ville_arr_propre = arr_v
-                    
-                    sug_dep = obtenir_suggestions_adresses(dep_v)
-                    sug_arr = obtenir_suggestions_adresses(arr_v)
-                    if sug_dep: ville_dep_propre = sug_dep[0]["ville"]
-                    if sug_arr: ville_arr_propre = sug_arr[0]["ville"]
-                    
-                    # 🎯 ENVOI TOTALEMENT PROPRE AU GOOGLE SHEET
+                    # 🎯 ENVOI AVEC LES COMMUNES PROPRES AU GOOGLE SHEET :
                     log_to_sheets(
                         nom_onglet="Simulateur", 
                         ville=f"{ville_dep_propre} -> {ville_arr_propre} ({km_calcule} km)", 
@@ -516,7 +539,7 @@ with tabs[2]:
             </div>
         """, unsafe_allow_html=True)
 
-        w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
+        w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_selectionne)}&from={urllib.parse.quote(dep_selectionne)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
         
 # --- ONGLET 3 : SUPPORT ---
