@@ -264,26 +264,52 @@ with tabs[1]:
         st.session_state.recherche_lancee = False
 
     if df is not None:
-        # 🟢 1. LA ZONE DE RECHERCHE SIMPLE ET PROPRE
-        saisie = st.text_input("📍 Où cherchez-vous ?", placeholder="Commencez à taper une ville ou adresse...", key="input_stations")
+        # 🟢 1. RECHERCHE ULTRA-FLUIDE : TOUT PASSE PAR LA BARRE
+        # On crée une case mémoire pour l'adresse validée si elle n'existe pas
+        if "adresse_validee" not in st.session_state:
+            st.session_state["adresse_validee"] = ""
+
+        # On force la barre à afficher l'adresse validée dès qu'on clique sur la liste
+        saisie = st.text_input(
+            "📍 Où cherchez-vous ?", 
+            placeholder="Commencez à taper une ville ou adresse...", 
+            value=st.session_state["adresse_validee"],
+            key="input_stations"
+        )
         
         adresse_selectionnee = saisie
         ville_propre = saisie
         
-        # On affiche les choix UNIQUEMENT si l'utilisateur a écrit au moins 3 lettres
-        if len(saisie) >= 3:
+        # On affiche la liste UNIQUEMENT si l'utilisateur tape un truc NOUVEAU
+        if len(saisie) >= 3 and saisie != st.session_state["adresse_validee"]:
             suggestions = obtenir_suggestions_adresses(saisie)
             if suggestions:
+                # Titre explicite pour guider l'utilisateur
+                options_labels = ["-- Cliquez sur votre adresse dans la liste pour la valider --"] + [s["label"] for s in suggestions]
+                
                 choix = st.radio(
                     "📌 Choisissez l'adresse exacte :", 
-                    options=[s["label"] for s in suggestions],
+                    options=options_labels,
                     key="choix_adresse_radio"
                 )
-                # On met à jour les variables avec le choix cliqué
-                for s in suggestions:
-                    if s["label"] == choix:
-                        adresse_selectionnee = s["label"]
-                        ville_propre = s["ville"] # 🎯 Ville propre pour ton Google Sheet !
+                
+                # Des que l'utilisateur clique sur une vraie ligne de la liste
+                if choix != "-- Cliquez sur votre adresse dans la liste pour la valider --":
+                    for s in suggestions:
+                        if s["label"] == choix:
+                            # 🧠 L'ASTUCE : On met l'adresse dans la mémoire et on recharge !
+                            st.session_state["adresse_validee"] = s["label"]
+                            st.rerun()
+        
+        # Si le texte dans la barre correspond bien à notre adresse validée, on extrait la commune
+        if st.session_state["adresse_validee"] and saisie == st.session_state["adresse_validee"]:
+            adresse_selectionnee = st.session_state["adresse_validee"]
+            suggestions_validation = obtenir_suggestions_adresses(adresse_selectionnee)
+            if suggestions_validation:
+                ville_propre = suggestions_validation[0]["ville"]
+        else:
+            # Si l'utilisateur efface la barre ou rechange le texte, on réinitialise tout
+            st.session_state["adresse_validee"] = ""
 
         # ⚙️ 2. LE FORMULAIRE DE RECHERCHE RESSERRÉ
         with st.form("recherche_stations_form"):
@@ -391,7 +417,6 @@ with tabs[1]:
                         st.error("Lieu non reconnu.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
-
 
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
