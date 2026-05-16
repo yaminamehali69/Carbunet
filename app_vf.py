@@ -264,61 +264,28 @@ with tabs[1]:
         st.session_state.recherche_lancee = False
 
     if df is not None:
-        # 🟢 1. RECHERCHE INTELLIGENTE STYLE WAZE (CHAMP UNIQUE)
-        # On garde en mémoire ce que l'utilisateur écrit
-        if "adresse_recherche" not in st.session_state:
-            st.session_state["adresse_recherche"] = ""
-
-        # On va chercher les suggestions du gouvernement en fonction de sa frappe précédente
-        suggestions = obtenir_suggestions_adresses(st.session_state["adresse_recherche"])
-        liste_options = [s["label"] for s in suggestions]
-
-        # L'astuce magique : On injecte les suggestions dans le dictionnaire HTML natif du navigateur
-        options_html = "".join([f'<option value="{opt}">' for opt in liste_options])
+        # 🟢 1. LA ZONE DE RECHERCHE SIMPLE ET PROPRE
+        saisie = st.text_input("📍 Où cherchez-vous ?", placeholder="Commencez à taper une ville ou adresse...", key="input_stations")
         
-        st.markdown(f"""
-            <datalist id="adresses_waze">
-                {options_html}
-            </datalist>
-        """, unsafe_allow_html=True)
-
-        # La barre de texte native Streamlit, mais connectée au système de suggestions automatique
-        adresse_saisie = st.text_input(
-            "📍 Où cherchez-vous ?", 
-            placeholder="Entrez une ville ou une adresse...", 
-            value=st.session_state["adresse_recherche"],
-            key="input_stations_waze"
-        )
-
-        # On met à jour la mémoire de la frappe
-        if adresse_saisie != st.session_state["adresse_recherche"]:
-            st.session_state["adresse_recherche"] = adresse_saisie
-            st.rerun()
-
-        # On connecte proprement la liste déroulante au champ de texte via un mini-script invisible
-        st.components.v1.html(
-            """
-            <script>
-            var input = window.parent.document.querySelector('input[aria-label="📍 Où cherchez-vous ?"]');
-            if (input) {
-                input.setAttribute('list', 'adresses_waze');
-                input.setAttribute('autocomplete', 'off');
-            }
-            </script>
-            """,
-            height=0
-        )
-
-        # Traitement intelligent de la ville pour ton Google Sheet
-        adresse_selectionnee = adresse_saisie
-        ville_propre = adresse_saisie
+        adresse_selectionnee = saisie
+        ville_propre = saisie
         
-        # Si l'adresse écrite correspond à une suggestion, on extrait la ville seule
-        for s in suggestions:
-            if s["label"].lower() == adresse_saisie.strip().lower():
-                ville_propre = s["ville"]
+        # On affiche les choix UNIQUEMENT si l'utilisateur a écrit au moins 3 lettres
+        if len(saisie) >= 3:
+            suggestions = obtenir_suggestions_adresses(saisie)
+            if suggestions:
+                choix = st.radio(
+                    "📌 Choisissez l'adresse exacte :", 
+                    options=[s["label"] for s in suggestions],
+                    key="choix_adresse_radio"
+                )
+                # On met à jour les variables avec le choix cliqué
+                for s in suggestions:
+                    if s["label"] == choix:
+                        adresse_selectionnee = s["label"]
+                        ville_propre = s["ville"] # 🎯 Ville propre pour ton Google Sheet !
 
-        # ⚙️ 2. LE FORMULAIRE DE SELECTION (UNIQUEMENT POUR LES OPTIONS)
+        # ⚙️ 2. LE FORMULAIRE DE RECHERCHE RESSERRÉ
         with st.form("recherche_stations_form"):
             c1, c2 = st.columns(2)
             with c1:
@@ -327,7 +294,7 @@ with tabs[1]:
             with c2:
                 rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
 
-            # FILTRE PAR SERVICES
+            # AJOUT DE LA PARTIE SERVICES
             with st.expander("⚙️ Filtrer par services (Boutique, Lavage, etc.)"):
                 cols_srv = st.columns(2)
                 selection_services = []
