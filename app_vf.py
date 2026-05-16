@@ -13,7 +13,6 @@ import streamlit.components.v1 as components
 from datetime import datetime
 
 
-
 # --- LES BOÎTES DE SÉCURITÉ (PROPRES ET SANS REFRESH) ---
 if 'recherche_lancee' not in st.session_state:
     st.session_state['recherche_lancee'] = False
@@ -195,43 +194,35 @@ def log_to_sheets(nom_onglet, action="Navigation", ville="N/A", carburant="N/A",
     url = "https://docs.google.com/forms/d/e/1FAIpQLSdrK4vXE69rQ_cFHqVddPBRNlc6MEzyghifGQ0Jy7Ly8A69tA/formResponse"
     horodatage = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     
-    # 📱 DÉTECTION MOBILE AMÉLIORÉE (ANTI-PROXY STREAMLIT)
+    # 📱 DÉTECTION MOBILE BLINDÉE VIA LES HEADERS PYTHON
     appareil = "Ordinateur"
     try:
-        # On teste d'abord l'en-tête standard de Streamlit
-        user_agent = st.context.headers.get("User-Agent", "")
+        # On récupère TOUS les en-têtes possibles combinés en un seul gros texte
+        headers_dict = st.context.headers
+        headers_text = str(headers_dict).lower()
         
-        # Si Streamlit Cloud bloque, on cherche dans l'en-tête de transfert Cloudflare/GCP
-        if not user_agent:
-            user_agent = st.context.headers.get("X-Forwarded-User-Agent", "")
-        if not user_agent:
-            user_agent = st.context.headers.get("Sec-Ch-Ua-Platform", "")
-            
-        user_agent_clean = str(user_agent).lower()
+        # Liste de ce qui trahit un smartphone / tablette dans le flux réseau
+        indices_mobile = ["mobi", "android", "iphone", "ipad", "phone", "ios", "touch"]
         
-        # Liste des mots-clés qui grillent un smartphone ou une tablette
-        mots_cles_mobile = ["mobi", "android", "iphone", "ipad", "phone", "ios"]
-        
-        if any(mot in user_agent_clean for mot in mots_cles_mobile):
+        if any(indice in headers_text for indice in indices_mobile):
             appareil = "Mobile / Tablette"
     except Exception as e:
-        # En cas de bug de lecture, on laisse "Ordinateur" par défaut sans crasher
-        print(f"[DEBUG APPAREIL ERREUR] {e}")
+        print(f"[DEBUG] Erreur détection appareil : {e}")
         pass
 
-    # Tes données de formulaire Google Form
+    # Tes données pour le Google Form
     data = {
         "entry.444917946": horodatage,      # Date et Heure
         "entry.15775607": nom_onglet,       # Onglet visité
         "entry.116783663": ville,           # Ville / Trajet
         "entry.2094833025": carburant,      # Type de carburant
-        "entry.1118479884": appareil,       # Résultat de la détection (Mobile ou Ordinateur)
+        "entry.1118479884": appareil,       # "Mobile / Tablette" ou "Ordinateur"
         "entry.2024538065": rayon           # Rayon max ou N/A
     }
     
     try:
         reponse = requests.post(url, data=data, timeout=3)
-        print(f"[TRACKING] {nom_onglet} | Appareil détecté: {appareil} | Code : {reponse.status_code}")
+        print(f"[TRACKING] {nom_onglet} | Appareil : {appareil} | Code : {reponse.status_code}")
     except Exception as e:
         print(f"[TRACKING ERREUR] Impossible d'envoyer : {e}")
 
