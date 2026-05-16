@@ -12,6 +12,13 @@ import urllib.parse
 import streamlit.components.v1 as components
 from datetime import datetime
 
+# --- LES BOÎTES DE SÉCURITÉ ---
+if 'recherche_lancee' not in st.session_state:
+    st.session_state['recherche_lancee'] = False
+
+if 'km_memoire' not in st.session_state:
+    st.session_state['km_memoire'] = 0.0
+
 # --- 1. CONFIGURATION UNIQUE ---
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 path_logo = "logo_carbunet.png"
@@ -273,7 +280,6 @@ with tabs[1]:
                 rayon=str(rayon)
             )
             st.session_state.recherche_lancee = True
-
         # 3. AFFICHAGE DES RÉSULTATS
         if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse en cours..."):
