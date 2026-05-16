@@ -264,27 +264,47 @@ with tabs[1]:
         st.session_state.recherche_lancee = False
 
     if df is not None:
-        # 🟢 1. BARRE DE RECHERCHE INTELLIGENTE (HORS DU FORMULAIRE POUR L'AUTOCOMPLÉTION)
-        saisie = st.text_input("📍 Où cherchez-vous ?", placeholder="Commencez à taper une ville ou adresse...", key="input_stations")
+        # 🟢 1. UNE SEULE BARRE : RECHERCHE ET SUGGESTIONS EN MÊME TEMPS
+        if "input_brute" not in st.session_state:
+            st.session_state["input_brute"] = ""
+            
+        # Barre unique qui affiche directement les suggestions du gouvernement en dessous
+        saisie = st.selectbox(
+            "📍 Où cherchez-vous ?",
+            options=[s["label"] for s in obtenir_suggestions_adresses(st.session_state.get("input_brute", ""))],
+            index=None,
+            placeholder="Commencez à taper une ville ou une adresse...",
+            key="adresse_selectbox"
+        )
         
-        # On appelle l'API du gouvernement pour avoir les suggestions
-        suggestions = obtenir_suggestions_adresses(saisie)
-        
-        adresse_selectionnee = None
+        # Script invisible qui capture ce que l'utilisateur écrit en direct au clavier
+        st.components.v1.html(
+            """
+            <script>
+            var input = window.parent.document.querySelector('input[aria-label="📍 Où cherchez-vous ?"]');
+            if (input && !input.dataset.bound) {
+                input.dataset.bound = true;
+                input.addEventListener('input', function(e) {
+                    window.parent.postMessage({type: 'streamlit:set_widget_value', key: 'input_brute', value: e.target.value}, '*');
+                });
+            }
+            </script>
+            """,
+            height=0
+        )
+
+        # Extraction de la ville propre pour ton tableau de statistiques
+        adresse_selectionnee = saisie
         ville_propre = "N/A"
         
-        # Si l'API trouve des adresses correspondantes, on les propose dans une liste déroulante
-        if suggestions:
-            choix = st.selectbox("📌 Sélectionnez l'adresse exacte :", options=[s["label"] for s in suggestions])
-            # On extrait l'adresse complète ET la ville seule correspondante
-            for s in suggestions:
-                if s["label"] == choix:
-                    adresse_selectionnee = s["label"]
-                    ville_propre = s["ville"]  # 🎯 LA VILLE PROPRE SÉPARÉE !
+        if adresse_selectionnee:
+            suggestions_locales = obtenir_suggestions_adresses(adresse_selectionnee)
+            for s in suggestions_locales:
+                if s["label"] == adresse_selectionnee:
+                    ville_propre = s["ville"]  # 🎯 On extrait la ville seule (ex: Meyzieu)
         else:
-            # Si l'utilisateur n'a rien écrit ou que rien n'est trouvé, on prend le texte brut
-            adresse_selectionnee = saisie
-            ville_propre = saisie
+            adresse_selectionnee = st.session_state.get("input_brute", "")
+            ville_propre = adresse_selectionnee
 
         # ⚙️ 2. LE FORMULAIRE DE RECHERCHE (POUR LE RESTE DES OPTIONS)
         with st.form("recherche_stations_form"):
@@ -305,17 +325,17 @@ with tabs[1]:
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
-        # 📈 3. TRACKING INTELLIGENT LORS DE LA RECHERCHE (ON ENVOIE LA VILLE PROPRE)
+        # 📈 3. TRACKING LORS DE LA RECHERCHE
         if submit_search and adresse_selectionnee:
             log_to_sheets(
                 nom_onglet="Stations", 
-                ville=ville_propre,  # 🎯 C'est ici qu'on envoie "Paris" ou "Lyon" au lieu de la rue entière !
+                ville=ville_propre,  # On envoie la ville seule au Google Sheet !
                 carburant=carbu, 
                 rayon=str(rayon)
             )
             st.session_state.recherche_lancee = True
 
-        # 🗺️ 4. AFFICHAGE DES RÉSULTATS (On utilise l'adresse complète sélectionnée)
+        # 🗺️ 4. AFFICHAGE DES RÉSULTATS
         if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
             with st.spinner("Analyse en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_v5")
@@ -392,7 +412,7 @@ with tabs[1]:
                         st.error("Lieu non reconnu.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
-                    
+
 
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
