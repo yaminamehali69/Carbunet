@@ -264,49 +264,28 @@ with tabs[1]:
         st.session_state.recherche_lancee = False
 
     if df is not None:
-        # 🟢 1. UNE SEULE BARRE : RECHERCHE ET SUGGESTIONS EN MÊME TEMPS
-        if "input_brute" not in st.session_state:
-            st.session_state["input_brute"] = ""
-            
-        # Barre unique qui affiche directement les suggestions du gouvernement en dessous
-        saisie = st.selectbox(
-            "📍 Où cherchez-vous ?",
-            options=[s["label"] for s in obtenir_suggestions_adresses(st.session_state.get("input_brute", ""))],
-            index=None,
-            placeholder="Commencez à taper une ville ou une adresse...",
-            key="adresse_selectbox"
-        )
+        # 🟢 1. LA ZONE DE RECHERCHE SIMPLE ET PROPRE
+        saisie = st.text_input("📍 Où cherchez-vous ?", placeholder="Commencez à taper une ville ou adresse...", key="input_stations")
         
-        # Script invisible qui capture ce que l'utilisateur écrit en direct au clavier
-        st.components.v1.html(
-            """
-            <script>
-            var input = window.parent.document.querySelector('input[aria-label="📍 Où cherchez-vous ?"]');
-            if (input && !input.dataset.bound) {
-                input.dataset.bound = true;
-                input.addEventListener('input', function(e) {
-                    window.parent.postMessage({type: 'streamlit:set_widget_value', key: 'input_brute', value: e.target.value}, '*');
-                });
-            }
-            </script>
-            """,
-            height=0
-        )
-
-        # Extraction de la ville propre pour ton tableau de statistiques
         adresse_selectionnee = saisie
-        ville_propre = "N/A"
+        ville_propre = saisie
         
-        if adresse_selectionnee:
-            suggestions_locales = obtenir_suggestions_adresses(adresse_selectionnee)
-            for s in suggestions_locales:
-                if s["label"] == adresse_selectionnee:
-                    ville_propre = s["ville"]  # 🎯 On extrait la ville seule (ex: Meyzieu)
-        else:
-            adresse_selectionnee = st.session_state.get("input_brute", "")
-            ville_propre = adresse_selectionnee
+        # On affiche les choix UNIQUEMENT si l'utilisateur a écrit au moins 3 lettres
+        if len(saisie) >= 3:
+            suggestions = obtenir_suggestions_adresses(saisie)
+            if suggestions:
+                choix = st.radio(
+                    "📌 Choisissez l'adresse exacte :", 
+                    options=[s["label"] for s in suggestions],
+                    key="choix_adresse_radio"
+                )
+                # On met à jour les variables avec le choix cliqué
+                for s in suggestions:
+                    if s["label"] == choix:
+                        adresse_selectionnee = s["label"]
+                        ville_propre = s["ville"] # 🎯 Ville propre pour ton Google Sheet !
 
-        # ⚙️ 2. LE FORMULAIRE DE RECHERCHE (POUR LE RESTE DES OPTIONS)
+        # ⚙️ 2. LE FORMULAIRE DE RECHERCHE RESSERRÉ
         with st.form("recherche_stations_form"):
             c1, c2 = st.columns(2)
             with c1:
@@ -329,7 +308,7 @@ with tabs[1]:
         if submit_search and adresse_selectionnee:
             log_to_sheets(
                 nom_onglet="Stations", 
-                ville=ville_propre,  # On envoie la ville seule au Google Sheet !
+                ville=ville_propre,  # Envoie la ville seule (ex: Meyzieu)
                 carburant=carbu, 
                 rayon=str(rayon)
             )
