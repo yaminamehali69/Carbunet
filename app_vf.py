@@ -351,12 +351,14 @@ with tabs[1]:
 
 
 # --- ONGLET 2 : SIMULATEUR ---
-with tabs[2]:
-    # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Simulateur")
+# --- INITIALISATION DES VARIABLES DE SESSIONS GLOBALES (ANTI-CRASH) ---
     if 'km_memoire' not in st.session_state:
+        st.session_state['km_memoire'] = 0.0
+    if 'recherche_lancee' not in st.session_state:
+        st.session_state.recherche_lancee = False
 
     # --- TITRE HARMONISÉ ---
-       st.markdown("""
+    st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #3b82f6; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #3b82f6;">calculate</span>
             <h2 style="margin: 0; font-size: 1.6rem; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; border:none;">
@@ -395,7 +397,8 @@ with tabs[2]:
             except Exception as e:
                 st.error(f"❌ Erreur : {e}")
 
-    km_final = st.number_input("Distance retenue (km)", value=float(st.session_state['km_memoire']))
+   # Le .get('km_memoire', 0.0) donne une valeur de secours (0.0) si la clé disparait
+    km_final = st.number_input("Distance retenue (km)", value=float(st.session_state.get('km_memoire', 0.0)))
 
     # --- 2. PARAMÈTRES AVANCÉS (LE COEUR DU CALCUL) ---
     st.markdown("---")
