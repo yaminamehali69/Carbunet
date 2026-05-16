@@ -11,6 +11,9 @@ import base64
 import urllib.parse
 import streamlit.components.v1 as components
 from datetime import datetime
+from streamlit_javascript import st_javascript
+
+from streamlit_javascript import st_javascript
 
 # --- LES BOÎTES DE SÉCURITÉ ---
 if 'recherche_lancee' not in st.session_state:
@@ -18,6 +21,21 @@ if 'recherche_lancee' not in st.session_state:
 
 if 'km_memoire' not in st.session_state:
     st.session_state['km_memoire'] = 0.0
+    
+# --- DÉTECTION APPAREIL PAR JAVASCRIPT ---
+if 'appareil_detecte' not in st.session_state:
+    st.session_state['appareil_detecte'] = "Ordinateur"
+    try:
+        # Ce script tourne sur le téléphone/PC du visiteur
+        is_mobile = st_javascript("""
+            /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        """)
+        
+        # 🎯 LA CORRECTION EST ICI : On vérifie proprement la réponse
+        if is_mobile is True or str(is_mobile).lower() == "true":
+            st.session_state['appareil_detecte'] = "Mobile / Tablette"
+    except:
+        pass
 
 # --- 1. CONFIGURATION UNIQUE ---
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
