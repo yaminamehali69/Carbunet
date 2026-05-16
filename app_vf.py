@@ -181,27 +181,35 @@ df = charger_donnees()
 
 
 # --- 1. LA FONCTION DE TRACKING (CORRIGÉE) ---
-def log_to_sheets(nom_onglet, ville="N/A", carburant="N/A"):
+def log_to_sheets(nom_onglet, action="Navigation", ville="N/A", carburant="N/A", rayon="N/A"):
     url = "https://docs.google.com/forms/d/e/1FAIpQLSdrK4vXE69rQ_cFHqVddPBRNlc6MEzyghifGQ0Jy7Ly8A69tA/formResponse"
     horodatage = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     
+    # 📱 Détection automatique du type d'appareil (PC ou Smartphone)
+    appareil = "Ordinateur"
+    try:
+        user_agent = st.context.headers.get("User-Agent", "").lower()
+        if "mobi" in user_agent or "android" in user_agent or "iphone" in user_agent:
+            appareil = "Mobile / Tablette"
+    except:
+        pass
+
+    # Données organisées avec tes vrais numéros d'identification
     data = {
-        "entry.444917946": horodatage,
-        "entry.15775607": nom_onglet,
-        "entry.116783663": ville,
-        "entry.2094833025": carburant
+        "entry.444917946": horodatage,      # Date et Heure
+        "entry.15775607": nom_onglet,       # Onglet visité / Page
+        "entry.116783663": ville,           # Ville recherchée
+        "entry.2094833025": carburant,      # Type de carburant
+        "entry.1118479884": appareil,       # NOUVEAU : Appareil (PC ou Mobile)
+        "entry.2024538065": rayon           # NOUVEAU : Rayon max (en km)
     }
     
     try:
         reponse = requests.post(url, data=data, timeout=3)
-        # Ceci va s'afficher dans ton terminal de commande (pas sur l'écran de l'appli)
-        print(f"[TRACKING] Onglet: {nom_onglet} | Code Retour Google : {reponse.status_code}")
-        
-        # Si tu veux le voir sur ton écran Streamlit pour valider le test, active cette ligne :
-        # st.toast(f"Tracking envoyé ! Code : {reponse.status_code}")
+        # Permet de voir instantanément dans la console si Google valide (Code 200)
+        print(f"[TRACKING] {nom_onglet} | Appareil: {appareil} | Code Google : {reponse.status_code}")
     except Exception as e:
-        print(f"[TRACKING ERREUR] Impossible d'envoyer : {e}")
-
+        print(f"[TRACKING ERREUR] Échec de l'envoi : {e}")
 
 # --- NAVIGATION ---
 tabs = st.tabs([" Concept", " Stations", " Simulateur", " Support & Bugs"])
@@ -235,9 +243,14 @@ with tabs[0]:
 with tabs[1]:
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
+    rayon = 5  # Valeur par défaut si le formulaire n'est pas encore soumis
+
     if 'recherche_lancee' not in st.session_state:
         st.session_state.recherche_lancee = False
 
+    
+ # Vérifie bien qu'il y a "rayon =" au début de cette ligne :
+    rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
     if df is not None:
         # 1. LE FORMULAIRE DE RECHERCHE
         with st.form("recherche_stations_form"):
@@ -463,7 +476,7 @@ with tabs[2]:
 
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_v)}&from={urllib.parse.quote(dep_v)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
-        
+
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
     # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Support & Bugs")
