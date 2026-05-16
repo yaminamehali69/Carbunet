@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import requests
@@ -19,10 +20,10 @@ VERSION = "1.3.9"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
-# --- 2. CONFIGURATION DE LA PAGE ---
+# --- 2. CONFIGURATION DE LA PAGE (CORRIGÉE EN LAYOUT WIDE) ---
 st.set_page_config(
     page_title="CarbuNet", 
-    layout="centered",
+    layout="wide",  # Permet au CSS de gérer le responsive sur tous les écrans
     page_icon=LOGO_URL
 )
 
@@ -36,9 +37,9 @@ def get_logo_base64(url):
 
 logo_data = get_logo_base64(LOGO_URL)
 
-# --- 5. FIX VISUEL & CSS (VERSION NETTOYÉE) ---
+# --- 5. FIX VISUEL & CSS UNIFIÉ (PC, TABLETTE, SMARTPHONE) ---
 
-# Le Script (JS) : On l'isole pour qu'il ne crée pas de marge
+# Le Script (JS) : Gère le titre de l'onglet et cache les boutons Streamlit
 components.html(f"""
     <script>
         window.parent.document.title = "CarbuNet";
@@ -55,32 +56,86 @@ components.html(f"""
     </script>
 """, height=0)
 
-# Le Style (CSS) : On force la suppression des marges Streamlit
+# Le seul et unique bloc CSS de l'application
 st.markdown("""
     <style>
-        /* On supprime le header Streamlit vide */
-        header {visibility: hidden;}
+        /* 1. On vire le bandeau blanc Streamlit du haut */
+        header { visibility: hidden; height: 0px !important; }
         
-        /* On remonte tout le contenu vers le haut */
+        /* 2. LE CONTENEUR PRINCIPAL (S'adapte à TOUS les écrans) */
         .main .block-container {
-            padding-top: 0rem !important;
-            padding-bottom: 1rem !important;
-            margin-top: -30px !important;
+            padding-top: 1rem !important;
+            padding-bottom: 2rem !important;
+            padding-left: 5% !important;   
+            padding-right: 5% !important;  
+            max-width: 1100px !important;  /* Largeur max parfaite sur grand écran */
+            margin: 0 auto !important;     /* Centre l'application */
         }
 
-        /* Responsive pour la boîte Hero */
+        /* 3. OPACITÉ GLOBALE */
+        div[data-testid="stAppViewBlockContainer"] { opacity: 1 !important; }
+
+        /* 4. GESTION DES ONGLETS FLUIDES */
+        .stTabs [data-baseweb="tab-list"] { 
+            gap: 10px; 
+            justify-content: center; 
+            overflow-x: auto !important; 
+            -webkit-overflow-scrolling: touch; 
+            width: 100% !important;
+        }
+        .stTabs [data-baseweb="tab"] { 
+            height: 42px; 
+            background-color: #f1f5f9; 
+            border-radius: 10px; 
+            padding: 5px 20px; 
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .stTabs [aria-selected="true"] { 
+            background-color: #0f172a !important; 
+            color: white !important; 
+        }
+
+        /* 5. BANNIÈRE BLEUE CONCEPT */
         .hero-container {
             width: 100% !important;
+            max-width: 100% !important;
             box-sizing: border-box !important;
+            padding: 40px 20px !important;
         }
 
+        /* 💻 ADAPTATION TABLETTE */
+        @media (max-width: 1024px) {
+            .main .block-container { 
+                max-width: 90% !important; 
+                padding-left: 3% !important;
+                padding-right: 3% !important;
+            }
+            .hero-container { padding: 30px 15px !important; }
+        }
+
+        /* 📱 ADAPTATION SMARTPHONE */
         @media (max-width: 640px) {
-            .hero-container h1 { font-size: 1.6rem !important; }
+            .main .block-container { 
+                padding-top: 0.5rem !important; 
+                padding-left: 15px !important; 
+                padding-right: 15px !important;
+                max-width: 100% !important;
+            }
+            [data-testid="column"] { 
+                width: 100% !important; 
+                flex: 1 1 100% !important; 
+                min-width: 100% !important; 
+                margin-bottom: 15px !important; 
+            }
+            iframe { width: 100% !important; min-width: 100% !important; }
+            .hero-container h1 { font-size: 1.8rem !important; }
             .hero-container p { font-size: 1.1rem !important; }
-            .main .block-container { padding-top: 0rem !important; }
+            h2 { font-size: 1.3rem !important; }
         }
     </style>
 """, unsafe_allow_html=True)
+
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
@@ -219,7 +274,7 @@ with tabs[1]:
         # 3. AFFICHAGE DES RÉSULTATS
         if st.session_state.recherche_lancee and adresse:
             with st.spinner("Analyse en cours..."):
-                geolocator = Nominatim(user_agent="carbunet_pro_v5", timeout=10)
+                geolocator = Nominatim(user_agent="carbunet_pro_v5")
                 try:
                     loc = geolocator.geocode(adresse + ", France")
                     if loc:
