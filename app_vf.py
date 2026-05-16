@@ -243,14 +243,6 @@ with tabs[0]:
 with tabs[1]:
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
-    rayon = 5  # Valeur par défaut si le formulaire n'est pas encore soumis
-
-    if 'recherche_lancee' not in st.session_state:
-        st.session_state.recherche_lancee = False
-
-    
- # Vérifie bien qu'il y a "rayon =" au début de cette ligne :
-    rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
     if df is not None:
         # 1. LE FORMULAIRE DE RECHERCHE
         with st.form("recherche_stations_form"):
