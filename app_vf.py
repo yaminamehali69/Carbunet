@@ -393,20 +393,21 @@ with tabs[2]:
                     geolocator = Nominatim(user_agent="carbunet_pro_sim")
                     l1 = geolocator.geocode(dep_v)
                     l2 = geolocator.geocode(arr_v)
-                    if l1 and l2:
-                        dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
-                        st.session_state['km_memoire'] = round(dist_gps * 1.25, 1)
-                        
-                        # Tracking de l'itinéraire calculé !
-                        log_to_sheets(
-                            nom_onglet="Simulateur", 
-                            ville=f"{dep_v} -> {arr_v}", 
-                            carburant=nom_carbu, 
-                            rayon=str(round(dist_gps * 1.25, 1))
-                        )
-                        st.rerun() 
-                    else:
-                        st.error("❌ Adresse introuvable.")
+                if l1 and l2:
+                    dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
+                    km_calcule = round(dist_gps * 1.25, 1)
+                    st.session_state['km_memoire'] = km_calcule
+                    
+                    # 🎯 ENVOI CORRIGÉ ET LOGIQUE POUR LE TABLEAU :
+                    log_to_sheets(
+                        nom_onglet="Simulateur", 
+                        ville=f"{dep_v} -> {arr_v} ({km_calcule} km)", # Les kilomètres s'écrivent ici avec le trajet !
+                        carburant=nom_carbu, 
+                        rayon="N/A" # On met N/A ici pour ne plus polluer ta colonne rayon !
+                    )
+                    st.rerun() 
+                else:
+                    st.error("❌ Adresse introuvable.")
             except Exception as e:
                 st.error(f"❌ Erreur : {e}")
 
