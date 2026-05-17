@@ -596,26 +596,25 @@ with tabs[3]:
         const successMsg = document.getElementById('success-message');
         const btn = document.getElementById('submit-btn');
 
-        form.onsubmit = async (e) => {
+        form.onsubmit = function(e) {
             e.preventDefault();
             btn.innerHTML = "Envoi en cours...";
             btn.disabled = true;
 
             const formData = new FormData(form);
-            const response = await fetch(form.action, {
+            
+            // Envoi de la requête en tâche de fond
+            fetch(form.action, {
                 method: 'POST',
                 body: formData,
                 headers: { 'Accept': 'application/json' }
             });
 
-            if (response.ok) {
+            // On affiche directement le succès sans attendre le réseau
+            setTimeout(() => {
                 form.style.display = 'none';
                 successMsg.style.display = 'block';
-            } else {
-                alert("Erreur lors de l'envoi. Réessayez.");
-                btn.innerHTML = "🚀 ENVOYER MA DEMANDE";
-                btn.disabled = false;
-            }
+            }, 400);
         };
     </script>
     """
