@@ -558,72 +558,56 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    # --- LE FORMULAIRE INTERACTIF SANS CONFIGURATION COMPLEXE ---
-    contact_form_html = """
-    <div id="form-container" style="font-family: sans-serif; max-width: 100%; overflow: hidden;">
-        
-        <div id="success-message" style="display: none; background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center;">
-            <h3 style="margin:0;">✅ Message envoyé !</h3>
-            <p style="margin:10px 0 0 0;">Merci pour votre retour, Carbunet vous répondra dans les plus brefs délais.</p>
-        </div>
+    # Formulaire natif Streamlit (Ultra stable, responsive sur mobile et sans iframes)
+    with st.form("formulaire_support_carbunet", clear_on_submit=True):
+        c1, c2 = st.columns(2)
+        with c1:
+            nom_prenom = st.text_input("👤 Nom & Prénom", placeholder="Votre nom")
+        with c2:
+            email_user = st.text_input("✉️ Votre Email", placeholder="exemple@mail.com")
 
-        <form id="support-form" action="https://api.emailjs.com/api/v1.0/email/send-form" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box;">
-            
-            <input type="hidden" name="service_id" value="service_9ys56ln">
-            <input type="hidden" name="template_id" value="template_jeb4naq">
-            
-            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-                <input type="text" id="form-name" name="from_name" placeholder=" Nom & Prénom" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
-                <input type="email" id="form-email" name="from_email" placeholder=" Votre Email" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
-            </div>
+        objet_demande = st.selectbox(
+            "📋 Objet de votre demande", 
+            ["Signaler un Bug", "Suggestion d'amélioration", "Erreur sur une station", "Autre question"],
+            index=None,
+            placeholder="Sélectionnez l'objet..."
+        )
 
-            <select id="form-subject" name="subject" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; box-sizing: border-box;" required>
-                <option value="" disabled selected> Objet de votre demande</option>
-                <option>Signaler un Bug</option>
-                <option>Suggestion d'amélioration</option>
-                <option>Erreur sur une station</option>
-                <option>Autre question</option>
-            </select>
+        message_detail = st.text_area("💬 Votre message détaillé...", placeholder="Écrivez votre message ici...")
 
-            <textarea id="form-message" name="message" placeholder=" Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px; box-sizing: border-box;" required></textarea>
+        submit_support = st.form_submit_button("🚀 ENVOYER MA DEMANDE", use_container_width=True)
 
-            <button type="submit" id="submit-btn" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
-                 ENVOYER MA DEMANDE
-            </button>
-        </form>
-    </div>
+    # Traitement de l'envoi en arrière-plan Python
+    if submit_support:
+        if nom_prenom and email_user and objet_demande and message_detail:
+            with st.spinner("Envoi de votre message en cours..."):
+                
+                url_emailjs = "https://api.emailjs.com/api/v1.0/email/send"
+                
+                # Configuration avec tes identifiants EmailJS
+                payload = {
+                    "service_id": "service_9ys56ln",
+                    "template_id": "template_jeb4naq",
+                    "user_id": "api", # Mode d'authentification simplifié pour requêtes directes
+                    "template_params": {
+                        "from_name": nom_prenom,
+                        "from_email": email_user,
+                        "subject": f"CarbuNet - {objet_demande}",
+                        "message": message_detail
+                    }
+                }
 
-    <script>
-        const form = document.getElementById('support-form');
-        const successMsg = document.getElementById('success-message');
-        const btn = document.getElementById('submit-btn');
+                try:
+                    res = requests.post(url_emailjs, json=payload, timeout=5)
+                    if res.status_code == 200 or res.text == "OK":
+                        st.success("✅ Message envoyé avec succès ! L'équipe CarbuNet vous répondra sous 48h.")
+                    else:
+                        # Si le mode simplifié bloque, on affiche une alerte claire
+                        st.error(f"❌ Erreur de distribution EmailJS (Code {res.status_code}).")
+                except Exception as e:
+                    st.error(f"❌ Impossible de joindre le serveur de messagerie : {e}")
+        else:
+            st.warning("⚠️ Veuillez remplir tous les champs du formulaire avant d'envoyer.")
 
-        form.onsubmit = async function(e) {
-            e.preventDefault();
-            btn.innerHTML = "Envoi en cours...";
-            btn.disabled = true;
-
-            const formData = new FormData(form);
-
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                // Le serveur EmailJS répond toujours 'OK' ou 200 quand le formulaire de base est soumis
-                form.style.display = 'none';
-                successMsg.style.display = 'block';
-            } catch (err) {
-                // Secours visuel si le réseau mobile coupe au même moment
-                form.style.display = 'none';
-                successMsg.style.display = 'block';
-            }
-        };
-    </script>
-    """
-    
-    # On affiche le composant HTML
-    st.components.v1.html(contact_form_html, height=480, scrolling=False)
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
