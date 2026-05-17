@@ -558,7 +558,7 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    # --- LE FORMULAIRE INTERACTIF SÉCURISÉ ---
+    # --- LE FORMULAIRE INTERACTIF SÉCURISÉ (DESIGN CONSERVÉ À 100%) ---
     contact_form_html = """
     <div id="form-container" style="font-family: sans-serif; max-width: 100%; overflow: hidden;">
         
@@ -570,11 +570,11 @@ with tabs[3]:
         <form id="support-form" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box;">
             
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-                <input type="text" name="from_name" placeholder=" Nom & Prénom" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
-                <input type="email" name="reply_to" placeholder=" Votre Email" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
+                <input type="text" id="form-name" placeholder=" Nom & Prénom" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
+                <input type="email" id="form-email" placeholder=" Votre Email" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
             </div>
 
-            <select name="subject" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; box-sizing: border-box;" required>
+            <select id="form-subject" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; box-sizing: border-box;" required>
                 <option value="" disabled selected> Objet de votre demande</option>
                 <option>Signaler un Bug</option>
                 <option>Suggestion d'amélioration</option>
@@ -582,7 +582,7 @@ with tabs[3]:
                 <option>Autre question</option>
             </select>
 
-            <textarea name="message" placeholder=" Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px; box-sizing: border-box;" required></textarea>
+            <textarea id="form-message" placeholder=" Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px; box-sizing: border-box;" required></textarea>
 
             <button type="submit" id="submit-btn" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
                  ENVOYER MA DEMANDE
@@ -608,13 +608,22 @@ with tabs[3]:
             btn.innerHTML = "Envoi en cours...";
             btn.disabled = true;
 
-            emailjs.sendForm('service_9ys56ln', 'template_jeb4naq', this)
+            // 🎯 Création d'un colis de données explicite pour s'adapter à ton modèle EmailJS
+            const templateParams = {
+                from_name: document.getElementById('form-name').value,
+                from_email: document.getElementById('form-email').value,
+                reply_to: document.getElementById('form-email').value,
+                subject: document.getElementById('form-subject').value,
+                message: document.getElementById('form-message').value
+            };
+
+            // Utilisation de send plutôt que sendForm pour forcer l'acceptation des variables
+            emailjs.send('service_9ys56ln', 'template_jeb4naq', templateParams)
                 .then(function() {
                     form.style.display = 'none';
                     successMsg.style.display = 'block';
                 }, function(error) {
-                    alert("Erreur lors de la distribution. Vérifiez votre modèle EmailJS.");
-                    console.log('FAILED...', error);
+                    alert("Erreur lors de la distribution. Code erreur : " + error.status);
                     btn.innerHTML = "ENVOYER MA DEMANDE";
                     btn.disabled = false;
                 });
