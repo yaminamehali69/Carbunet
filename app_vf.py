@@ -561,7 +561,7 @@ with tabs[3]:
     # --- LE FORMULAIRE HTML STANDARD (FIABLE À 100%) ---
     contact_form_html = """
     <div id="form-container" style="font-family: sans-serif; max-width: 100%; overflow: hidden;">
-        <form id="support-form" action="https://formsubmit.co/minamhl@icloud.com" method="POST" target="_blank" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box;">
+        <form id="support-form" action="https://formsubmit.co/yaminamehali69@gmail.com" method="POST" target="_blank" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box;">
             
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_subject" value="🚀 Nouveau message CarbuNet !">
