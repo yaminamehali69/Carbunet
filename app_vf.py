@@ -571,7 +571,7 @@ with tabs[3]:
             
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                 <input type="text" name="from_name" placeholder=" Nom & Prénom" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
-                <input type="email" name="from_email" placeholder=" Votre Email" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
+                <input type="email" name="reply_to" placeholder=" Votre Email" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
             </div>
 
             <select name="subject" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; box-sizing: border-box;" required>
@@ -613,7 +613,8 @@ with tabs[3]:
                     form.style.display = 'none';
                     successMsg.style.display = 'block';
                 }, function(error) {
-                    alert("Erreur lors de la distribution. Vérifiez votre clé publique.");
+                    alert("Erreur lors de la distribution. Vérifiez votre modèle EmailJS.");
+                    console.log('FAILED...', error);
                     btn.innerHTML = "ENVOYER MA DEMANDE";
                     btn.disabled = false;
                 });
