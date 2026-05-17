@@ -421,45 +421,39 @@ with tabs[2]:
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
     st.info(f" Prix actuel utilisé : **{p_final:.3f} €/L** ({nom_carbu})")
 
-    # --- 1. ITINÉRAIRE AVEC AUTOCOMPLÉTION ---
+    # --- 1. ITINÉRAIRE AVEC AUTOCOMPLÉTION SANS BOUTONS ---
     st.markdown("##### 📍 1. Itinéraire")
     c1, c2 = st.columns(2)
     
     with c1:
-        saisie_dep = st.text_input("Départ", placeholder="Tapez une ville de départ...", key="cle_dep_brute")
-        dep_selectionne = saisie_dep
-        ville_dep_propre = saisie_dep
+        # Barre de recherche unique pour le départ
+        choix_dep = st_searchbox(
+            chercher_adresses_searchbox,
+            placeholder="🛫 Ville ou adresse de départ...",
+            key="searchbox_depart",
+            clear_on_submit=False
+        )
         
-        if len(saisie_dep) >= 3:
-            sug_dep = obtenir_suggestions_adresses(saisie_dep)
-            if sug_dep:
-                choix_dep = st.radio(
-                    "📌 Confirmez le départ :", 
-                    options=[s["label"] for s in sug_dep],
-                    key="radio_dep_choix"
-                )
-                for s in sug_dep:
-                    if s["label"] == choix_dep:
-                        dep_selectionne = s["label"]
-                        ville_dep_propre = s["ville"]
+        dep_selectionne = ""
+        ville_dep_propre = ""
+        if choix_dep:
+            dep_selectionne = choix_dep["label"]
+            ville_dep_propre = choix_dep["ville"]
 
     with c2:
-        saisie_arr = st.text_input("Arrivée", placeholder="Tapez une ville d'arrivée...", key="cle_arr_brute")
-        arr_selectionne = saisie_arr
-        ville_arr_propre = saisie_arr
+        # Barre de recherche unique pour l'arrivée
+        choix_arr = st_searchbox(
+            chercher_adresses_searchbox,
+            placeholder="🛬 Ville ou adresse d'arrivée...",
+            key="searchbox_arrivee",
+            clear_on_submit=False
+        )
         
-        if len(saisie_arr) >= 3:
-            sug_arr = obtenir_suggestions_adresses(saisie_arr)
-            if sug_arr:
-                choix_arr = st.radio(
-                    "📌 Confirmez l'arrivée :", 
-                    options=[s["label"] for s in sug_arr],
-                    key="radio_arr_choix"
-                )
-                for s in sug_arr:
-                    if s["label"] == choix_arr:
-                        arr_selectionne = s["label"]
-                        ville_arr_propre = s["ville"]
+        arr_selectionne = ""
+        ville_arr_propre = ""
+        if choix_arr:
+            arr_selectionne = choix_arr["label"]
+            ville_arr_propre = choix_arr["ville"]
 
     if st.button("🔍 CALCULER LA DISTANCE GPS", use_container_width=True):
         if dep_selectionne and arr_selectionne:
@@ -473,7 +467,7 @@ with tabs[2]:
                     km_calcule = round(dist_gps * 1.25, 1)
                     st.session_state['km_memoire'] = km_calcule
                     
-                    # 🎯 ENVOI AVEC LES COMMUNES PROPRES AU GOOGLE SHEET :
+                    # 🎯 ENVOI PARFAIT ET NETTOYÉ : Uniquement les communes (ex: Lyon -> Paris)
                     log_to_sheets(
                         nom_onglet="Simulateur", 
                         ville=f"{ville_dep_propre} -> {ville_arr_propre} ({km_calcule} km)", 
@@ -482,7 +476,7 @@ with tabs[2]:
                     )
                     st.rerun() 
                 else:
-                    st.error("❌ Adresse introuvable.")
+                    st.error("❌ Adresse introuvable. Veuillez sélectionner une adresse valide dans la liste.")
             except Exception as e:
                 st.error(f"❌ Erreur : {e}")
 
@@ -548,7 +542,7 @@ with tabs[2]:
             </div>
         """, unsafe_allow_html=True)
 
-        w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_selectionne)}&from={urllib.parse.quote(dep_selectionne)}&navigate=yes"
+        w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_selectionne if arr_selectionne else arr_v)}&from={urllib.parse.quote(dep_selectionne if dep_selectionne else dep_v)}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
         
 # --- ONGLET 3 : SUPPORT ---
