@@ -558,19 +558,22 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    # --- LE FORMULAIRE HTML STANDARD (FIABLE À 100%) ---
+    # --- LE FORMULAIRE AVEC DESIGN CONSERVÉ ET COULISSES EMAILJS ---
     contact_form_html = """
     <div id="form-container" style="font-family: sans-serif; max-width: 100%; overflow: hidden;">
-        <form id="support-form" action="https://formsubmit.co/yaminamehali69@gmail.com" method="POST" target="_blank" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box;">
-            
-            <input type="hidden" name="_captcha" value="false">
-            <input type="hidden" name="_subject" value="🚀 Nouveau message CarbuNet !">
+        
+        <div id="success-message" style="display: none; background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center;">
+            <h3 style="margin:0;">✅ Message envoyé !</h3>
+            <p style="margin:10px 0 0 0;">Merci pour votre retour, Carbunet vous répondra dans les plus brefs délais.</p>
+        </div>
+
+        <form id="support-form" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box;">
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-                <input type="text" name="name" placeholder=" Nom & Prénom" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
-                <input type="email" name="email" placeholder=" Votre Email" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
+                <input type="text" id="form-name" name="name" placeholder=" Nom & Prénom" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
+                <input type="email" id="form-email" name="email" placeholder=" Votre Email" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
             </div>
 
-            <select name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; box-sizing: border-box;" required>
+            <select id="form-subject" name="objet" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; box-sizing: border-box;" required>
                 <option value="" disabled selected> Objet de votre demande</option>
                 <option>Signaler un Bug</option>
                 <option>Suggestion d'amélioration</option>
@@ -578,16 +581,63 @@ with tabs[3]:
                 <option>Autre question</option>
             </select>
 
-            <textarea name="message" id="msg-field" placeholder=" Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px; box-sizing: border-box;" required></textarea>
+            <textarea id="form-message" name="message" placeholder=" Votre message détaillé..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; height: 100px; margin-bottom: 15px; box-sizing: border-box;" required></textarea>
 
             <button type="submit" id="submit-btn" style="background: #f59e0b; color: white; border: none; padding: 14px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 800; font-size: 16px;">
                  ENVOYER MA DEMANDE
             </button>
         </form>
     </div>
+
+    <script>
+        const form = document.getElementById('support-form');
+        const successMsg = document.getElementById('success-message');
+        const btn = document.getElementById('submit-btn');
+
+        form.onsubmit = async function(e) {
+            e.preventDefault();
+            btn.innerHTML = "Envoi en cours...";
+            btn.disabled = true;
+
+            // 🎯 Préparation des données pour EmailJS
+            const payload = {
+                service_id: 'service_9ys56ln',
+                template_id: 'template_jeb4naq',
+                user_id: 'service_9ys56ln', // 👈 Remplacer uniquement ici !
+                template_params: {
+                    from_name: document.getElementById('form-name').value,
+                    from_email: document.getElementById('form-email').value,
+                    subject: 'CarbuNet - ' + document.getElementById('form-subject').value,
+                    message: document.getElementById('form-message').value
+                }
+            };
+
+            // Envoi direct à l'API officielle EmailJS
+            try {
+                const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    form.style.display = 'none';
+                    successMsg.style.display = 'block';
+                } else {
+                    alert("Erreur technique lors de l'envoi. Vérifiez vos clés.");
+                    btn.innerHTML = "ENVOYER MA DEMANDE";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Erreur de connexion.");
+                btn.innerHTML = "ENVOYER MA DEMANDE";
+                btn.disabled = false;
+            }
+        };
+    </script>
     """
     
     # On affiche le composant HTML
-    st.components.v1.html(contact_form_html, height=400, scrolling=False)
+    st.components.v1.html(contact_form_html, height=480, scrolling=False)
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
