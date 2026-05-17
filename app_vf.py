@@ -603,7 +603,7 @@ with tabs[3]:
             const payload = {
                 service_id: 'service_9ys56ln',
                 template_id: 'template_jeb4naq',
-                user_id: 'service_9ys56ln', // 👈 Remplacer uniquement ici !
+                user_id: 'service_9ys56ln', 
                 template_params: {
                     from_name: document.getElementById('form-name').value,
                     from_email: document.getElementById('form-email').value,
