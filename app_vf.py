@@ -11,7 +11,22 @@ import base64
 import urllib.parse
 import streamlit.components.v1 as components
 from datetime import datetime
+from streamlit_searchbox import st_searchbox
 
+
+def chercher_adresses_searchbox(search_term: str):
+    if not search_term or len(search_term) < 3:
+        return []
+    url = f"https://api-adresse.data.gouv.fr/search/?q={requests.utils.quote(search_term)}&limit=5"
+    try:
+        reponse = requests.get(url, timeout=2).json()
+        # On retourne une liste de tuples : (ce qui s'affiche à l'écran, la valeur stockée en arrière-plan)
+        return [
+            (feat["properties"]["label"], {"label": feat["properties"]["label"], "ville": feat["properties"]["city"]}) 
+            for feat in reponse.get("features", [])
+        ]
+    except:
+        return []
 
 # --- LES BOÎTES DE SÉCURITÉ (PROPRES ET SANS REFRESH) ---
 if 'recherche_lancee' not in st.session_state:
@@ -264,50 +279,23 @@ with tabs[1]:
         st.session_state.recherche_lancee = False
 
     if df is not None:
-        # 🟢 1. LA BARRE DE RECHERCHE AVEC AUTOCOMPLÉTION DIRECTE ET TRANSPARENTE
-        if "saisie_clavier" not in st.session_state:
-            st.session_state["saisie_clavier"] = ""
-
-        # On récupère les suggestions basées sur ce qui est stocké en mémoire
-        suggestions = obtenir_suggestions_adresses(st.session_state["saisie_clavier"])
-        
-        # Génération de la liste invisible de suggestions pour le navigateur
-        options_html = "".join([f'<option value="{s["label"]}">' for s in suggestions])
-        st.markdown(f'<datalist id="liste_communes_gouv">{options_html}</datalist>', unsafe_allow_html=True)
-
-        # L'unique barre de recherche principale
-        saisie = st.text_input(
-            "📍 Où cherchez-vous ?", 
-            placeholder="Commencez à taper une ville ou adresse...", 
-            value=st.session_state["saisie_clavier"],
-            key="input_stations"
+        # 🟢 1. LA BARRE DE RECHERCHE UNIQUE ET INTELLIGENTE
+        # Les suggestions s'affichent DIRECTEMENT dans ce champ unique au fil de la frappe
+        adresse_choisie = st_searchbox(
+            chercher_adresses_searchbox,
+            placeholder="📍 Entrez une ville ou une adresse...",
+            key="searchbox_stations",
+            clear_on_submit=False
         )
 
-        # Détection immédiate du changement pour rafraîchir les suggestions sans bloquer
-        if saisie != st.session_state["saisie_clavier"]:
-            st.session_state["saisie_clavier"] = saisie
-            st.rerun()
+        # Variables par défaut si l'utilisateur n'a rien sélectionné
+        adresse_selectionnee = ""
+        ville_propre = "N/A"
 
-        # Le script qui connecte la liste invisible directement à ta barre principale
-        st.components.v1.html(
-            """
-            <script>
-            var input = window.parent.document.querySelector('input[aria-label="📍 Où cherchez-vous ?"]');
-            if (input) {
-                input.setAttribute('list', 'liste_communes_gouv');
-                input.setAttribute('autocomplete', 'off');
-            }
-            </script>
-            """,
-            height=0
-        )
-
-        # Identification de la ville pour Google Sheets et de l'adresse pour la carte
-        adresse_selectionnee = saisie
-        ville_propre = saisie
-        for s in suggestions:
-            if s["label"].lower() == saisie.strip().lower():
-                ville_propre = s["ville"]
+        # Si l'utilisateur a cliqué sur une suggestion, on extrait les données propres
+        if adresse_choisie:
+            adresse_selectionnee = adresse_choisie["label"]
+            ville_propre = adresse_choisie["ville"]  # 🎯 La commune seule pour ton Google Sheet
 
         # ⚙️ 2. LE FORMULAIRE DE RECHERCHE RESSERRÉ
         with st.form("recherche_stations_form"):
@@ -332,7 +320,7 @@ with tabs[1]:
         if submit_search and adresse_selectionnee:
             log_to_sheets(
                 nom_onglet="Stations", 
-                ville=ville_propre,  # Envoie la ville seule (ex: Meyzieu)
+                ville=ville_propre,  # Envoie uniquement la commune (ex: Meyzieu)
                 carburant=carbu, 
                 rayon=str(rayon)
             )
@@ -410,12 +398,9 @@ with tabs[1]:
                                 """
                                 st.markdown(card_html, unsafe_allow_html=True)
                         else:
-                            st.warning("Aucune station trouvée.")
-                    else:
-                        st.error("Lieu non reconnu.")
+                            st.warning("Veuillez sélectionner une adresse valide dans la liste.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
-
 
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
