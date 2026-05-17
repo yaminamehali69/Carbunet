@@ -558,14 +558,16 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    # --- LE FORMULAIRE RE-DÉSIGNÉ POUR EMAILJS ---
+    # --- LE FORMULAIRE INTERACTIF SÉCURISÉ ---
     contact_form_html = """
     <div id="form-container" style="font-family: sans-serif; max-width: 100%; overflow: hidden;">
         
-        <form id="support-form" action="https://api.emailjs.com/api/v1.0/email/send-form" method="POST" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box;">
-            
-            <input type="hidden" name="service_id" value="service_9ys56ln">
-            <input type="hidden" name="template_id" value="template_jeb4naq">
+        <div id="success-message" style="display: none; background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center;">
+            <h3 style="margin:0;">✅ Message envoyé !</h3>
+            <p style="margin:10px 0 0 0;">Merci pour votre retour, Carbunet vous répondra dans les plus brefs délais.</p>
+        </div>
+
+        <form id="support-form" style="background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-sizing: border-box;">
             
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
                 <input type="text" name="from_name" placeholder=" Nom & Prénom" style="flex: 1; min-width: 200px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box;" required>
@@ -587,9 +589,41 @@ with tabs[3]:
             </button>
         </form>
     </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    
+    <script type="text/javascript">
+        // Connexion directe avec tes paramètres d'identification
+        (function(){
+            emailjs.init({
+                publicKey: "METS_TA_PUBLIC_KEY_ICI", // 👈 REMPLACE UNIQUEMENT CE TEXTE PAR TA CLÉ PUBLIQUE (onglet Account)
+            });
+        })();
+
+        const form = document.getElementById('support-form');
+        const successMsg = document.getElementById('success-message');
+        const btn = document.getElementById('submit-btn');
+
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            btn.innerHTML = "Envoi en cours...";
+            btn.disabled = true;
+
+            // Envoi natif du formulaire via le SDK EmailJS
+            emailjs.sendForm('service_9ys56ln', 'template_jeb4naq', this)
+                .then(function() {
+                    form.style.display = 'none';
+                    successMsg.style.display = 'block';
+                }, function(error) {
+                    alert("Erreur lors du traitement. Veuillez vérifier la configuration.");
+                    btn.innerHTML = "ENVOYER MA DEMANDE";
+                    btn.disabled = false;
+                });
+        };
+    </script>
     """
     
-    # Affichage du composant HTML
-    st.components.v1.html(contact_form_html, height=420, scrolling=False)
+    # On affiche le composant HTML
+    st.components.v1.html(contact_form_html, height=480, scrolling=False)
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
