@@ -593,10 +593,9 @@ with tabs[3]:
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     
     <script type="text/javascript">
-        // Connexion directe avec tes paramètres d'identification
         (function(){
             emailjs.init({
-                publicKey: "METS_TA_PUBLIC_KEY_ICI", // 👈 REMPLACE UNIQUEMENT CE TEXTE PAR TA CLÉ PUBLIQUE (onglet Account)
+                publicKey: "IbQB_34subEvrEDX7", 
             });
         })();
 
@@ -609,13 +608,12 @@ with tabs[3]:
             btn.innerHTML = "Envoi en cours...";
             btn.disabled = true;
 
-            // Envoi natif du formulaire via le SDK EmailJS
             emailjs.sendForm('service_9ys56ln', 'template_jeb4naq', this)
                 .then(function() {
                     form.style.display = 'none';
                     successMsg.style.display = 'block';
                 }, function(error) {
-                    alert("Erreur lors du traitement. Veuillez vérifier la configuration.");
+                    alert("Erreur lors de la distribution. Vérifiez votre clé publique.");
                     btn.innerHTML = "ENVOYER MA DEMANDE";
                     btn.disabled = false;
                 });
@@ -623,7 +621,6 @@ with tabs[3]:
     </script>
     """
     
-    # On affiche le composant HTML
     st.components.v1.html(contact_form_html, height=480, scrolling=False)
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
