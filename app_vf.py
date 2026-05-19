@@ -550,7 +550,10 @@ with tabs[2]:
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
-    
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
     # Configuration des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
@@ -578,7 +581,7 @@ with tabs[3]:
             st.session_state.support_succes = False
             st.rerun()
     else:
-        # Formulaire natif Streamlit
+        # Formulaire natif Streamlit calqué sur ton design HTML original
         with st.form("form_support_direct", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
@@ -595,38 +598,39 @@ with tabs[3]:
 
             message_detail = st.text_area("💬 Votre message détaillé...", placeholder="Votre message détaillé...")
 
+            # Ton bouton orange original
             submit_btn = st.form_submit_button("ENVOYER MA DEMANDE", use_container_width=True)
 
         if submit_btn:
             if nom_prenom and email_user and objet_demande and message_detail:
                 with st.spinner("Envoi en cours..."):
                     
-                    GMAIL_PERSO = "yaminamehali69@gmail.com"
-                    GMAIL_PASSWORD = "luijzrgtvewmyewvdtg" 
+                    # 🎯 RE-VÉRIFIE BIEN CES DEUX LIGNES :
+                    GMAIL_PERSO = "yaminamehali69@gmail.com"  # 👈 Ça doit être le mail du compte Google où tu as créé les 16 lettres !
+                    GMAIL_PASSWORD = "luijzrgtvewmyewvdtg"    # 👈 Tes 16 lettres, tout en minuscules, aucun espace
 
-                    # Construction du mail
+                    # Construction du mail technique
                     msg = MIMEMultipart()
                     msg['From'] = GMAIL_PERSO
                     msg['To'] = GMAIL_PERSO
                     msg['Subject'] = f"🚀 CarbuNet Support - {objet_demande}"
 
-                    corps_mail = f"👤 Nom : {nom_prenom}\n✉️ Email : {email_user}\n📋 Objet : {objet_demande}\n\n💬 Message :\n{message_detail}"
+                    corps_mail = f"👤 Nom : {nom_prenom}\n✉️ Email de l'utilisateur : {email_user}\n📋 Objet : {objet_demande}\n\n💬 Message :\n{message_detail}"
                     msg.attach(MIMEText(corps_mail, 'plain', 'utf-8'))
 
                     try:
-                        # Connexion directe sécurisée à Google
+                        # Connexion directe sécurisée aux serveurs de Google
                         server = smtplib.SMTP('smtp.gmail.com', 587)
                         server.starttls()
                         server.login(GMAIL_PERSO, GMAIL_PASSWORD)
                         server.sendmail(GMAIL_PERSO, GMAIL_PERSO, msg.as_string())
                         server.quit()
 
-                        # SI ÇA RÉUSSIT VRAIMENT :
+                        # Validation de l'écran (affiche le bandeau vert)
                         st.session_state.support_succes = True
                         st.rerun()
 
                     except Exception as e:
-                        # EN CAS D'ERREUR, ON L'AFFICHE (on ne triche plus !)
                         st.error(f"❌ Le mail n'est pas parti. Erreur technique Google : {e}")
             else:
                 st.warning("⚠️ Veuillez remplir tous les champs avant d'envoyer.")
