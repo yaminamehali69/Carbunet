@@ -12,9 +12,7 @@ import urllib.parse
 import streamlit.components.v1 as components
 from datetime import datetime
 from streamlit_searchbox import st_searchbox
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+
 
 
 def chercher_adresses_searchbox(search_term: str):
@@ -550,10 +548,12 @@ with tabs[2]:
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
-    # Configuration des icônes
+    import yagmail
+
+    # Configuration visuelle des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
-    # Titre original
+    # Titre original de ton application
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #f59e0b; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #f59e0b;">contact_support</span>
@@ -561,12 +561,12 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    # État de la soumission dans l'application
-    if 'support_succes' not in st.session_state:
-        st.session_state.support_succes = False
+    # Gestion de l'affichage du succès
+    if 'support_succes_final' not in st.session_state:
+        st.session_state.support_succes_final = False
 
-    # Affichage du JOLI BANDEAU VERT original si ça a marché
-    if st.session_state.support_succes:
+    # Ton joli bandeau vert original s'affiche ici si l'envoi réussit
+    if st.session_state.support_succes_final:
         st.markdown("""
             <div style="background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center; font-family: sans-serif; margin-bottom: 20px;">
                 <h3 style="margin:0;">✅ Message envoyé !</h3>
@@ -574,11 +574,11 @@ with tabs[3]:
             </div>
         """, unsafe_allow_html=True)
         if st.button("Envoyer un autre message"):
-            st.session_state.support_succes = False
+            st.session_state.support_succes_final = False
             st.rerun()
     else:
         # Formulaire natif Streamlit calqué sur ton design HTML original
-        with st.form("form_support_direct", clear_on_submit=True):
+        with st.form("form_support_ultra_direct", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
                 nom_prenom = st.text_input("👤 Nom & Prénom", placeholder="Nom & Prénom")
@@ -600,35 +600,30 @@ with tabs[3]:
         if submit_btn:
             if nom_prenom and email_user and objet_demande and message_detail:
                 with st.spinner("Envoi en cours..."):
-                    
-                    # 🎯 SYNCHRONISATION AVEC TON COMPTE GOOGLE VISIBLE SUR TES CAPTURES
-                    GMAIL_USER = "minamhl@icloud.com"         # 👈 Ton identifiant de compte Google principal
-                    GMAIL_PASSWORD = "luijzrgtvewmyewvdtg"    # 👈 Tes 16 lettres générées sur ce compte
-                    EMAIL_RECEPTION = "yaminamehali69@gmail.com" # 👈 La boîte où tu veux lire tes messages de support
-
-                    # Construction du mail technique
-                    msg = MIMEMultipart()
-                    msg['From'] = GMAIL_USER
-                    msg['To'] = EMAIL_RECEPTION
-                    msg['Subject'] = f"🚀 CarbuNet Support - {objet_demande}"
-
-                    corps_mail = f"👤 Nom : {nom_prenom}\n✉️ Email de l'utilisateur : {email_user}\n📋 Objet : {objet_demande}\n\n💬 Message :\n{message_detail}"
-                    msg.attach(MIMEText(corps_mail, 'plain', 'utf-8'))
-
                     try:
-                        # Connexion directe sécurisée aux serveurs de Google via l'adresse iCloud-Google
-                        server = smtplib.SMTP('smtp.gmail.com', 587)
-                        server.starttls()
-                        server.login(GMAIL_USER, GMAIL_PASSWORD)
-                        server.sendmail(GMAIL_USER, EMAIL_RECEPTION, msg.as_string())
-                        server.quit()
-
-                        # Validation de l'écran (affiche le bandeau vert)
-                        st.session_state.support_succes = True
+                        # On initialise le robot d'envoi avec ton adresse et tes 16 lettres secrets
+                        yag = yagmail.SMTP("yaminamehali69@gmail.com", "luijzrgtvewmyewvdtg")
+                        
+                        # Contenu du mail
+                        sujet = f"🚀 CarbuNet Support - {objet_demande}"
+                        contenu = [
+                            f"👤 Nom : {nom_prenom}",
+                            f"✉️ Email de l'utilisateur : {email_user}",
+                            f"📋 Objet : {objet_demande}",
+                            "",
+                            "💬 Message :",
+                            message_detail
+                        ]
+                        
+                        # Envoi direct du mail à toi-même
+                        yag.send(to="yaminamehali69@gmail.com", subject=sujet, contents=contenu)
+                        
+                        # On active le bandeau vert et on rafraîchit l'écran
+                        st.session_state.support_succes_final = True
                         st.rerun()
 
                     except Exception as e:
-                        st.error(f"❌ Le mail n'est pas parti. Erreur technique Google : {e}")
+                        st.error(f"❌ Un problème technique empêche l'envoi : {e}")
             else:
                 st.warning("⚠️ Veuillez remplir tous les champs avant d'envoyer.")
 
