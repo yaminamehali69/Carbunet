@@ -550,8 +550,7 @@ with tabs[2]:
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
-
-
+    
     # Configuration des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
@@ -579,7 +578,7 @@ with tabs[3]:
             st.session_state.support_succes = False
             st.rerun()
     else:
-        # Formulaire natif Streamlit calqué sur ton design HTML original
+        # Formulaire natif Streamlit
         with st.form("form_support_direct", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
@@ -596,33 +595,22 @@ with tabs[3]:
 
             message_detail = st.text_area("💬 Votre message détaillé...", placeholder="Votre message détaillé...")
 
-            # Ton bouton orange original
             submit_btn = st.form_submit_button("ENVOYER MA DEMANDE", use_container_width=True)
 
         if submit_btn:
             if nom_prenom and email_user and objet_demande and message_detail:
                 with st.spinner("Envoi en cours..."):
                     
-                    # 🎯 CONFIGURATION GMAIL DIRECTE SANS INTERMÉDIAIRE
                     GMAIL_PERSO = "yaminamehali69@gmail.com"
-                    GMAIL_PASSWORD = "luijzrgtvewmyewvdtg" # 👈 Ton code secret Google sans espaces
+                    GMAIL_PASSWORD = "luijzrgtvewmyewvdtg" 
 
-                    # Construction du mail technique
+                    # Construction du mail
                     msg = MIMEMultipart()
                     msg['From'] = GMAIL_PERSO
                     msg['To'] = GMAIL_PERSO
                     msg['Subject'] = f"🚀 CarbuNet Support - {objet_demande}"
 
-                    corps_mail = f"""
-                    Nouveau message reçu depuis CarbuNet :
-                    
-                    👤 Nom : {nom_prenom}
-                    ✉️ Email de l'utilisateur : {email_user}
-                    📋 Objet : {objet_demande}
-                    
-                    💬 Message :
-                    {message_detail}
-                    """
+                    corps_mail = f"👤 Nom : {nom_prenom}\n✉️ Email : {email_user}\n📋 Objet : {objet_demande}\n\n💬 Message :\n{message_detail}"
                     msg.attach(MIMEText(corps_mail, 'plain', 'utf-8'))
 
                     try:
@@ -633,12 +621,13 @@ with tabs[3]:
                         server.sendmail(GMAIL_PERSO, GMAIL_PERSO, msg.as_string())
                         server.quit()
 
-                        # Validation de l'écran
+                        # SI ÇA RÉUSSIT VRAIMENT :
                         st.session_state.support_succes = True
                         st.rerun()
 
                     except Exception as e:
-                        st.error(f"❌ Erreur technique : {e}")
+                        # EN CAS D'ERREUR, ON L'AFFICHE (on ne triche plus !)
+                        st.error(f"❌ Le mail n'est pas parti. Erreur technique Google : {e}")
             else:
                 st.warning("⚠️ Veuillez remplir tous les champs avant d'envoyer.")
 
