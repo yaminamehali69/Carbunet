@@ -12,6 +12,7 @@ import urllib.parse
 import streamlit.components.v1 as components
 from datetime import datetime
 from streamlit_searchbox import st_searchbox
+import yagmail
 
 
 
@@ -548,7 +549,7 @@ with tabs[2]:
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
-    import yagmail
+   
 
     # Configuration visuelle des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
