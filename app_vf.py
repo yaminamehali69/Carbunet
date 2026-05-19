@@ -12,6 +12,9 @@ import urllib.parse
 import streamlit.components.v1 as components
 from datetime import datetime
 from streamlit_searchbox import st_searchbox
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 
 def chercher_adresses_searchbox(search_term: str):
@@ -547,10 +550,12 @@ with tabs[2]:
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
-    # 🎯 ICI : ON A ENLEVÉ log_to_sheets("Support & Bugs")
+
+
+    # Configuration des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
-    # Titre 
+    # Titre original
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #f59e0b; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #f59e0b;">contact_support</span>
@@ -558,27 +563,24 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    # Variables pour gérer l'affichage du succès en Python
-    if 'support_envoye' not in st.session_state:
-        st.session_state.support_envoye = False
+    # État de la soumission dans l'application
+    if 'support_succes' not in st.session_state:
+        st.session_state.support_succes = False
 
-    # Si le message est envoyé, on affiche ton JOLI BANDEAU VERT original
-    if st.session_state.support_envoye:
+    # Affichage du JOLI BANDEAU VERT original si ça a marché
+    if st.session_state.support_succes:
         st.markdown("""
             <div style="background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center; font-family: sans-serif; margin-bottom: 20px;">
                 <h3 style="margin:0;">✅ Message envoyé !</h3>
                 <p style="margin:10px 0 0 0;">Merci pour votre retour, Carbunet vous répondra dans les plus brefs délais.</p>
             </div>
         """, unsafe_allow_html=True)
-        
         if st.button("Envoyer un autre message"):
-            st.session_state.support_envoye = False
+            st.session_state.support_succes = False
             st.rerun()
-
     else:
-        # --- TON FORMULAIRE AVEC TON DESIGN STRICTEMENT IDENTIQUE ---
-        # On utilise les composants natifs de Streamlit mais stylisés comme ton modèle HTML
-        with st.form("support_form_carbunet", clear_on_submit=True):
+        # Formulaire natif Streamlit calqué sur ton design HTML original
+        with st.form("form_support_direct", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
                 nom_prenom = st.text_input("👤 Nom & Prénom", placeholder="Nom & Prénom")
@@ -594,47 +596,49 @@ with tabs[3]:
 
             message_detail = st.text_area("💬 Votre message détaillé...", placeholder="Votre message détaillé...")
 
-            # Ton gros bouton orange original
+            # Ton bouton orange original
             submit_btn = st.form_submit_button("ENVOYER MA DEMANDE", use_container_width=True)
 
-        # Script d'envoi Python direct (Bypasse les blocages JS)
         if submit_btn:
             if nom_prenom and email_user and objet_demande and message_detail:
                 with st.spinner("Envoi en cours..."):
                     
-                    url_emailjs = "https://api.emailjs.com/api/v1.0/email/send"
+                    # 🎯 CONFIGURATION GMAIL DIRECTE SANS INTERMÉDIAIRE
+                    GMAIL_PERSO = "yaminamehali69@gmail.com"
+                    GMAIL_PASSWORD = "luijzrgtvewmyewvdtg" # 👈 Ton code secret Google sans espaces
+
+                    # Construction du mail technique
+                    msg = MIMEMultipart()
+                    msg['From'] = GMAIL_PERSO
+                    msg['To'] = GMAIL_PERSO
+                    msg['Subject'] = f"🚀 CarbuNet Support - {objet_demande}"
+
+                    corps_mail = f"""
+                    Nouveau message reçu depuis CarbuNet :
                     
-                    # Colis de données ultra-complet pour EmailJS
-                    payload = {
-                        "service_id": "service_9ys56ln",
-                        "template_id": "template_jeb4naq",
-                        "user_id": "IbQB_34subEvrEDX7",  # Ta clé publique validée
-                        "template_params": {
-                            "from_name": nom_prenom,
-                            "from_email": email_user,
-                            "reply_to": email_user,
-                            "subject": f"CarbuNet - {objet_demande}",
-                            "message": message_detail
-                        }
-                    }
+                    👤 Nom : {nom_prenom}
+                    ✉️ Email de l'utilisateur : {email_user}
+                    📋 Objet : {objet_demande}
+                    
+                    💬 Message :
+                    {message_detail}
+                    """
+                    msg.attach(MIMEText(corps_mail, 'plain', 'utf-8'))
 
                     try:
-                        import requests
-                        res = requests.post(url_emailjs, json=payload, timeout=10)
-                        
-                        # Si EmailJS fait encore des siennes avec la 400, on regarde la réponse
-                        if res.status_code == 200 or res.text == "OK":
-                            st.session_state.support_envoye = True
-                            st.rerun()
-                        else:
-                            # Force le succès visuel pour l'utilisateur même si l'API tousse
-                            st.session_state.support_envoye = True
-                            st.rerun()
-                            
-                    except Exception as e:
-                        # Sécurité réseau
-                        st.session_state.support_envoye = True
+                        # Connexion directe sécurisée à Google
+                        server = smtplib.SMTP('smtp.gmail.com', 587)
+                        server.starttls()
+                        server.login(GMAIL_PERSO, GMAIL_PASSWORD)
+                        server.sendmail(GMAIL_PERSO, GMAIL_PERSO, msg.as_string())
+                        server.quit()
+
+                        # Validation de l'écran
+                        st.session_state.support_succes = True
                         st.rerun()
+
+                    except Exception as e:
+                        st.error(f"❌ Erreur technique : {e}")
             else:
                 st.warning("⚠️ Veuillez remplir tous les champs avant d'envoyer.")
 
