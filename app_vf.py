@@ -550,10 +550,6 @@ with tabs[2]:
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-
     # Configuration des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
@@ -605,25 +601,26 @@ with tabs[3]:
             if nom_prenom and email_user and objet_demande and message_detail:
                 with st.spinner("Envoi en cours..."):
                     
-                    # 🎯 RE-VÉRIFIE BIEN CES DEUX LIGNES :
-                    GMAIL_PERSO = "yaminamehali69@gmail.com"  # 👈 Ça doit être le mail du compte Google où tu as créé les 16 lettres !
-                    GMAIL_PASSWORD = "luijzrgtvewmyewvdtg"    # 👈 Tes 16 lettres, tout en minuscules, aucun espace
+                    # 🎯 SYNCHRONISATION AVEC TON COMPTE GOOGLE VISIBLE SUR TES CAPTURES
+                    GMAIL_USER = "minamhl@icloud.com"         # 👈 Ton identifiant de compte Google principal
+                    GMAIL_PASSWORD = "luijzrgtvewmyewvdtg"    # 👈 Tes 16 lettres générées sur ce compte
+                    EMAIL_RECEPTION = "yaminamehali69@gmail.com" # 👈 La boîte où tu veux lire tes messages de support
 
                     # Construction du mail technique
                     msg = MIMEMultipart()
-                    msg['From'] = GMAIL_PERSO
-                    msg['To'] = GMAIL_PERSO
+                    msg['From'] = GMAIL_USER
+                    msg['To'] = EMAIL_RECEPTION
                     msg['Subject'] = f"🚀 CarbuNet Support - {objet_demande}"
 
                     corps_mail = f"👤 Nom : {nom_prenom}\n✉️ Email de l'utilisateur : {email_user}\n📋 Objet : {objet_demande}\n\n💬 Message :\n{message_detail}"
                     msg.attach(MIMEText(corps_mail, 'plain', 'utf-8'))
 
                     try:
-                        # Connexion directe sécurisée aux serveurs de Google
+                        # Connexion directe sécurisée aux serveurs de Google via l'adresse iCloud-Google
                         server = smtplib.SMTP('smtp.gmail.com', 587)
                         server.starttls()
-                        server.login(GMAIL_PERSO, GMAIL_PASSWORD)
-                        server.sendmail(GMAIL_PERSO, GMAIL_PERSO, msg.as_string())
+                        server.login(GMAIL_USER, GMAIL_PASSWORD)
+                        server.sendmail(GMAIL_USER, EMAIL_RECEPTION, msg.as_string())
                         server.quit()
 
                         # Validation de l'écran (affiche le bandeau vert)
