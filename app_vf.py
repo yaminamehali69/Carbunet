@@ -269,6 +269,15 @@ with tabs[0]:
     
 # --- ONGLET 1 : STATIONS ---
 with tabs[1]:
+    st.markdown("""
+<style>
+    html, body, [data-testid="stAppViewContainer"], .main {
+        background-color: #ffffff !important;
+        opacity: 1 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
     rayon = 5
@@ -346,23 +355,29 @@ with tabs[1]:
                         st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
                         # ✅ CHANGEMENT 2 : Popups sur la carte + returned_objects=[] (plus de rechargement)
-                        m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
-                        p_min = res[col_p].min()
-                        for _, r in res.head(10).iterrows():
-                            color = 'green' if r[col_p] == p_min else 'blue'
-                            folium.Marker(
-                                [r['latitude'], r['longitude']],
-                                icon=folium.Icon(color=color, icon='gas-pump', prefix='fa'),
-                                popup=folium.Popup(
-                                    f"<b>{float(r[col_p]):.3f} €</b><br>{r['adresse'].title()}<br><a href='https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes' target='_blank'>🚗 Waze</a>",
-                                    max_width=200
-                                )
-                            ).add_to(m)
-                        st_folium(m, width="100%", height=400, returned_objects=[])
+                    m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
+                    p_min = res[col_p].min()
+                    for _, r in res.head(10).iterrows():
+                        color = 'green' if r[col_p] == p_min else 'blue'
+                    folium.Marker(
+                    [r['latitude'], r['longitude']],
+                    icon=folium.Icon(color=color, icon='gas-pump', prefix='fa'),
+                    tooltip=f"⛽ {float(r[col_p]):.3f} € — {r['adresse'].title()} ({r['ville']})",
+                    popup=folium.Popup(
+                    f"<div style='font-family:sans-serif; min-width:150px'>"
+                    f"<b>⛽ {float(r[col_p]):.3f} €/L</b><br>"
+                    f"{r['adresse'].title()}<br>"
+                    f"<a href='https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes' "
+                    f"target='_blank' style='color:#1a73e8'>🚗 Ouvrir Waze</a>"
+                    f"</div>",
+                    max_width=220
+                            )
+                        ).add_to(m)
+                    st_folium(m, width="100%", height=400, returned_objects=[]) 
 
-                        st.markdown("### 🏆 Meilleures options trouvées")
+                    st.markdown("### 🏆 Meilleures options trouvées")
 
-                        for _, row in res.head(8).iterrows():
+                    for _, row in res.head(8).iterrows():
                             w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                             rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
                             stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
