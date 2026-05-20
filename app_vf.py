@@ -269,22 +269,15 @@ with tabs[0]:
     
 # --- ONGLET 1 : STATIONS ---
 with tabs[1]:
-    st.markdown("""
-<style>
-    html, body, [data-testid="stAppViewContainer"], .main {
-        background-color: #ffffff !important;
-        opacity: 1 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
 
-    rayon = 5
+    rayon = 5  # Valeur de secours par défaut
     if 'recherche_lancee' not in st.session_state:
         st.session_state.recherche_lancee = False
 
     if df is not None:
+        # 🟢 1. LA BARRE DE RECHERCHE UNIQUE ET INTELLIGENTE
+        # Les suggestions s'affichent DIRECTEMENT dans ce champ unique au fil de la frappe
         adresse_choisie = st_searchbox(
             chercher_adresses_searchbox,
             placeholder="📍 Entrez une ville ou une adresse...",
@@ -292,13 +285,16 @@ with tabs[1]:
             clear_on_submit=False
         )
 
+        # Variables par défaut si l'utilisateur n'a rien sélectionné
         adresse_selectionnee = ""
         ville_propre = "N/A"
 
+        # Si l'utilisateur a cliqué sur une suggestion, on extrait les données propres
         if adresse_choisie:
             adresse_selectionnee = adresse_choisie["label"]
-            ville_propre = adresse_choisie["ville"]
+            ville_propre = adresse_choisie["ville"]  # 🎯 La commune seule pour ton Google Sheet
 
+        # ⚙️ 2. LE FORMULAIRE DE RECHERCHE RESSERRÉ
         with st.form("recherche_stations_form"):
             c1, c2 = st.columns(2)
             with c1:
@@ -307,6 +303,7 @@ with tabs[1]:
             with c2:
                 rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
 
+            # AJOUT DE LA PARTIE SERVICES
             with st.expander("⚙️ Filtrer par services (Boutique, Lavage, etc.)"):
                 cols_srv = st.columns(2)
                 selection_services = []
@@ -316,101 +313,89 @@ with tabs[1]:
             
             submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
 
+        # 📈 3. TRACKING LORS DE LA RECHERCHE
         if submit_search and adresse_selectionnee:
             log_to_sheets(
                 nom_onglet="Stations", 
-                ville=ville_propre,
+                ville=ville_propre,  # Envoie uniquement la commune (ex: Meyzieu)
                 carburant=carbu, 
                 rayon=str(rayon)
             )
             st.session_state.recherche_lancee = True
 
+        # 🗺️ 4. AFFICHAGE DES RÉSULTATS
         if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
             with st.spinner("Analyse en cours..."):
+                geolocator = Nominatim(user_agent="carbunet_pro_v5")
                 try:
-                    # ✅ CHANGEMENT 1 : API gouv.fr à la place de Nominatim (plus de timeout)
-                    url_geo = f"https://api-adresse.data.gouv.fr/search/?q={requests.utils.quote(adresse_selectionnee)}&limit=1"
-                    geo = requests.get(url_geo, timeout=5).json()
-                    coords = geo["features"][0]["geometry"]["coordinates"]
-                    ma_pos = (coords[1], coords[0])  # (lat, lon)
+                    loc = geolocator.geocode(adresse_selectionnee + ", France")
+                    if loc:
+                        ma_pos = (loc.latitude, loc.longitude)
+                        df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
+                        df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
+                        res = df_c[df_c['distance'] <= rayon].copy()
 
-                    df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
-                    df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
-                    res = df_c[df_c['distance'] <= rayon].copy()
+                        for s_filtre in selection_services:
+                            res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
 
-                    for s_filtre in selection_services:
-                        res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
+                        res = res.sort_values(by=col_p)
 
-                    res = res.sort_values(by=col_p)
-
-                    if not res.empty:
-                        st.markdown("---")
-                        stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
-                        choix_station = st.selectbox("🎯 Choisir cette station pour le simulateur :", options=list(stations_trouvees.keys()))
-                        
-                        st.session_state['prix_perso'] = stations_trouvees[choix_station]
-                        st.session_state['carbu_nom'] = carbu
-                        st.session_state['station_nom'] = choix_station.split('(')[0].strip()
-                        
-                        st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
-
-                        # ✅ CHANGEMENT 2 : Popups sur la carte + returned_objects=[] (plus de rechargement)
-                    m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
-                    p_min = res[col_p].min()
-                    for _, r in res.head(10).iterrows():
-                        color = 'green' if r[col_p] == p_min else 'blue'
-                    folium.Marker(
-                    [r['latitude'], r['longitude']],
-                    icon=folium.Icon(color=color, icon='gas-pump', prefix='fa'),
-                    tooltip=f"⛽ {float(r[col_p]):.3f} € — {r['adresse'].title()} ({r['ville']})",
-                    popup=folium.Popup(
-                    f"<div style='font-family:sans-serif; min-width:150px'>"
-                    f"<b>⛽ {float(r[col_p]):.3f} €/L</b><br>"
-                    f"{r['adresse'].title()}<br>"
-                    f"<a href='https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes' "
-                    f"target='_blank' style='color:#1a73e8'>🚗 Ouvrir Waze</a>"
-                    f"</div>",
-                    max_width=220
-                            )
-                        ).add_to(m)
-                    st_folium(m, width="100%", height=400, returned_objects=[]) 
-
-                    st.markdown("### 🏆 Meilleures options trouvées")
-
-                    for _, row in res.head(8).iterrows():
-                            w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
-                            rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
-                            stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
-                            border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
+                        if not res.empty:
+                            st.markdown("---")
+                            stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
+                            choix_station = st.selectbox("🎯 Choisir cette station pour le simulateur :", options=list(stations_trouvees.keys()))
                             
-                            srv_str = str(row.get('service_propose', ''))
-                            badges_html = ""
-                            if srv_str and srv_str != 'nan':
-                                for s in srv_str.split(','):
-                                    s = s.strip()
-                                    emoji = LOGOS_SERVICES.get(s, "🔹")
-                                    badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s}</span>'
+                            st.session_state['prix_perso'] = stations_trouvees[choix_station]
+                            st.session_state['carbu_nom'] = carbu
+                            st.session_state['station_nom'] = choix_station.split('(')[0].strip()
+                            
+                            st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
-                            card_html = f"""
-                            <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                <div style="display:flex; justify-content:space-between; align-items:start;">
-                                    <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
-                                    <div style="text-align:right;">
-                                        <span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row['distance']:.1f} km</span>
-                                        <div style="color:{stock_c}; font-weight:bold; font-size:0.75rem; margin-top:4px;">{stock_t}</div>
+                            # Carte Folium
+                            m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
+                            p_min = res[col_p].min()
+                            for _, r in res.head(10).iterrows():
+                                color = 'green' if r[col_p] == p_min else 'blue'
+                                folium.Marker([r['latitude'], r['longitude']], icon=folium.Icon(color=color, icon='gas-pump', prefix='fa')).add_to(m)
+                            st_folium(m, width="100%", height=400)
+
+                            st.markdown("### 🏆 Meilleures options trouvées")
+
+                            # Cartes HTML des stations
+                            for _, row in res.head(8).iterrows():
+                                w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
+                                rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
+                                stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
+                                border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
+                                
+                                srv_str = str(row.get('service_propose', ''))
+                                badges_html = ""
+                                if srv_str and srv_str != 'nan':
+                                    for s in srv_str.split(','):
+                                        s = s.strip()
+                                        emoji = LOGOS_SERVICES.get(s, "🔹")
+                                        badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s}</span>'
+
+                                card_html = f"""
+                                <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                                        <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
+                                        <div style="text-align:right;">
+                                            <span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row['distance']:.1f} km</span>
+                                            <div style="color:{stock_c}; font-weight:bold; font-size:0.75rem; margin-top:4px;">{stock_t}</div>
+                                        </div>
+                                    </div>
+                                    <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
+                                    <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{badges_html}</div>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
+                                        <small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
+                                        <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a>
                                     </div>
                                 </div>
-                                <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
-                                <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{badges_html}</div>
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
-                                    <small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
-                                    <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a>
-                                </div>
-                            </div>
-                            """
-                            st.markdown(card_html, unsafe_allow_html=True)
-                    else:
-                        st.warning("Aucune station trouvée. Essayez un rayon plus grand.")
+                                """
+                                st.markdown(card_html, unsafe_allow_html=True)
+                        else:
+                            st.warning("Veuillez sélectionner une adresse valide dans la liste.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
 
