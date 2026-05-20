@@ -12,7 +12,6 @@ import urllib.parse
 import streamlit.components.v1 as components
 from datetime import datetime
 from streamlit_searchbox import st_searchbox
-import yagmail
 
 
 
