@@ -99,77 +99,73 @@ components.html(f"""
     </script>
 """, height=0)
 
-# Le seul et unique bloc CSS de l'application
 st.markdown("""
     <style>
+        /* Anti-flash au chargement */
+        [data-testid="stAppViewContainer"] {
+            background-color: #ffffff !important;
+            opacity: 1 !important;
+        }
+        [data-testid="stSkeleton"] { display: none !important; }
+        .main { background-color: #ffffff !important; visibility: visible !important; }
+
         /* 1. On vire le bandeau blanc Streamlit du haut */
         header { visibility: hidden; height: 0px !important; }
         
-        /* 2. LE CONTENEUR PRINCIPAL (S'adapte à TOUS les écrans) */
+        /* 2. LE CONTENEUR PRINCIPAL */
         .main .block-container {
             padding-top: 1rem !important;
             padding-bottom: 2rem !important;
             padding-left: 5% !important;   
             padding-right: 5% !important;  
-            max-width: 1100px !important;  /* Largeur max parfaite sur grand écran */
-            margin: 0 auto !important;     /* Centre l'application */
+            max-width: 1100px !important;
+            margin: 0 auto !important;
         }
 
         /* 3. OPACITÉ GLOBALE */
         div[data-testid="stAppViewBlockContainer"] { opacity: 1 !important; }
 
-        /* 4. GESTION DES ONGLETS FLUIDES */
+        /* 4. ONGLETS */
         .stTabs [data-baseweb="tab-list"] { 
-            gap: 10px; 
-            justify-content: center; 
+            gap: 10px; justify-content: center; 
             overflow-x: auto !important; 
             -webkit-overflow-scrolling: touch; 
             width: 100% !important;
         }
         .stTabs [data-baseweb="tab"] { 
-            height: 42px; 
-            background-color: #f1f5f9; 
-            border-radius: 10px; 
-            padding: 5px 20px; 
-            font-weight: 600;
-            white-space: nowrap;
+            height: 42px; background-color: #f1f5f9; 
+            border-radius: 10px; padding: 5px 20px; 
+            font-weight: 600; white-space: nowrap;
         }
         .stTabs [aria-selected="true"] { 
-            background-color: #0f172a !important; 
-            color: white !important; 
+            background-color: #0f172a !important; color: white !important; 
         }
 
-        /* 5. BANNIÈRE BLEUE CONCEPT */
+        /* 5. BANNIÈRE */
         .hero-container {
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            padding: 40px 20px !important;
+            width: 100% !important; max-width: 100% !important;
+            box-sizing: border-box !important; padding: 40px 20px !important;
         }
 
-        /* 💻 ADAPTATION TABLETTE */
+        /* TABLETTE */
         @media (max-width: 1024px) {
             .main .block-container { 
                 max-width: 90% !important; 
-                padding-left: 3% !important;
-                padding-right: 3% !important;
+                padding-left: 3% !important; padding-right: 3% !important;
             }
             .hero-container { padding: 30px 15px !important; }
         }
 
-        /* 📱 ADAPTATION SMARTPHONE */
+        /* SMARTPHONE */
         @media (max-width: 640px) {
             .main .block-container { 
                 padding-top: 0.5rem !important; 
-                padding-left: 15px !important; 
-                padding-right: 15px !important;
+                padding-left: 15px !important; padding-right: 15px !important;
                 max-width: 100% !important;
             }
             [data-testid="column"] { 
-                width: 100% !important; 
-                flex: 1 1 100% !important; 
-                min-width: 100% !important; 
-                margin-bottom: 15px !important; 
+                width: 100% !important; flex: 1 1 100% !important; 
+                min-width: 100% !important; margin-bottom: 15px !important; 
             }
             iframe { width: 100% !important; min-width: 100% !important; }
             .hero-container h1 { font-size: 1.8rem !important; }
@@ -178,7 +174,6 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
-
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
