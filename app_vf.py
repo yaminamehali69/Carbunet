@@ -549,12 +549,7 @@ with tabs[2]:
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
 with tabs[3]:
-   
-
-    # Configuration visuelle des icônes
     st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
-
-    # Titre original de ton application
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #f59e0b; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #f59e0b;">contact_support</span>
@@ -562,71 +557,67 @@ with tabs[3]:
         </div>
     """, unsafe_allow_html=True)
 
-    # Gestion de l'affichage du succès
-    if 'support_succes_final' not in st.session_state:
-        st.session_state.support_succes_final = False
+    components.html("""
+    <style>
+        * { box-sizing: border-box; font-family: sans-serif; }
+        input, select, textarea {
+            width: 100%; padding: 10px 14px; margin-bottom: 14px;
+            border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;
+        }
+        .row { display: flex; gap: 12px; }
+        .row > div { flex: 1; }
+        button {
+            width: 100%; padding: 14px; background: #f59e0b; color: white;
+            border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer;
+        }
+        #succes { display:none; background:#d1fae5; color:#065f46; padding:20px; border-radius:10px; border:1px solid #34d399; text-align:center; margin-top:15px; }
+    </style>
 
-    # Ton joli bandeau vert original s'affiche ici si l'envoi réussit
-    if st.session_state.support_succes_final:
-        st.markdown("""
-            <div style="background-color: #d1fae5; color: #065f46; padding: 20px; border-radius: 10px; border: 1px solid #34d399; text-align: center; font-family: sans-serif; margin-bottom: 20px;">
-                <h3 style="margin:0;">✅ Message envoyé !</h3>
-                <p style="margin:10px 0 0 0;">Merci pour votre retour, Carbunet vous répondra dans les plus brefs délais.</p>
-            </div>
-        """, unsafe_allow_html=True)
-        if st.button("Envoyer un autre message"):
-            st.session_state.support_succes_final = False
-            st.rerun()
-    else:
-        # Formulaire natif Streamlit calqué sur ton design HTML original
-        with st.form("form_support_ultra_direct", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-            with col1:
-                nom_prenom = st.text_input("👤 Nom & Prénom", placeholder="Nom & Prénom")
-            with col2:
-                email_user = st.text_input("✉️ Votre Email", placeholder="Votre Email")
+    <div id="formulaire">
+        <div class="row">
+            <div><input type="text" id="nom" placeholder="👤 Nom & Prénom"></div>
+            <div><input type="email" id="email" placeholder="✉️ Votre Email"></div>
+        </div>
+        <select id="objet">
+            <option value="" disabled selected>📋 Objet de votre demande</option>
+            <option>Signaler un Bug</option>
+            <option>Suggestion d'amélioration</option>
+            <option>Erreur sur une station</option>
+            <option>Autre question</option>
+        </select>
+        <textarea id="message" rows="5" placeholder="💬 Votre message détaillé..."></textarea>
+        <button onclick="envoyer()">ENVOYER MA DEMANDE</button>
+    </div>
 
-            objet_demande = st.selectbox(
-                "📋 Objet de votre demande", 
-                ["Signaler un Bug", "Suggestion d'amélioration", "Erreur sur une station", "Autre question"],
-                index=None,
-                placeholder="Objet de votre demande"
-            )
+    <div id="succes"><h3 style="margin:0">✅ Message envoyé !</h3><p>Merci, CarbuNet vous répondra dans les plus brefs délais.</p></div>
 
-            message_detail = st.text_area("💬 Votre message détaillé...", placeholder="Votre message détaillé...")
+    <script>
+    async function envoyer() {
+        const nom = document.getElementById("nom").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const objet = document.getElementById("objet").value;
+        const message = document.getElementById("message").value.trim();
 
-            # Ton bouton orange original
-            submit_btn = st.form_submit_button("ENVOYER MA DEMANDE", use_container_width=True)
+        if (!nom || !email || !objet || !message) {
+            alert("⚠️ Veuillez remplir tous les champs.");
+            return;
+        }
 
-        if submit_btn:
-            if nom_prenom and email_user and objet_demande and message_detail:
-                with st.spinner("Envoi en cours..."):
-                    try:
-                        # On initialise le robot d'envoi avec ton adresse et tes 16 lettres secrets
-                        yag = yagmail.SMTP("yaminamehali69@gmail.com", "luijzrgtvewmyewvdtg")
-                        
-                        # Contenu du mail
-                        sujet = f"🚀 CarbuNet Support - {objet_demande}"
-                        contenu = [
-                            f"👤 Nom : {nom_prenom}",
-                            f"✉️ Email de l'utilisateur : {email_user}",
-                            f"📋 Objet : {objet_demande}",
-                            "",
-                            "💬 Message :",
-                            message_detail
-                        ]
-                        
-                        # Envoi direct du mail à toi-même
-                        yag.send(to="yaminamehali69@gmail.com", subject=sujet, contents=contenu)
-                        
-                        # On active le bandeau vert et on rafraîchit l'écran
-                        st.session_state.support_succes_final = True
-                        st.rerun()
+        const res = await fetch("https://formspree.io/f/xjgzyrro", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({ nom, email, objet, message })
+        });
 
-                    except Exception as e:
-                        st.error(f"❌ Un problème technique empêche l'envoi : {e}")
-            else:
-                st.warning("⚠️ Veuillez remplir tous les champs avant d'envoyer.")
+        if (res.ok) {
+            document.getElementById("formulaire").style.display = "none";
+            document.getElementById("succes").style.display = "block";
+        } else {
+            alert("❌ Erreur lors de l'envoi. Réessayez.");
+        }
+    }
+    </script>
+    """, height=450)
 
     st.markdown("---")
     st.markdown("<div style='text-align: center; font-size: 0.8rem; color: #64748b;'><b>CarbuNet Support</b> : Temps de réponse < 48h</div>", unsafe_allow_html=True)
