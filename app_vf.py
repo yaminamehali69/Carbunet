@@ -99,6 +99,7 @@ components.html(f"""
     </script>
 """, height=0)
 
+# Le seul et unique bloc CSS de l'application
 st.markdown("""
     <style>
         /* Anti-flash au chargement */
@@ -174,6 +175,7 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+
 
 # --- DICTIONNAIRE DES LOGOS/EMOJIS ---
 LOGOS_SERVICES = {
