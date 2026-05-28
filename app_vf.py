@@ -108,6 +108,7 @@ st.markdown("""
             opacity: 1 !important;
         }
         [data-testid="stSkeleton"] { display: none !important; }
+        [data-testid="stSkeletonLine"] { display: none !important; }
         .main { background-color: #ffffff !important; visibility: visible !important; }
 
         /* 1. On vire le bandeau blanc Streamlit du haut */
