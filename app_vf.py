@@ -328,7 +328,7 @@ with tabs[1]:
             with st.spinner("Analyse en cours..."):
                 geolocator = Nominatim(user_agent="carbunet_pro_v5")
                 try:
-                    loc = geolocator.geocode(adresse_selectionnee + ", France")
+                    loc = geolocator.geocode(adresse_selectionnee + ", France", timeout=10)
                     if loc:
                         ma_pos = (loc.latitude, loc.longitude)
                         df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
@@ -457,8 +457,8 @@ with tabs[2]:
             try:
                 with st.spinner("Calcul de l'itinéraire..."):
                     geolocator = Nominatim(user_agent="carbunet_pro_sim")
-                    l1 = geolocator.geocode(dep_selectionne)
-                    l2 = geolocator.geocode(arr_selectionne)
+                    l1 = geolocator.geocode(dep_selectionne, timeout=10)
+                    l2 = geolocator.geocode(arr_selectionne, timeout=10)
                 if l1 and l2:
                     dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
                     km_calcule = round(dist_gps * 1.25, 1)
