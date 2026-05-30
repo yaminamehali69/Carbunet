@@ -332,125 +332,134 @@ with tabs[1]:
                 rayon=str(rayon)
             )
             st.session_state.recherche_lancee = True
-
 # 🗺️ 4. AFFICHAGE DES RÉSULTATS
-        if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
-            with st.spinner("Analyse en cours..."):
-                geolocator = Nominatim(user_agent="carbunet_pro_v5")
-                try:
-                    loc = geolocator.geocode(adresse_selectionnee + ", France", timeout=10)
-                    if loc:
-                        ma_pos = (loc.latitude, loc.longitude)
-                        df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
-                        df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
-                        res = df_c[df_c['distance'] <= rayon].copy()
+if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
+    with st.spinner("Analyse en cours..."):
+        geolocator = Nominatim(user_agent="carbunet_pro_v5")
+        try:
+            loc = geolocator.geocode(adresse_selectionnee + ", France", timeout=10)
+            if loc:
+                ma_pos = (loc.latitude, loc.longitude)
+                df_c = df[df[col_p] > 0].dropna(subset=[col_p, 'latitude', 'longitude']).copy()
+                df_c['distance'] = df_c.apply(lambda r: geodesic(ma_pos, (r['latitude'], r['longitude'])).km, axis=1)
+                res = df_c[df_c['distance'] <= rayon].copy()
 
-                        for s_filtre in selection_services:
-                            res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
+                for s_filtre in selection_services:
+                    res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
 
-                        # Tri par PRIX d'abord, puis par DISTANCE si les prix sont identiques
-                        res = res.sort_values(by=[col_p, 'distance'])
+                # Tri par PRIX d'abord, puis par DISTANCE si les prix sont identiques
+                res = res.sort_values(by=[col_p, 'distance'])
 
-                        if not res.empty:
-                            st.markdown("---")
-                            stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
-                            choix_station = st.selectbox("🎯 Choisir cette station pour le simulateur :", options=list(stations_trouvees.keys()))
-                            
-                            st.session_state['prix_perso'] = stations_trouvees[choix_station]
-                            st.session_state['carbu_nom'] = carbu
-                            st.session_state['station_nom'] = choix_station.split('(')[0].strip()
-                            
-                            st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
+                if not res.empty:
+                    st.markdown("---")
+                    stations_trouvees = {f"{row['adresse']} ({row[col_p]}€)": row[col_p] for _, row in res.head(8).iterrows()}
+                    choix_station = st.selectbox("🎯 Choisir cette station pour le simulateur :", options=list(stations_trouvees.keys()))
+                    
+                    st.session_state['prix_perso'] = stations_trouvees[choix_station]
+                    st.session_state['carbu_nom'] = carbu
+                    st.session_state['station_nom'] = choix_station.split('(')[0].strip()
+                    
+                    st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
-                            # 🗺️ Création de la carte Folium
-                            m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
-                            
-                            # On récupère l'index de la toute première station (la moins chère et plus proche)
-                            id_premiere_station = res.head(1).index[0]
-                            
-                            for idx, r in res.head(10).iterrows():
-                                # 🟢 UNE SEULE VERTE : uniquement la toute première de la liste triée
-                                color = 'green' if idx == id_premiere_station else 'blue'
-                                
-                                # Configuration des infos de rupture pour la bulle de la carte
-                                r_rupt = str(r.get('carburants_en_rupture_temporaire', '')) + str(r.get('carburants_en_rupture_definitive', ''))
-                                s_text = "❌ RUPTURE" if carbu in r_rupt else "✅ EN STOCK"
-                                s_color = "#ef4444" if carbu in r_rupt else "#10b981"
-                                
-                                # URL Waze spécifique pour ce marqueur
-                                waze_pop_url = f"https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes"
-                                
-                                # 🎯 CONTENU DE LA BULLE AU CLIC (HTML complet avec bouton bleu Waze cliquable)
-                                popup_html = f"""
-                                <div style="font-family: Arial, sans-serif; width: 190px; color: #333; line-height: 1.4;">
-                                    <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.25rem;">{float(r[col_p]):.3f} €</h4>
-                                    <div style="color: {s_color}; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px;">{s_text}</div>
-                                    <div style="font-size: 0.85rem; margin-bottom: 4px;"><b>{r['adresse'].title()}</b></div>
-                                    <div style="font-size: 0.85rem; margin-bottom: 6px;">🏙️ {r['ville']}</div>
-                                    <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">📍 À {r['distance']:.1f} km</div>
-                                    <a href="{waze_pop_url}" target="_blank" style="display: block; text-align: center; background: #1a73e8; color: white; padding: 6px 0; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.8rem;">
-                                        Ouvrir Waze 🚗
-                                    </a>
+                    # 🗺️ Création de la carte Folium
+                    m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
+                    
+                    # On récupère l'index de la toute première station (la moins chère et plus proche)
+                    id_premiere_station = res.head(1).index[0]
+                    
+                    for idx, r in res.head(10).iterrows():
+                        # 🟢 UNE SEULE VERTE : uniquement la toute première de la liste triée
+                        color = 'green' if idx == id_premiere_station else 'blue'
+                        
+                        # Configuration des infos de rupture pour la bulle de la carte
+                        r_rupt = str(r.get('carburants_en_rupture_temporaire', '')) + str(r.get('carburants_en_rupture_definitive', ''))
+                        s_text = "❌ RUPTURE" if carbu in r_rupt else "✅ EN STOCK"
+                        s_color = "#ef4444" if carbu in r_rupt else "#10b981"
+                        
+                        # URL Waze spécifique pour ce marqueur
+                        waze_pop_url = f"https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes"
+                        
+                        # 🎯 CONTENU DE LA BULLE (HTML complet cliquable)
+                        popup_html = f"""
+                        <div style="font-family: Arial, sans-serif; width: 190px; color: #333; line-height: 1.4; padding: 5px;">
+                            <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.25rem;">{float(r[col_p]):.3f} €</h4>
+                            <div style="color: {s_color}; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px;">{s_text}</div>
+                            <div style="font-size: 0.85rem; margin-bottom: 4px;"><b>{r['adresse'].title()}</b></div>
+                            <div style="font-size: 0.85rem; margin-bottom: 6px;">🏙️ {r['ville']}</div>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">📍 À {r['distance']:.1f} km</div>
+                            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #ddd;">
+                            <a href="{waze_pop_url}" target="_blank" style="display: block; text-align: center; background: #1a73e8; color: white; padding: 6px 0; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.8rem;">
+                                Ouvrir Waze 🚗
+                            </a>
+                        </div>
+                        """
+                        
+                        # Configuration des objets Folium pour valider et autoriser les clics HTML
+                        iframe_popup = folium.Html(popup_html, script=True)
+                        iframe_tooltip = folium.Tooltip(popup_html, sticky=True)
+                        
+                        folium.Marker(
+                            location=[r['latitude'], r['longitude']], 
+                            popup=folium.Popup(iframe_popup, max_width=250),
+                            icon=folium.Icon(color=color, icon='gas-pump', prefix='fa'),
+                            tooltip=iframe_tooltip
+                        ).add_to(m)
+                        
+                    # 🎯 CORRECTION TRANSPARENCE : Bloque les rechargements au zoom et mouvements
+                    st_folium(
+                        m, 
+                        use_container_width=True, 
+                        height=400,
+                        returned_objects=[]
+                    )
+
+                    st.markdown("### 🏆 Meilleures options trouvées")
+
+                    # Cartes HTML des stations (Liste en text sous la carte)
+                    p_min = res[col_p].min()
+                    for _, row in res.head(8).iterrows():
+                        w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
+                        rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
+                        stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
+                        border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
+                        
+                        srv_str = str(row.get('service_propose', ''))
+                        badges_html = ""
+                        if srv_str and srv_str != 'nan':
+                            for s in srv_str.split(','):
+                                s = s.strip()
+                                emoji = LOGOS_SERVICES.get(s, "🔹")
+                                badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s}</span>'
+
+                        card_html = f"""
+                        <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <div style="display:flex; justify-content:space-between; align-items:start;">
+                                <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
+                                <div style="text-align:right;">
+                                    <span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row['distance']:.1f} km</span>
+                                    <div style="color:{stock_c}; font-weight:bold; font-size:0.75rem; margin-top:4px;">{stock_t}</div>
                                 </div>
-                                """
-                                
-                                # 🎯 TEXTE AU SURVOL DE LA SOURIS (Simple texte sans HTML pour éviter les bugs visuels)
-                                tooltip_text = f"{float(r[col_p]):.3f} € | {r['adresse'].title()} | {r['distance']:.1f}km"
-                                
-                                folium.Marker(
-                                    location=[r['latitude'], r['longitude']], 
-                                    popup=folium.Popup(popup_html, max_width=250), # S'affiche au CLIC
-                                    icon=folium.Icon(color=color, icon='gas-pump', prefix='fa'),
-                                    tooltip=tooltip_text # S'affiche au SURVOL
-                                ).add_to(m)
-                                
-                            st_folium(m, width="100%", height=400)
+                            </div>
+                            <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
+                            <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{badges_html}</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
+                                <small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
+                                <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a>
+                            </div>
+                        </div>
+                        """
+                        st.markdown(card_html, unsafe_allow_html=True)
+                else:
+                    st.warning("Aucune station trouvée dans ce rayon avec vos critères.")
+            else:
+                st.warning("Veuillez sélectionner une adresse valide dans la liste.")
+        except Exception as e:
+            st.error(f"Erreur technique : {e}")
 
-                            st.markdown("### 🏆 Meilleures options trouvées")
-
-                            # Cartes HTML des stations (Ton code de liste d'origine inchangé)
-                            p_min = res[col_p].min()
-                            for _, row in res.head(8).iterrows():
-                                w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
-                                rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
-                                stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
-                                border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
-                                
-                                srv_str = str(row.get('service_propose', ''))
-                                badges_html = ""
-                                if srv_str and srv_str != 'nan':
-                                    for s in srv_str.split(','):
-                                        s = s.strip()
-                                        emoji = LOGOS_SERVICES.get(s, "🔹")
-                                        badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s}</span>'
-
-                                card_html = f"""
-                                <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                    <div style="display:flex; justify-content:space-between; align-items:start;">
-                                        <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
-                                        <div style="text-align:right;">
-                                            <span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row['distance']:.1f} km</span>
-                                            <div style="color:{stock_c}; font-weight:bold; font-size:0.75rem; margin-top:4px;">{stock_t}</div>
-                                        </div>
-                                    </div>
-                                    <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
-                                    <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{badges_html}</div>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
-                                        <small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
-                                        <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a>
-                                    </div>
-                                </div>
-                                """
-                                st.markdown(card_html, unsafe_allow_html=True)
-                        else:
-                            st.warning("Veuillez sélectionner une adresse valide dans la liste.")
-                except Exception as e:
-                    st.error(f"Erreur technique : {e}")
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
 # =====================================================================
 with tabs[2]:
-    # --- TITRE HARMONISÉ ---
     st.markdown("""
         <div style="display: flex; align-items: center; gap: 15px; border-left: 4px solid #3b82f6; padding-left: 15px; margin-top: 10px; margin-bottom: 25px;">
             <span class="material-icons-outlined" style="font-size: 35px; color: #3b82f6;">calculate</span>
