@@ -65,6 +65,11 @@ AUTEUR_2 = "CarbuNet"
 
 # --- 2. CONFIGURATION DE LA PAGE (CORRIGÉE EN LAYOUT WIDE) ---
 st.set_page_config(
+    page_title="CarbuNet Pro",
+    layout="wide",
+    menu_items=None  # Supprime les options du menu
+)
+st.set_page_config(
     page_title="CarbuNet", 
     layout="wide",  # Permet au CSS de gérer le responsive sur tous les écrans
     page_icon=LOGO_URL
@@ -264,7 +269,7 @@ with tabs[0]:
         <p style="font-size: 1.3rem; opacity: 0.95; margin-top: 10px;">Le prix le plus net, au kilomètre près.</p>
         <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 20px 0;">
         <p style="font-size: 0.75rem; opacity: 0.8;">Mention d'information : Données data.gouv.fr.</p>
-        <p style="font-size: 0.8rem; margin-top: 10px;">Version {VERSION} | Développé par Yamina Mehali</p>
+        <p style="font-size: 0.8rem; margin-top: 10px;">Version {VERSION} | © 2026 Yamina Mehali - CarbuNet Pro. Tous droits réservés.</p>
     </div>
     """, unsafe_allow_html=True)
     
