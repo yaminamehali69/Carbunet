@@ -465,48 +465,41 @@ with tabs[2]:
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
     st.info(f" Prix actuel utilisé : **{p_final:.3f} €/L** ({nom_carbu})")
 
-    # --- 1. ITINÉRAIRE SÉCURISÉ POUR ÉVITER LA TRANSPARENCE ---
+    # --- 1. ITINÉRAIRE AVEC AUTOCOMPLÉTION RESTAURÉE ---
     st.markdown("##### 📍 1. Itinéraire")
+    c1, c2 = st.columns(2)
     
-    # 🎯 FIX TRANSPARENCE : On place la sélection dans un formulaire pour bloquer les rechargements visuels intempestifs
-    with st.form("formulaire_simulateur_vitesse"):
-        c1, c2 = st.columns(2)
+    with c1:
+        # L'autocomplétion fonctionne à nouveau en direct au fil de la frappe
+        choix_dep = st_searchbox(
+            chercher_adresses_searchbox,
+            placeholder="🛫 Ville ou adresse de départ...",
+            key="searchbox_depart",
+            clear_on_submit=False
+        )
         
-        with c1:
-            # Barre de recherche unique pour le départ
-            choix_dep = st_searchbox(
-                chercher_adresses_searchbox,
-                placeholder="🛫 Ville ou adresse de départ...",
-                key="searchbox_depart",
-                clear_on_submit=False
-            )
-            
-            dep_selectionne = ""
-            ville_dep_propre = ""
-            if choix_dep:
-                dep_selectionne = choix_dep["label"]
-                ville_dep_propre = choix_dep["ville"]
+        dep_selectionne = ""
+        ville_dep_propre = ""
+        if choix_dep:
+            dep_selectionne = choix_dep["label"]
+            ville_dep_propre = choix_dep["ville"]
 
-        with c2:
-            # Barre de recherche unique pour l'arrivée
-            choix_arr = st_searchbox(
-                chercher_adresses_searchbox,
-                placeholder="🛬 Ville ou adresse d'arrivée...",
-                key="searchbox_arrivee",
-                clear_on_submit=False
-            )
-            
-            arr_selectionne = ""
-            ville_arr_propre = ""
-            if choix_arr:
-                arr_selectionne = choix_arr["label"]
-                ville_arr_propre = choix_arr["ville"]
+    with c2:
+        # L'autocomplétion fonctionne à nouveau en direct au fil de la frappe
+        choix_arr = st_searchbox(
+            chercher_adresses_searchbox,
+            placeholder="🛬 Ville ou adresse d'arrivée...",
+            key="searchbox_arrivee",
+            clear_on_submit=False
+        )
+        
+        arr_selectionne = ""
+        ville_arr_propre = ""
+        if choix_arr:
+            arr_selectionne = choix_arr["label"]
+            ville_arr_propre = choix_arr["ville"]
 
-        # Bouton de validation du formulaire obligatoire pour appliquer la saisie sans clignotement
-        submit_gps = st.form_submit_button("🔍 CALCULER LA DISTANCE GPS", use_container_width=True)
-
-    # Traitement de l'itinéraire une fois le formulaire soumis
-    if submit_gps:
+    if st.button("🔍 CALCULER LA DISTANCE GPS", use_container_width=True):
         if dep_selectionne and arr_selectionne:
             try:
                 with st.spinner("Calcul de l'itinéraire..."):
@@ -517,8 +510,9 @@ with tabs[2]:
                     dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
                     km_calcule = round(dist_gps * 1.25, 1)
                     st.session_state['km_memoire'] = km_calcule
+                    st.session_state['bouton_calcul_presse'] = True
                     
-                    # 🎯 ENVOI PARFAIT ET NETTOYÉ : Uniquement les communes (ex: Lyon -> Paris)
+                    # Envoi propre aux Google Sheets
                     log_to_sheets(
                         nom_onglet="Simulateur", 
                         ville=f"{ville_dep_propre} -> {ville_arr_propre} ({km_calcule} km)", 
@@ -531,7 +525,7 @@ with tabs[2]:
             except Exception as e:
                 st.error(f"❌ Erreur : {e}")
 
-    # Le .get sécurisé empêche le plantage si l'utilisateur arrive sans clé
+    # Récupération sécurisée de la distance
     km_final = st.number_input("Distance retenue (km)", value=float(st.session_state.get('km_memoire', 0.0)))
 
     # --- 2. PARAMÈTRES AVANCÉS ---
@@ -568,8 +562,8 @@ with tabs[2]:
     poids_extra = (passagers - 1) * 0.4
     conso_finale = (base_conso + impact_route + poids_extra) * coeff_relief
 
-    # AFFICHAGE DES RÉSULTATS DU SIMULATEUR
-    if km_final > 0:
+    # AFFICHAGE DU BUDGET (Uniquement si le calcul a été validé ou qu'une distance existe)
+    if km_final > 0 and st.session_state.get('bouton_calcul_presse', False):
         total_euros = (km_final / 100) * conso_finale * p_final
         cout_reel_total = total_euros + (km_final * 0.12)
 
@@ -593,6 +587,7 @@ with tabs[2]:
             </div>
         """, unsafe_allow_html=True)
 
+        # Lien Waze dynamique et fonctionnel
         w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_selectionne if arr_selectionne else '')}&from={urllib.parse.quote(dep_selectionne if dep_selectionne else '')}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
 # -----------------------------------------------------------  
