@@ -332,7 +332,7 @@ with tabs[1]:
                 )
                 st.session_state.recherche_lancee = True
 
-            # 🗺️ 4. AFFICHAGE DES RÉSULTATS (Imbriqué au millimètre)
+            # 🗺️ 4. AFFICHAGE DES RÉSULTATS
             if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                 with st.spinner("Analyse en cours..."):
                     try:
@@ -361,7 +361,7 @@ with tabs[1]:
                                 
                                 st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
-                                # Valeur minimale pour l'encadrement vert des cartes
+                                # Calcul de p_min
                                 p_min = res[col_p].min()
 
                                 # Création de la carte Folium
@@ -416,7 +416,7 @@ with tabs[1]:
 
                                 st.markdown("### 🏆 Meilleures options trouvées")
 
-                                # Cartes HTML de la liste des stations en dessous de la carte
+                                # Cartes HTML des stations en liste en dessous de la carte
                                 for _, row in res.head(8).iterrows():
                                     w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                     rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
@@ -432,29 +432,15 @@ with tabs[1]:
                                     if srv_str and srv_str != 'nan':
                                         for s in srv_str.split(','):
                                             s = s.strip()
+                                            # Sécurité absolue : on nettoie les parenthèses orphelines pour éviter le bug Markdown de Streamlit
+                                            s_propre = s.replace('(', '').replace(')', '')
                                             emoji = LOGOS_SERVICES.get(s, "🔹")
-                                            badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s}</span>'
+                                            badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s_propre}</span>'
 
-                                    # Construction sécurisée du conteneur graphique HTML
-                                    card_html = f"""
-                                    <div style="font-family: Arial, sans-serif; background:#fff; border-radius:12px; padding:15px; margin-bottom:5px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #333;">
-                                        <div style="display:flex; justify-content:space-between; align-items:start;">
-                                            <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
-                                            <div style="text-align:right;">
-                                                <span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row["distance"]:.1f} km</span>
-                                                {rupture_badge}
-                                            </div>
-                                        </div>
-                                        <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row["adresse"].title()}</b> ({row["ville"]})</div>
-                                        <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{badges_html}</div>
-                                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
-                                            <small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
-                                            <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a>
-                                        </div>
-                                    </div>
-                                    """
-                                    # Injection isolée via iframe pour bloquer définitivement le bug de texte brut
-                                    st.components.v1.html(card_html, height=170, scrolling=False)
+                                    # Construction propre sur une seule ligne HTML pour éliminer les conflits de sauts de ligne
+                                    card_html = f'<div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #333;"><div style="display:flex; justify-content:space-between; align-items:start;"><span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span><div style="text-align:right;"><span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row["distance"]:.1f} km</span>{rupture_badge}</div></div><div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row["adresse"].title()}</b> ({row["ville"]})</div><div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{badges_html}</div><div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;"><small style="color:#94a3b8; font-size:0.7rem;">Letzte Aktualisierung: {row[col_m]}</small><a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a></div></div>'
+                                    
+                                    st.markdown(card_html, unsafe_allow_html=True)
                             else:
                                 st.warning("Aucune station trouvée dans ce rayon avec vos critères.")
                         else:
