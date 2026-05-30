@@ -59,7 +59,9 @@ def obtenir_suggestions_adresses(texte):
 LOGO_URL = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/logo_carbunet.png"
 path_logo = "logo_carbunet.png"
 path_csv = "https://raw.githubusercontent.com/yaminamehali69/Carbunet/main/carburant_prix_nettoye.csv"
-VERSION = "1.3.9"
+last_mod = os.path.getmtime(__file__)
+date_suffix = datetime.datetime.fromtimestamp(last_mod).strftime('%Y%m%d')
+VERSION = f"1.3.{date_suffix}"
 AUTEUR = "Yamina Mehali"
 AUTEUR_2 = "CarbuNet"
 
