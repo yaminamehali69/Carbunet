@@ -371,44 +371,36 @@ with tabs[1]:
 
                             st.markdown("### 🏆 Meilleures options trouvées")
 
-                            # Cartes HTML des stations
-                            for _, row in res.head(8).iterrows():
-                                w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
-                                rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
-                                stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
-                                border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
-                                
-                                srv_str = str(row.get('service_propose', ''))
-                                badges_html = ""
-                                if srv_str and srv_str != 'nan':
-                                    for s in srv_str.split(','):
-                                        s = s.strip()
-                                        emoji = LOGOS_SERVICES.get(s, "🔹")
-                                        badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s}</span>'
+                            # --- À l'intérieur de ta boucle "for _, row in res.head(8).iterrows():" ---
 
-                                card_html = f"""
-                                <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                                    <div style="display:flex; justify-content:space-between; align-items:start;">
-                                        <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
-                                        <div style="text-align:right;">
-                                            <span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row['distance']:.1f} km</span>
-                                            <div style="color:{stock_c}; font-weight:bold; font-size:0.75rem; margin-top:4px;">{stock_t}</div>
-                                        </div>
-                                    </div>
-                                    <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
-                                    <div style="margin: 10px 0; display: flex; flex-wrap: wrap;">{badges_html}</div>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; border-top:1px solid #f8fafc; padding-top:10px;">
-                                        <small style="color:#94a3b8; font-size:0.7rem;">MàJ : {row[col_m]}</small>
-                                        <a href="{w_url}" target="_blank" style="color:#1a73e8; font-weight:bold; text-decoration:none; font-size:0.85rem;">WAZE 🚗</a>
-                                    </div>
+                            w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
+                            rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
+                            stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
+                            marker_color = "gray" if carbu in rupt else "green"
+
+                                # 🎯 1. CRÉATION DU CONTENU DU CLIC (POPUP) POUR LA CARTE
+                                # On prépare le texte et le bouton Waze spécifiquement pour le point de la carte
+                            popup_content = f"""
+                                <div style="font-family: Arial, sans-serif; width: 200px; color: #333;">
+                                    <h3 style="margin: 0 0 5px 0; color: #0f172a; font-size: 1.3rem;">{float(row[col_p]):.3f} €</h3>
+                                    <div style="color: {stock_c}; font-weight: bold; font-size: 0.8rem; margin-bottom: 5px;">{stock_t}</div>
+                                    <div style="font-size: 0.85rem; margin-bottom: 8px;"><b>{row['adresse'].title()}</b></div>
+                                    <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 8px;">📍 À {row['distance']:.1f} km</div>
+                                    <a href="{w_url}" target="_blank" style="display: block; text-align: center; background: #1a73e8; color: white; padding: 6px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.85rem;">
+                                        Ouvrir Waze 🚗
+                                    </a>
                                 </div>
                                 """
-                                st.markdown(card_html, unsafe_allow_html=True)
-                        else:
-                            st.warning("Veuillez sélectionner une adresse valide dans la liste.")
-                except Exception as e:
-                    st.error(f"Erreur technique : {e}")
 
+                                # 🎯 2. AJOUT DU MARQUEUR SUR LA CARTE (Vérifie si tes lignes ressemblent à ça)
+                            folium.Marker(
+                                    location=[row['latitude'], row['longitude']],
+                                    popup=folium.Popup(popup_content, max_width=250), # 👈 On lui injecte les infos ici !
+                                    icon=folium.Icon(color=marker_color, icon="gas-pump", prefix="fa"),
+                                    tooltip=f"{float(row[col_p]):.3f} €" # Affiche le prix juste en passant la souris
+                                ).add_to(m)
+
+# --- Ensuite tu laisses ton code "card_html" actuel en dessous pour la liste ---
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
 # =====================================================================
