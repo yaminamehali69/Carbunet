@@ -465,41 +465,48 @@ with tabs[2]:
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
     st.info(f" Prix actuel utilisé : **{p_final:.3f} €/L** ({nom_carbu})")
 
-    # --- 1. ITINÉRAIRE AVEC AUTOCOMPLÉTION SANS BOUTONS ---
+    # --- 1. ITINÉRAIRE SÉCURISÉ POUR ÉVITER LA TRANSPARENCE ---
     st.markdown("##### 📍 1. Itinéraire")
-    c1, c2 = st.columns(2)
     
-    with c1:
-        # Barre de recherche unique pour le départ
-        choix_dep = st_searchbox(
-            chercher_adresses_searchbox,
-            placeholder="🛫 Ville ou adresse de départ...",
-            key="searchbox_depart",
-            clear_on_submit=False
-        )
+    # 🎯 FIX TRANSPARENCE : On place la sélection dans un formulaire pour bloquer les rechargements visuels intempestifs
+    with st.form("formulaire_simulateur_vitesse"):
+        c1, c2 = st.columns(2)
         
-        dep_selectionne = ""
-        ville_dep_propre = ""
-        if choix_dep:
-            dep_selectionne = choix_dep["label"]
-            ville_dep_propre = choix_dep["ville"]
+        with c1:
+            # Barre de recherche unique pour le départ
+            choix_dep = st_searchbox(
+                chercher_adresses_searchbox,
+                placeholder="🛫 Ville ou adresse de départ...",
+                key="searchbox_depart",
+                clear_on_submit=False
+            )
+            
+            dep_selectionne = ""
+            ville_dep_propre = ""
+            if choix_dep:
+                dep_selectionne = choix_dep["label"]
+                ville_dep_propre = choix_dep["ville"]
 
-    with c2:
-        # Barre de recherche unique pour l'arrivée
-        choix_arr = st_searchbox(
-            chercher_adresses_searchbox,
-            placeholder="🛬 Ville ou adresse d'arrivée...",
-            key="searchbox_arrivee",
-            clear_on_submit=False
-        )
-        
-        arr_selectionne = ""
-        ville_arr_propre = ""
-        if choix_arr:
-            arr_selectionne = choix_arr["label"]
-            ville_arr_propre = choix_arr["ville"]
+        with c2:
+            # Barre de recherche unique pour l'arrivée
+            choix_arr = st_searchbox(
+                chercher_adresses_searchbox,
+                placeholder="🛬 Ville ou adresse d'arrivée...",
+                key="searchbox_arrivee",
+                clear_on_submit=False
+            )
+            
+            arr_selectionne = ""
+            ville_arr_propre = ""
+            if choix_arr:
+                arr_selectionne = choix_arr["label"]
+                ville_arr_propre = choix_arr["ville"]
 
-    if st.button("🔍 CALCULER LA DISTANCE GPS", use_container_width=True):
+        # Bouton de validation du formulaire obligatoire pour appliquer la saisie sans clignotement
+        submit_gps = st.form_submit_button("🔍 CALCULER LA DISTANCE GPS", use_container_width=True)
+
+    # Traitement de l'itinéraire une fois le formulaire soumis
+    if submit_gps:
         if dep_selectionne and arr_selectionne:
             try:
                 with st.spinner("Calcul de l'itinéraire..."):
@@ -586,7 +593,7 @@ with tabs[2]:
             </div>
         """, unsafe_allow_html=True)
 
-        w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_selectionne if arr_selectionne else arr_v)}&from={urllib.parse.quote(dep_selectionne if dep_selectionne else dep_v)}&navigate=yes"
+        w_link = f"https://www.waze.com/ul?q={urllib.parse.quote(arr_selectionne if arr_selectionne else '')}&from={urllib.parse.quote(dep_selectionne if dep_selectionne else '')}&navigate=yes"
         st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
