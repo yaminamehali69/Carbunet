@@ -269,7 +269,10 @@ with tabs[0]:
         <p style="font-size: 1.3rem; opacity: 0.95; margin-top: 10px;">Le prix le plus net, au kilomètre près.</p>
         <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.2); margin: 20px 0;">
         <p style="font-size: 0.75rem; opacity: 0.8;">Mention d'information : Données data.gouv.fr.</p>
-        <p style="font-size: 0.8rem; margin-top: 10px;">Version {VERSION} | © 2026 Yamina Mehali - CarbuNet Pro. Tous droits réservés.</p>
+        
+        <p style="font-size: 0.85rem; margin-top: 10px; color: #ffffff; font-weight: 500;">
+            Version {VERSION} | © 2026 Yamina Mehali - CarbuNet Pro. Tous droits réservés.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
