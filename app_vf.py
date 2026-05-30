@@ -348,7 +348,8 @@ with tabs[1]:
                         for s_filtre in selection_services:
                             res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
 
-                        res = res.sort_values(by=col_p)
+                        # 🎯 Tri par PRIX d'abord, puis par DISTANCE si les prix sont identiques
+                        res = res.sort_values(by=[col_p, 'distance'])
 
                         if not res.empty:
                             st.markdown("---")
@@ -361,34 +362,40 @@ with tabs[1]:
                             
                             st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
-                            # 🎯 MODIFICATION ICI : Carte Folium avec bulles (Popup) complètes
+                            # 🗺️ Création de la carte Folium
                             m = folium.Map(location=ma_pos, zoom_start=13, tiles="cartodbpositron")
-                            p_min = res[col_p].min()
                             
-                            for _, r in res.head(10).iterrows():
-                                color = 'green' if r[col_p] == p_min else 'blue'
+                            # On récupère l'index de la toute première station (la moins chère et plus proche)
+                            id_premiere_station = res.head(1).index[0]
+                            
+                            for idx, r in res.head(10).iterrows():
+                                # 🟢 UNE SEULE VERTE : uniquement la toute première de la liste triée
+                                color = 'green' if idx == id_premiere_station else 'blue'
                                 
-                                # Liens et statuts pour la bulle
-                                waze_pop_url = f"https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes"
+                                # Configuration des infos de rupture pour la bulle de la carte
                                 r_rupt = str(r.get('carburants_en_rupture_temporaire', '')) + str(r.get('carburants_en_rupture_definitive', ''))
                                 s_text = "❌ RUPTURE" if carbu in r_rupt else "✅ EN STOCK"
                                 s_color = "#ef4444" if carbu in r_rupt else "#10b981"
                                 
-                                # Code HTML de la bulle de la carte
+                                # URL Waze spécifique pour ce marqueur
+                                waze_pop_url = f"https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes"
+                                
+                                # 🎯 CODE DE LA BULLE (POPUP) : Prix, Statut, Adresse complète, Distance et bouton Waze direct
                                 popup_html = f"""
                                 <div style="font-family: Arial, sans-serif; width: 190px; color: #333; line-height: 1.4;">
-                                    <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.2rem;">{float(r[col_p]):.3f} €</h4>
-                                    <div style="color: {s_color}; font-weight: bold; font-size: 0.75rem; margin-bottom: 4px;">{s_text}</div>
-                                    <div style="font-size: 0.85rem; margin-bottom: 4px;"><b>{r['adresse'].title()}</b> ({r['ville']})</div>
+                                    <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.25rem;">{float(r[col_p]):.3f} €</h4>
+                                    <div style="color: {s_color}; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px;">{s_text}</div>
+                                    <div style="font-size: 0.85rem; margin-bottom: 4px;"><b>{r['adresse'].title()}</b></div>
+                                    <div style="font-size: 0.85rem; margin-bottom: 6px;">🏙️ {r['ville']}</div>
                                     <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">📍 À {r['distance']:.1f} km</div>
-                                    <a href="{waze_pop_url}" target="_blank" style="display: block; text-align: center; background: #1a73e8; color: white; padding: 5px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.8rem;">
+                                    <a href="{waze_pop_url}" target="_blank" style="display: block; text-align: center; background: #1a73e8; color: white; padding: 6px 0; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 0.8rem;">
                                         Ouvrir Waze 🚗
                                     </a>
                                 </div>
                                 """
                                 
                                 folium.Marker(
-                                    [r['latitude'], r['longitude']], 
+                                    location=[r['latitude'], r['longitude']], 
                                     popup=folium.Popup(popup_html, max_width=250),
                                     icon=folium.Icon(color=color, icon='gas-pump', prefix='fa'),
                                     tooltip=f"{float(r[col_p]):.3f} €"
@@ -399,6 +406,7 @@ with tabs[1]:
                             st.markdown("### 🏆 Meilleures options trouvées")
 
                             # Cartes HTML des stations (Ton code de liste d'origine inchangé)
+                            p_min = res[col_p].min()
                             for _, row in res.head(8).iterrows():
                                 w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                                 rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
@@ -435,7 +443,6 @@ with tabs[1]:
                             st.warning("Veuillez sélectionner une adresse valide dans la liste.")
                 except Exception as e:
                     st.error(f"Erreur technique : {e}")
-
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
 # =====================================================================
