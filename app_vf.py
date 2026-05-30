@@ -361,7 +361,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                     
                     st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
-                    # 🎯 AVANT LA CARTE : On définit p_min pour ne pas faire planter l'application
+                    # 🎯 PIÈCE MANQUANTE : On calcule p_min ici en toute sécurité
                     p_min = res[col_p].min()
 
                     # 🗺️ Création de la carte Folium
@@ -374,7 +374,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                         # 🟢 UNE SEULE VERTE : uniquement la toute première de la liste triée
                         color = 'green' if idx == id_premiere_station else 'blue'
                         
-                        # Vérification des ruptures sans mentionner le stock si tout va bien
+                        # Gestion des ruptures (sans mention de stock si OK)
                         r_rupt = str(r.get('carburants_en_rupture_temporaire', '')) + str(r.get('carburants_en_rupture_definitive', ''))
                         
                         rupture_html = ""
@@ -400,7 +400,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                         """
                         
                         iframe_popup = folium.Html(popup_html, script=True)
-                        iframe_tooltip = folium.Tooltip(popup_html, sticky=True) # S'aimante bien au survol
+                        iframe_tooltip = folium.Tooltip(popup_html, sticky=True)
                         
                         folium.Marker(
                             location=[r['latitude'], r['longitude']], 
@@ -409,7 +409,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                             tooltip=iframe_tooltip
                         ).add_to(m)
                         
-                    # Affichage de la carte stabilisée (sans transparence au zoom)
+                    # Affichage de la carte stabilisée (sans clignotement)
                     st_folium(
                         m, 
                         use_container_width=True, 
@@ -419,7 +419,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
 
                     st.markdown("### 🏆 Meilleures options trouvées")
 
-                    # Cartes HTML des stations (Liste sous la carte)
+                    # 🎯 BOUCLE TEXTE CORRIGÉE : Parfaitement alignée
                     for _, row in res.head(8).iterrows():
                         w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                         rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
