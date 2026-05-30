@@ -278,60 +278,6 @@ with tabs[0]:
     """, unsafe_allow_html=True)
     
 # --- ONGLET 1 : STATIONS ---
-with tabs[1]:
-    st.markdown('<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">', unsafe_allow_html=True)
-
-    rayon = 5  # Valeur de secours par défaut
-    if 'recherche_lancee' not in st.session_state:
-        st.session_state.recherche_lancee = False
-
-    if df is not None:
-        # 🟢 1. LA BARRE DE RECHERCHE UNIQUE ET INTELLIGENTE
-        # Les suggestions s'affichent DIRECTEMENT dans ce champ unique au fil de la frappe
-        adresse_choisie = st_searchbox(
-            chercher_adresses_searchbox,
-            placeholder="📍 Entrez une ville ou une adresse...",
-            key="searchbox_stations",
-            clear_on_submit=False
-        )
-
-        # Variables par défaut si l'utilisateur n'a rien sélectionné
-        adresse_selectionnee = ""
-        ville_propre = "N/A"
-
-        # Si l'utilisateur a cliqué sur une suggestion, on extrait les données propres
-        if adresse_choisie:
-            adresse_selectionnee = adresse_choisie["label"]
-            ville_propre = adresse_choisie["ville"]  # 🎯 La commune seule pour ton Google Sheet
-
-        # ⚙️ 2. LE FORMULAIRE DE RECHERCHE RESSERRÉ
-        with st.form("recherche_stations_form"):
-            c1, c2 = st.columns(2)
-            with c1:
-                carbu = st.selectbox("Type de carburant", ["Gazole", "SP95", "SP98", "E10", "E85"])
-                col_p, col_m = f"prix_{carbu.lower()}", f"prix_{carbu.lower()}_maj"
-            with c2:
-                rayon = st.select_slider("Rayon (km)", options=[1, 2, 5, 10, 20], value=5)
-
-            # AJOUT DE LA PARTIE SERVICES
-            with st.expander("⚙️ Filtrer par services (Boutique, Lavage, etc.)"):
-                cols_srv = st.columns(2)
-                selection_services = []
-                for i, (srv_name, emoji) in enumerate(LOGOS_SERVICES.items()):
-                    if cols_srv[i % 2].checkbox(f"{emoji} {srv_name}"):
-                        selection_services.append(srv_name)
-            
-            submit_search = st.form_submit_button("🔍 CHERCHER LES STATIONS", use_container_width=True)
-
-        # 📈 3. TRACKING LORS DE LA RECHERCHE
-        if submit_search and adresse_selectionnee:
-            log_to_sheets(
-                nom_onglet="Stations", 
-                ville=ville_propre,  # Envoie uniquement la commune (ex: Meyzieu)
-                carburant=carbu, 
-                rayon=str(rayon)
-            )
-            st.session_state.recherche_lancee = True
 # 🗺️ 4. AFFICHAGE DES RÉSULTATS
 if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
     with st.spinner("Analyse en cours..."):
@@ -371,19 +317,22 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                         # 🟢 UNE SEULE VERTE : uniquement la toute première de la liste triée
                         color = 'green' if idx == id_premiere_station else 'blue'
                         
-                        # Configuration des infos de rupture pour la bulle de la carte
+                        # Vérification stricte des ruptures
                         r_rupt = str(r.get('carburants_en_rupture_temporaire', '')) + str(r.get('carburants_en_rupture_definitive', ''))
-                        s_text = "❌ RUPTURE" if carbu in r_rupt else "✅ EN STOCK"
-                        s_color = "#ef4444" if carbu in r_rupt else "#10b981"
+                        
+                        # 🎯 LOGIQUE MODIFIÉE : On n'affiche un sous-titre que s'il y a une rupture confirmée
+                        rupture_html = ""
+                        if carbu in r_rupt:
+                            rupture_html = '<div style="color: #ef4444; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px;">❌ RUPTURE SIGNALÉE</div>'
                         
                         # URL Waze spécifique pour ce marqueur
                         waze_pop_url = f"https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes"
                         
-                        # 🎯 CONTENU DE LA BULLE (HTML complet cliquable)
+                        # CONTENU DU TOOLTIP / POPUP AVEC WAZE EN DIRECT
                         popup_html = f"""
                         <div style="font-family: Arial, sans-serif; width: 190px; color: #333; line-height: 1.4; padding: 5px;">
                             <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.25rem;">{float(r[col_p]):.3f} €</h4>
-                            <div style="color: {s_color}; font-weight: bold; font-size: 0.75rem; margin-bottom: 5px;">{s_text}</div>
+                            {rupture_html}
                             <div style="font-size: 0.85rem; margin-bottom: 4px;"><b>{r['adresse'].title()}</b></div>
                             <div style="font-size: 0.85rem; margin-bottom: 6px;">🏙️ {r['ville']}</div>
                             <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px;">📍 À {r['distance']:.1f} km</div>
@@ -394,9 +343,9 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                         </div>
                         """
                         
-                        # Configuration des objets Folium pour valider et autoriser les clics HTML
+                        # Configuration des fenêtres Folium
                         iframe_popup = folium.Html(popup_html, script=True)
-                        iframe_tooltip = folium.Tooltip(popup_html, sticky=True)
+                        iframe_tooltip = folium.Tooltip(popup_html, sticky=True) # S'aimante au survol !
                         
                         folium.Marker(
                             location=[r['latitude'], r['longitude']], 
@@ -405,7 +354,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                             tooltip=iframe_tooltip
                         ).add_to(m)
                         
-                    # 🎯 CORRECTION TRANSPARENCE : Bloque les rechargements au zoom et mouvements
+                    # Affichage de la carte stabilisée (sans clignotement ni transparence)
                     st_folium(
                         m, 
                         use_container_width=True, 
@@ -415,12 +364,17 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
 
                     st.markdown("### 🏆 Meilleures options trouvées")
 
-                    # Cartes HTML des stations (Liste en text sous la carte)
+                    # Cartes HTML des stations (Liste de texte sous la carte)
                     p_min = res[col_p].min()
                     for _, row in res.head(8).iterrows():
                         w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                         rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
-                        stock_t, stock_c = ("❌ RUPTURE", "#ef4444") if carbu in rupt else ("✅ EN STOCK", "#10b981")
+                        
+                        # Structure simplifiée pour la liste textuelle
+                        rupture_badge = ""
+                        if carbu in rupt:
+                            rupture_badge = '<div style="color:#ef4444; font-weight:bold; font-size:0.75rem; margin-top:4px;">❌ RUPTURE SIGNALÉE</div>'
+                            
                         border_color = "#10b981" if row[col_p] == p_min else "#e2e8f0"
                         
                         srv_str = str(row.get('service_propose', ''))
@@ -437,7 +391,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                                 <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
                                 <div style="text-align:right;">
                                     <span style="background:#0f172a; color:white; padding:3px 10px; border-radius:8px; font-size:0.85rem; font-weight:bold;">{row['distance']:.1f} km</span>
-                                    <div style="color:{stock_c}; font-weight:bold; font-size:0.75rem; margin-top:4px;">{stock_t}</div>
+                                    {rupture_badge}
                                 </div>
                             </div>
                             <div style="font-size:0.95rem; margin:8px 0; color:#334155;"><b>{row['adresse'].title()}</b> ({row['ville']})</div>
@@ -455,7 +409,6 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                 st.warning("Veuillez sélectionner une adresse valide dans la liste.")
         except Exception as e:
             st.error(f"Erreur technique : {e}")
-
 # =====================================================================
 # 🧮 --- ONGLET 2 : SIMULATEUR (DÉTACHÉ, PROPRE ET SÉCURISÉ) ---
 # =====================================================================
