@@ -460,12 +460,12 @@ with tabs[2]:
         </div>
     """, unsafe_allow_html=True)
 
-    # PRIX RÉCUPÉRÉ
+    # Récupération sécurisée du prix mémorisé depuis l'onglet 1
     p_final = st.session_state.get('prix_perso', 1.859)
     nom_carbu = st.session_state.get('carbu_nom', 'Carburant')
     st.info(f" Prix actuel utilisé : **{p_final:.3f} €/L** ({nom_carbu})")
 
-    # --- 1. ITINÉRAIRE ---
+    # --- 1. ITINÉRAIRE (Autocomplétion fluide) ---
     st.markdown("##### 📍 1. Itinéraire")
     c1, c2 = st.columns(2)
     
@@ -476,12 +476,8 @@ with tabs[2]:
             key="searchbox_depart",
             clear_on_submit=False
         )
-        
-        dep_selectionne = ""
-        ville_dep_propre = ""
-        if choix_dep:
-            dep_selectionne = choix_dep["label"]
-            ville_dep_propre = choix_dep["ville"]
+        dep_selectionne = choix_dep["label"] if choix_dep else ""
+        ville_dep_propre = choix_dep["ville"] if choix_dep else ""
 
     with c2:
         choix_arr = st_searchbox(
@@ -490,12 +486,8 @@ with tabs[2]:
             key="searchbox_arrivee",
             clear_on_submit=False
         )
-        
-        arr_selectionne = ""
-        ville_arr_propre = ""
-        if choix_arr:
-            arr_selectionne = choix_arr["label"]
-            ville_arr_propre = choix_arr["ville"]
+        arr_selectionne = choix_arr["label"] if choix_arr else ""
+        ville_arr_propre = choix_arr["ville"] if choix_arr else ""
 
     if st.button("🔍 CALCULER LA DISTANCE GPS", use_container_width=True):
         if dep_selectionne and arr_selectionne:
@@ -504,17 +496,18 @@ with tabs[2]:
                     geolocator = Nominatim(user_agent="carbunet_pro_sim")
                     l1 = geolocator.geocode(dep_selectionne, timeout=10)
                     l2 = geolocator.geocode(arr_selectionne, timeout=10)
+                    
                 if l1 and l2:
                     dist_gps = geodesic((l1.latitude, l1.longitude), (l2.latitude, l2.longitude)).km
                     km_calcule = round(dist_gps * 1.25, 1)
                     
-                    # 🎯 SAUVEGARDE DES COORDONNÉES GPS STRICTES POUR WAZE
+                    # Stockage des variables de session
                     st.session_state['km_memoire'] = km_calcule
                     st.session_state['gps_dep'] = f"{l1.latitude},{l1.longitude}"
                     st.session_state['gps_arr'] = f"{l2.latitude},{l2.longitude}"
                     st.session_state['bouton_calcul_presse'] = True
                     
-                    # Envoi propre aux Google Sheets
+                    # Envoi des statistiques au Google Sheet
                     log_to_sheets(
                         nom_onglet="Simulateur", 
                         ville=f"{ville_dep_propre} -> {ville_arr_propre} ({km_calcule} km)", 
@@ -525,12 +518,12 @@ with tabs[2]:
                 else:
                     st.error("❌ Adresse introuvable. Veuillez sélectionner une adresse valide dans la liste.")
             except Exception as e:
-                st.error(f"❌ Erreur : {e}")
+                st.error(f"❌ Erreur de calcul : {e}")
 
-    # Récupération de la distance
+    # Champ de saisie manuel pré-rempli par la valeur calculée
     km_final = st.number_input("Distance retenue (km)", value=float(st.session_state.get('km_memoire', 0.0)))
 
-    # --- 2. PARAMÈTRES AVANCÉS ---
+    # --- 2. CONFIGURATION ET TRAJET ---
     st.markdown("---")
     st.markdown("##### ⚙️ 2. Configuration du trajet")
     
@@ -551,20 +544,18 @@ with tabs[2]:
     with col_r:
         relief = st.selectbox("Relief", ["Plat", "Vallonné", "Montagne"])
 
-    # LOGIQUE DE CALCUL
+    # Calculs de la consommation théorique
     base_conso = {"Citadine": 5.2, "Berline": 6.5, "SUV": 7.8, "Utilitaire": 9.5}[v_type]
     impact_route = {
-        "Urbain (100% Ville / Bouchons)": 2.8,
-        "Mixte (Ville + Route)": 0.8,
-        "Autoroute Éco (110 km/h)": 0.4,
-        "Autoroute Standard (130 km/h)": 2.2
+        "Urbain (100% Ville / Bouchons)": 2.8, "Mixte (Ville + Route)": 0.8,
+        "Autoroute Éco (110 km/h)": 0.4, "Autoroute Standard (130 km/h)": 2.2
     }[p_route]
 
     coeff_relief = {"Plat": 1.0, "Vallonné": 1.12, "Montagne": 1.35}[relief]
     poids_extra = (passagers - 1) * 0.4
     conso_finale = (base_conso + impact_route + poids_extra) * coeff_relief
 
-    # AFFICHAGE DU BUDGET
+    # --- 3. AFFICHAGE DES RÉSULTATS ---
     if km_final > 0 and st.session_state.get('bouton_calcul_presse', False):
         total_euros = (km_final / 100) * conso_finale * p_final
         cout_reel_total = total_euros + (km_final * 0.12)
@@ -589,12 +580,13 @@ with tabs[2]:
             </div>
         """, unsafe_allow_html=True)
 
-        # 🎯 CORRECTION WAZE : On utilise les coordonnées géographiques exactes (latitude, longitude) enregistrées en mémoire
+        # Récupération des coordonnées pour l'URL Waze
         gps_dep = st.session_state.get('gps_dep', '')
         gps_arr = st.session_state.get('gps_arr', '')
         
         if gps_dep and gps_arr:
-            w_link = f"https://www.waze.com/ul?ll={gps_arr}&from={gps_dep}&navigate=yes"
+            # URL directe officielle et robuste utilisant les coordonnées géographiques exactes
+            w_link = f"https://waze.com/ul?ll={gps_arr}&from={gps_dep}&navigate=yes"
             st.markdown(f'<a href="{w_link}" target="_blank" style="text-decoration:none;"><div style="background:#33CCFF;color:white;padding:15px;border-radius:10px;text-align:center;font-weight:bold;margin-top:15px;">🚀 LANCER L\'ITINÉRAIRE SUR WAZE</div></a>', unsafe_allow_html=True)
 # -----------------------------------------------------------  
 # --- ONGLET 3 : SUPPORT ---
