@@ -361,7 +361,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                     
                     st.success(f"✅ Station mémorisée : {st.session_state['prix_perso']} €/L")
 
-                    # On calcule p_min pour l'affichage des bordures des cartes
+                    # Déclaration sécurisée de p_min
                     p_min = res[col_p].min()
 
                     # 🗺️ Création de la carte Folium
@@ -374,7 +374,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                         # 🟢 UNE SEULE VERTE : uniquement la toute première de la liste triée
                         color = 'green' if idx == id_premiere_station else 'blue'
                         
-                        # Gestion des ruptures uniquement (pas de fausse confiance sur les stocks)
+                        # Gestion des ruptures uniquement (pas de mention de stock si OK)
                         r_rupt = str(r.get('carburants_en_rupture_temporaire', '')) + str(r.get('carburants_en_rupture_definitive', ''))
                         
                         rupture_html = ""
@@ -409,7 +409,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                             tooltip=iframe_tooltip
                         ).add_to(m)
                         
-                    # Affichage de la carte stabilisée (sans clignotement)
+                    # Affichage de la carte sans effet de transparence
                     st_folium(
                         m, 
                         use_container_width=True, 
@@ -419,7 +419,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
 
                     st.markdown("### 🏆 Meilleures options trouvées")
 
-                    # 📝 BOUCLE DES CARTES TEXTUELLE EN DESSOUS (Nettoyée et unique !)
+                    # 📝 Affichage des cartes sous forme de liste textuelle
                     for _, row in res.head(8).iterrows():
                         w_url = f"https://waze.com/ul?ll={row['latitude']},{row['longitude']}&navigate=yes"
                         rupt = str(row.get('carburants_en_rupture_temporaire', '')) + str(row.get('carburants_en_rupture_definitive', ''))
@@ -439,7 +439,7 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                                 badges_html += f'<span style="display:inline-block; font-size:10px; background:#f1f5f9; padding:2px 8px; border-radius:20px; margin:2px; color:#64748b; border:1px solid #e2e8f0;">{emoji} {s}</span>'
 
                         card_html = f"""
-                        <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                        <div style="background:#fff; border-radius:12px; padding:15px; margin-bottom:12px; border:2px solid {border_color}; box-shadow: 0 2px 4px rgba(0,0,0,0.05); color: #333;">
                             <div style="display:flex; justify-content:space-between; align-items:start;">
                                 <span style="font-size:1.6rem; font-weight:800; color:#0f172a;">{float(row[col_p]):.3f} €</span>
                                 <div style="text-align:right;">
@@ -455,11 +455,12 @@ if st.session_state.get('recherche_lancee', False) and adresse_selectionnee:
                             </div>
                         </div>
                         """
-                        st.markdown(card_html, unsafe_allow_html=True)
+                        # On utilise la fonction officielle st.html() qui gère parfaitement le HTML brut sans bug
+                        st.html(card_html)
                 else:
-                    st.warning("Aucune station trouvée dans ce rayon avec vos critères.")
+                    st.markdown("⚠️ Aucune station trouvée dans ce rayon avec vos critères.")
             else:
-                st.warning("Veuillez sélectionner une adresse valide dans la liste.")
+                st.markdown("⚠️ Veuillez sélectionner une adresse valide dans la liste.")
         except Exception as e:
             st.error(f"Erreur technique : {e}")
 # =====================================================================
