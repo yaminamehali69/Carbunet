@@ -348,7 +348,7 @@ with tabs[1]:
                         for s_filtre in selection_services:
                             res = res[res['service_propose'].str.contains(s_filtre, na=False, case=False)]
 
-                        # 🎯 Tri par PRIX d'abord, puis par DISTANCE si les prix sont identiques
+                        # Tri par PRIX d'abord, puis par DISTANCE si les prix sont identiques
                         res = res.sort_values(by=[col_p, 'distance'])
 
                         if not res.empty:
@@ -380,7 +380,7 @@ with tabs[1]:
                                 # URL Waze spécifique pour ce marqueur
                                 waze_pop_url = f"https://waze.com/ul?ll={r['latitude']},{r['longitude']}&navigate=yes"
                                 
-                                # 🎯 CODE DE LA BULLE (POPUP) : Prix, Statut, Adresse complète, Distance et bouton Waze direct
+                                # 🎯 CONTENU DE LA BULLE AU CLIC (HTML complet avec bouton bleu Waze cliquable)
                                 popup_html = f"""
                                 <div style="font-family: Arial, sans-serif; width: 190px; color: #333; line-height: 1.4;">
                                     <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.25rem;">{float(r[col_p]):.3f} €</h4>
@@ -394,11 +394,14 @@ with tabs[1]:
                                 </div>
                                 """
                                 
+                                # 🎯 TEXTE AU SURVOL DE LA SOURIS (Simple texte sans HTML pour éviter les bugs visuels)
+                                tooltip_text = f"{float(r[col_p]):.3f} € | {r['adresse'].title()} | {r['distance']:.1f}km"
+                                
                                 folium.Marker(
                                     location=[r['latitude'], r['longitude']], 
-                                    popup=folium.Popup(popup_html, max_width=250),
+                                    popup=folium.Popup(popup_html, max_width=250), # S'affiche au CLIC
                                     icon=folium.Icon(color=color, icon='gas-pump', prefix='fa'),
-                                    tooltip=f"{float(r[col_p]):.3f} €"
+                                    tooltip=tooltip_text # S'affiche au SURVOL
                                 ).add_to(m)
                                 
                             st_folium(m, width="100%", height=400)
